@@ -643,7 +643,7 @@ class NetgearDriver(NetworkDriver):
 
         Example:
             {
-                'Ethernet1': [
+                '0/1': [
                     {
                         'hostname': 'switch2.company.com',
                         'port': 'Ethernet1'
@@ -657,25 +657,26 @@ class NetgearDriver(NetworkDriver):
         
         # Parse the fixed-length table output
         fields = parseFixedLenght(
-            ["local_port", "remote_id", "remote_port", "remote_name", "capability", "remote_port_desc"],
+            ["local_port", "remote_id", "chassis_id", "port_id", "system_name", "oui", "oui_subtype"],
             output.splitlines()
         )
         
+        current_port = None
         for entry in fields:
-            local_port = entry["local_port"]
-            if local_port not in lldp:
-                lldp[local_port] = []
-            
-            # Use remote_name if available, otherwise use remote_id
-            hostname = entry["remote_name"] if entry["remote_name"].strip() else entry["remote_id"]
-            
-            # Use remote_port_desc if available, otherwise use remote_port
-            port = entry["remote_port_desc"] if entry["remote_port_desc"].strip() else entry["remote_port"]
-            
-            neighbor = {
-                "hostname": hostname,
-                "port": port
-            }
-            lldp[local_port].append(neighbor)
+            # Skip header rows and empty entries
+            if not entry["local_port"] or entry["local_port"] == "Interface":
+                continue
+                
+            # If we have a port number, this is the main entry
+            if not entry["local_port"].isspace():
+                current_port = entry["local_port"]
+                # Only add ports that have neighbors
+                if entry["remote_id"]:
+                    if current_port not in lldp:
+                        lldp[current_port] = []
+                    lldp[current_port].append({
+                        "hostname": entry["system_name"].strip() or entry["chassis_id"].strip(),
+                        "port": entry["port_id"].strip()
+                    })
         
         return lldp
