@@ -410,8 +410,8 @@ class NetgearDriver(NetworkDriver):
             'interface_list': [u'Ethernet2', u'Management1', u'Ethernet1', u'Ethernet3']
             }
         """
-        # Get version info for serial number
-        command = "show ver"
+        # Get version info
+        command = "show version"
         output = self._send_command(command)
         ver_fields = parseList(output.splitlines())
 
@@ -445,17 +445,6 @@ class NetgearDriver(NetworkDriver):
             except (ValueError, IndexError):
                 pass
 
-        # Parse model and version from System Description
-        # Example: "M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.4.26, 1.0.0.11"
-        model = ""
-        os_version = ""
-        if "System Description" in sys_fields:
-            desc = sys_fields["System Description"]
-            parts = desc.split(",")
-            if len(parts) >= 2:
-                model = parts[0].split()[0].strip()  # First word is model
-                os_version = parts[1].strip()  # Second part is OS version
-
         # Get interface list
         command = "show interfaces status all"
         output = self._send_command(command)
@@ -472,11 +461,11 @@ class NetgearDriver(NetworkDriver):
         return {
             'uptime': uptime,
             'vendor': 'Netgear',
-            'os_version': os_version,
-            'serial_number': ver_fields["Serial Number"],
-            'model': model,
+            'os_version': ver_fields.get("Software Version", ""),  # More accurate from show version
+            'serial_number': ver_fields.get("Serial Number", ""),
+            'model': ver_fields.get("Machine Model", ""),  # More accurate from show version
             'hostname': hostname,
-            'fqdn': fqdn,  # Now properly constructed from hostname and domain
+            'fqdn': fqdn,
             'interface_list': interfaces
         }
     
