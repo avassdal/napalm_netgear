@@ -410,32 +410,39 @@ class NetgearDriver(NetworkDriver):
             'interface_list': [u'Ethernet2', u'Management1', u'Ethernet1', u'Ethernet3']
             }
         """
-        # Get version info
+        # Get version info for serial number
         command = "show ver"
         output = self._send_command(command)
-        fields = parseList(output.splitlines())
+        ver_fields = parseList(output.splitlines())
 
-        # Get hostname
-        command = "show hostname"
-        hostname = self._send_command(command).strip()
-
-        # Get uptime from system info
-        command = "show system"
+        # Get system info
+        command = "show sysinfo"
         output = self._send_command(command)
+        sys_fields = parseList(output.splitlines())
+
+        # Parse uptime from "System Up Time: X days Y hrs Z mins W secs"
         uptime = 0.0
-        for line in output.splitlines():
-            if "System Up Time:" in line:
-                # Example: "System Up Time: 0 days 1 hr 32 min 50 sec"
-                parts = line.split(":", 1)[1].strip().split()
-                try:
-                    days = int(parts[0])
-                    hours = int(parts[2])
-                    minutes = int(parts[4])
-                    seconds = int(parts[6])
-                    uptime = float(days * 86400 + hours * 3600 + minutes * 60 + seconds)
-                except (ValueError, IndexError):
-                    pass
-                break
+        if "System Up Time" in sys_fields:
+            parts = sys_fields["System Up Time"].split()
+            try:
+                days = int(parts[0])
+                hours = int(parts[2])
+                minutes = int(parts[4])
+                seconds = int(parts[6])
+                uptime = float(days * 86400 + hours * 3600 + minutes * 60 + seconds)
+            except (ValueError, IndexError):
+                pass
+
+        # Parse model and version from System Description
+        # Example: "M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.4.26, 1.0.0.11"
+        model = ""
+        os_version = ""
+        if "System Description" in sys_fields:
+            desc = sys_fields["System Description"]
+            parts = desc.split(",")
+            if len(parts) >= 2:
+                model = parts[0].split()[0].strip()  # First word is model
+                os_version = parts[1].strip()  # Second part is OS version
 
         # Get interface list
         command = "show interfaces status all"
@@ -453,11 +460,11 @@ class NetgearDriver(NetworkDriver):
         return {
             'uptime': uptime,
             'vendor': 'Netgear',
-            'os_version': fields["Software Version"],
-            'serial_number': fields["Serial Number"],
-            'model': fields["Machine Model"],
-            'hostname': hostname,
-            'fqdn': hostname,  # Netgear doesn't support FQDN, use hostname
+            'os_version': os_version,
+            'serial_number': ver_fields["Serial Number"],
+            'model': model,
+            'hostname': sys_fields.get("System Name", ""),
+            'fqdn': sys_fields.get("System Name", ""),  # Netgear doesn't support FQDN, use hostname
             'interface_list': interfaces
         }
     
