@@ -9,28 +9,7 @@ NAPALM driver for Netgear ProSafe switches. Uses Netmiko's netgear_prosafe drive
 - MAC address table management
 - System information (facts, environment)
 
-## TODO List
 
-### High Priority
-- [ ] Implement proper configuration comparison in `compare_config`
-- [ ] Fix static flag logic in `get_mac_address_table` (currently inverted)
-- [ ] Add MAC address support to `get_interfaces` using "show interfaces"
-
-### Medium Priority
-- [ ] Add missing counters to `get_interfaces_counters`:
-  - [ ] tx_octets and rx_octets
-  - [ ] tx_multicast_packets
-  - [ ] tx_broadcast_packets
-- [ ] Add proper MTU detection in `get_interfaces` (currently hardcoded to 1500)
-- [ ] Add move tracking to `get_mac_address_table` (moves, last_move)
-
-### Nice to Have
-- [ ] Add support for more Netgear ProSafe models
-- [ ] Add unit tests
-- [ ] Add integration tests
-- [ ] Add CI/CD pipeline
-- [ ] Add type hints to all methods
-- [ ] Add docstring examples for all methods
 
 ## Implemented APIs
 
@@ -116,6 +95,29 @@ device.close()
 - Netgear M4250 series
 
 Other Netgear ProSafe switches may work but have not been tested.
+
+## TODO List
+
+### High Priority
+- [ ] Implement proper configuration comparison in `compare_config`
+- [ ] Fix static flag logic in `get_mac_address_table` (currently inverted)
+- [ ] Add MAC address support to `get_interfaces` using "show interfaces"
+
+### Medium Priority
+- [ ] Add missing counters to `get_interfaces_counters`:
+  - [ ] tx_octets and rx_octets
+  - [ ] tx_multicast_packets
+  - [ ] tx_broadcast_packets
+- [ ] Add proper MTU detection in `get_interfaces` (currently hardcoded to 1500)
+- [ ] Add move tracking to `get_mac_address_table` (moves, last_move)
+
+### Nice to Have
+- [ ] Add support for more Netgear ProSafe models
+- [ ] Add unit tests
+- [ ] Add integration tests
+- [ ] Add CI/CD pipeline
+- [ ] Add type hints to all methods
+- [ ] Add docstring examples for all methods
 
 ## Contributing
 
