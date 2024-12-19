@@ -410,20 +410,55 @@ class NetgearDriver(NetworkDriver):
             'interface_list': [u'Ethernet2', u'Management1', u'Ethernet1', u'Ethernet3']
             }
         """
-
+        # Get version info
         command = "show ver"
         output = self._send_command(command)
         fields = parseList(output.splitlines())
 
+        # Get hostname
+        command = "show hostname"
+        hostname = self._send_command(command).strip()
+
+        # Get uptime from system info
+        command = "show system"
+        output = self._send_command(command)
+        uptime = 0.0
+        for line in output.splitlines():
+            if "System Up Time:" in line:
+                # Example: "System Up Time: 0 days 1 hr 32 min 50 sec"
+                parts = line.split(":", 1)[1].strip().split()
+                try:
+                    days = int(parts[0])
+                    hours = int(parts[2])
+                    minutes = int(parts[4])
+                    seconds = int(parts[6])
+                    uptime = float(days * 86400 + hours * 3600 + minutes * 60 + seconds)
+                except (ValueError, IndexError):
+                    pass
+                break
+
+        # Get interface list
+        command = "show interfaces status all"
+        output = self._send_command(command)
+        interfaces = []
+        for line in output.splitlines():
+            # Skip header and empty lines
+            if not line or "-----" in line or "Port" in line:
+                continue
+            # First word in line is interface name
+            interface = line.split()[0]
+            if interface and not interface.startswith("lag"):
+                interfaces.append(interface)
+
         return {
-            'uptime': 0.0,
+            'uptime': uptime,
             'vendor': 'Netgear',
             'os_version': fields["Software Version"],
             'serial_number': fields["Serial Number"],
             'model': fields["Machine Model"],
-            'hostname': '',
-            'fqdn': '',
-            'interface_list': []
+            'hostname': hostname,
+            'fqdn': hostname,  # Netgear doesn't support FQDN, use hostname
+            'interface_list': interfaces
         }
     
     def get_interfaces_ip(self):
