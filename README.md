@@ -32,7 +32,12 @@ Uses netmiko netgear prosafe driver. Tested with M4300 and M4250.
 - `get_mac_address_table` - Get MAC address table entries
 
 ### System Information
-- `get_facts` - Get basic device facts (model, serial number, OS version)
+- `get_facts` - Get device facts:
+  - Model and vendor information
+  - Software version and serial number
+  - Hostname and FQDN (if domain configured)
+  - System uptime in seconds
+  - List of physical interfaces (excluding LAG/VLAN)
 - `get_environment` - Get environmental information (CPU, memory, temperature, fans, power)
 
 ## Installation
@@ -57,7 +62,7 @@ device = driver(
 # Open connection
 device.open()
 
-# Get device facts
+# Get device facts with accurate model and version
 facts = device.get_facts()
 print(facts)
 
