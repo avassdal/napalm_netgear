@@ -633,3 +633,49 @@ class NetgearDriver(NetworkDriver):
                     }
 
         return environment
+
+    def get_lldp_neighbors(self):
+        """
+        Returns a dictionary where the keys are local ports and the value is a list of dictionaries
+        with the following information:
+            * hostname
+            * port
+
+        Example:
+            {
+                'Ethernet1': [
+                    {
+                        'hostname': 'switch2.company.com',
+                        'port': 'Ethernet1'
+                    }
+                ]
+            }
+        """
+        lldp = {}
+        command = "show lldp remote-device all"
+        output = self._send_command(command)
+        
+        # Parse the fixed-length table output
+        fields = parseFixedLenght(
+            ["local_port", "remote_id", "remote_port", "remote_name", "capability", "remote_port_desc"],
+            output.splitlines()
+        )
+        
+        for entry in fields:
+            local_port = entry["local_port"]
+            if local_port not in lldp:
+                lldp[local_port] = []
+            
+            # Use remote_name if available, otherwise use remote_id
+            hostname = entry["remote_name"] if entry["remote_name"].strip() else entry["remote_id"]
+            
+            # Use remote_port_desc if available, otherwise use remote_port
+            port = entry["remote_port_desc"] if entry["remote_port_desc"].strip() else entry["remote_port"]
+            
+            neighbor = {
+                "hostname": hostname,
+                "port": port
+            }
+            lldp[local_port].append(neighbor)
+        
+        return lldp
