@@ -1,14 +1,13 @@
 # napalm_netgear
-NAPALM module for Netgear switches
 
-Uses netmiko netgear prosafe driver. Tested with M4300 and M4250.
+NAPALM driver for Netgear ProSafe switches. Uses Netmiko's netgear_prosafe driver for SSH connectivity. Tested with M4300 and M4250 series switches.
 
 ## Features
-- Configuration management (get, merge, replace)
-- Interface information and statistics
-- LLDP neighbor discovery
-- Environment monitoring (CPU, memory, temperature, fans, power)
+- Configuration management (get, merge, replace, compare, commit)
+- Interface information (status, counters, IP addresses)
+- LLDP neighbor discovery (basic and detailed)
 - MAC address table management
+- System information (facts, environment)
 
 ## Implemented APIs
 
@@ -21,24 +20,32 @@ Uses netmiko netgear prosafe driver. Tested with M4300 and M4250.
 - `get_config` - Get startup, running, or all configurations with sanitization options
 - `load_merge_candidate` - Load configuration to be merged
 - `load_replace_candidate` - Load configuration to be replaced
+- `compare_config` - Compare running config with candidate
 - `commit_config` - Commit the loaded configuration
 
 ### Network Information
-- `get_interfaces` - Get interface details including status and speed
+- `get_interfaces` - Get interface details (status, speed, description)
 - `get_interfaces_ip` - Get interface IP addresses and prefixes
-- `get_interfaces_counters` - Get basic interface traffic statistics
+- `get_interfaces_counters` - Get interface traffic statistics
 - `get_lldp_neighbors` - Get basic LLDP neighbor information
 - `get_lldp_neighbors_detail` - Get detailed LLDP neighbor information
 - `get_mac_address_table` - Get MAC address table entries
 
 ### System Information
 - `get_facts` - Get device facts:
-  - Model and vendor information
-  - Software version and serial number
-  - Hostname and FQDN (if domain configured)
+  - Model (from Machine Model)
+  - Vendor (Netgear)
+  - Software version
+  - Serial number
+  - Hostname and FQDN (from show hosts)
   - System uptime in seconds
-  - List of physical interfaces (excluding LAG/VLAN)
-- `get_environment` - Get environmental information (CPU, memory, temperature, fans, power)
+  - List of physical interfaces (0/X format)
+- `get_environment` - Get environmental information:
+  - CPU usage
+  - Memory utilization
+  - Temperature sensors
+  - Fan status
+  - Power supply status
 
 ## Installation
 
@@ -62,11 +69,11 @@ device = driver(
 # Open connection
 device.open()
 
-# Get device facts with accurate model and version
+# Get device facts
 facts = device.get_facts()
 print(facts)
 
-# Get configuration with sanitization
+# Get configuration with sanitization (removes passwords and SNMP community strings)
 config = device.get_config(sanitized=True)
 print(config)
 
