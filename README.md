@@ -4,10 +4,10 @@ NAPALM module for Netgear switches
 Uses netmiko netgear prosafe driver. Tested with M4300 and M4250.
 
 ## Features
-- Full NAPALM interface compatibility
-- Support for configuration management
-- Interface and LLDP information retrieval
-- Environment monitoring
+- Configuration management (get, merge, replace)
+- Interface information and statistics
+- LLDP neighbor discovery
+- Basic environment monitoring
 - MAC address table management
 
 ## Implemented APIs
@@ -18,24 +18,22 @@ Uses netmiko netgear prosafe driver. Tested with M4300 and M4250.
 - `is_alive` - Check if the connection to the device is active
 
 ### Configuration Management
-- `get_config` - Get startup, running, or all configurations
+- `get_config` - Get startup, running, or all configurations with sanitization options
 - `load_merge_candidate` - Load configuration to be merged
 - `load_replace_candidate` - Load configuration to be replaced
-- `compare_config` - Compare loaded config with running config
 - `commit_config` - Commit the loaded configuration
-- `rollback` - Rollback to previous configuration
 
 ### Network Information
 - `get_interfaces` - Get interface details including status and speed
 - `get_interfaces_ip` - Get interface IP addresses and prefixes
-- `get_interfaces_counters` - Get interface traffic statistics
+- `get_interfaces_counters` - Get basic interface traffic statistics
 - `get_lldp_neighbors` - Get basic LLDP neighbor information
 - `get_lldp_neighbors_detail` - Get detailed LLDP neighbor information
 - `get_mac_address_table` - Get MAC address table entries
 
 ### System Information
-- `get_facts` - Get device facts (model, serial number, etc.)
-- `get_environment` - Get environmental information (CPU, memory, temperature)
+- `get_facts` - Get basic device facts (model, serial number, OS version)
+- `get_environment` - Get basic environmental information (CPU, memory)
 
 ## Installation
 
@@ -63,8 +61,8 @@ device.open()
 facts = device.get_facts()
 print(facts)
 
-# Get configuration
-config = device.get_config()
+# Get configuration with sanitization
+config = device.get_config(sanitized=True)
 print(config)
 
 # Close connection
