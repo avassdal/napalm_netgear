@@ -1,6 +1,8 @@
 """NAPALM Netgear ProSafe Handler."""
 import re
 import socket
+from typing import Dict, List
+from napalm.base import models
 
 from napalm.base.base import NetworkDriver
 from napalm.base.exceptions import (
@@ -527,9 +529,7 @@ class NetgearDriver(NetworkDriver):
         
         for line in output.splitlines():
             line = line.strip()
-            if not line:
-                continue
-                
+            
             # Check for main temperature
             if line.startswith("Temp (C)"):
                 try:
@@ -634,24 +634,51 @@ class NetgearDriver(NetworkDriver):
 
         return environment
 
-    def get_lldp_neighbors(self):
+    def get_lldp_neighbors(self) -> Dict[str, List[models.LLDPNeighborDict]]:
         """
-        Returns a dictionary where the keys are local ports and the value is a list of dictionaries
-        with the following information:
+        Returns a dictionary where the keys are local ports and the value is a list of \
+        dictionaries with the following information:
             * hostname
             * port
 
-        Example:
+        Example::
+
             {
-                '0/1': [
+            u'Ethernet2':
+                [
                     {
-                        'hostname': 'switch2.company.com',
-                        'port': 'Ethernet1'
+                    'hostname': u'junos-unittest',
+                    'port': u'520',
+                    }
+                ],
+            u'Ethernet3':
+                [
+                    {
+                    'hostname': u'junos-unittest',
+                    'port': u'522',
+                    }
+                ],
+            u'Ethernet1':
+                [
+                    {
+                    'hostname': u'junos-unittest',
+                    'port': u'519',
+                    },
+                    {
+                    'hostname': u'ios-xrv-unittest',
+                    'port': u'Gi0/0/0/0',
+                    }
+                ],
+            u'Management1':
+                [
+                    {
+                    'hostname': u'junos-unittest',
+                    'port': u'508',
                     }
                 ]
             }
         """
-        lldp = {}
+        lldp: Dict[str, List[models.LLDPNeighborDict]] = {}
         command = "show lldp remote-device all"
         output = self._send_command(command)
         
@@ -677,43 +704,90 @@ class NetgearDriver(NetworkDriver):
                 current_port = entry["local_port"]
                 # Only add neighbors if we have remote info
                 if entry["remote_id"]:
-                    lldp[current_port].append({
+                    neighbor: models.LLDPNeighborDict = {
                         "hostname": entry["system_name"].strip() or entry["chassis_id"].strip(),
                         "port": entry["port_id"].strip()
-                    })
+                    }
+                    lldp[current_port].append(neighbor)
         
         return lldp
 
-    def get_lldp_neighbors_detail(self):
+    def get_lldp_neighbors_detail(
+        self, interface: str = ""
+    ) -> models.LLDPNeighborsDetailDict:
         """
-        Returns a detailed view of the LLDP neighbors as a dictionary.
+        Returns a detailed view of the LLDP neighbors as a dictionary
+        containing lists of dictionaries for each interface.
 
-        Example:
+        Empty entries are returned as an empty string (e.g. '') or list where applicable.
+
+        Inner dictionaries contain fields:
+
+            * parent_interface (string)
+            * remote_port (string)
+            * remote_port_description (string)
+            * remote_chassis_id (string)
+            * remote_system_name (string)
+            * remote_system_description (string)
+            * remote_system_capab (list) with any of these values
+                * other
+                * repeater
+                * bridge
+                * wlan-access-point
+                * router
+                * telephone
+                * docsis-cable-device
+                * station
+            * remote_system_enabled_capab (list)
+
+        Example::
+
             {
-                'local_port': {
-                    'parent_interface': 'string',
-                    'remote_port': 'string',
-                    'remote_port_description': 'string',
-                    'remote_chassis_id': 'string',
-                    'remote_system_name': 'string',
-                    'remote_system_description': 'string',
-                    'remote_system_capab': ['capabilities'],
-                    'remote_system_enable_capab': ['enabled_capabilities']
-                }
+                'TenGigE0/0/0/8': [
+                    {
+                        'parent_interface': u'Bundle-Ether8',
+                        'remote_chassis_id': u'8c60.4f69.e96c',
+                        'remote_system_name': u'switch',
+                        'remote_port': u'Eth2/2/1',
+                        'remote_port_description': u'Ethernet2/2/1',
+                        'remote_system_description': u'''Cisco Nexus Operating System (NX-OS)
+                              Software 7.1(0)N1(1a)
+                              TAC support: http://www.cisco.com/tac
+                              Copyright (c) 2002-2015, Cisco Systems, Inc. All rights reserved.''',
+                        'remote_system_capab': ['bridge', 'repeater'],
+                        'remote_system_enable_capab': ['bridge']
+                    }
+                ]
             }
         """
-        lldp = {}
+        lldp: models.LLDPNeighborsDetailDict = {}
         
-        # First get list of ports with LLDP neighbors
+        # Get list of ports with LLDP neighbors
         neighbors = self.get_lldp_neighbors()
         
+        # If interface is specified, only get details for that interface
+        if interface:
+            if interface in neighbors:
+                ports_to_query = [interface]
+            else:
+                return {}
+        else:
+            ports_to_query = list(neighbors.keys())
+        
         # For each port with a neighbor, get the details
-        for local_port in neighbors:
+        for local_port in ports_to_query:
             command = f"show lldp remote-device detail {local_port}"
             output = self._send_command(command)
             
-            # Initialize the port entry with default values
-            lldp[local_port] = {
+            # Initialize the port entry with an empty list
+            lldp[local_port] = []
+            
+            # Skip if no LLDP data
+            if "No LLDP data has been received" in output:
+                continue
+            
+            # Create a neighbor entry
+            neighbor = {
                 'parent_interface': local_port,
                 'remote_port': '',
                 'remote_port_description': '',
@@ -725,9 +799,16 @@ class NetgearDriver(NetworkDriver):
             }
             
             # Parse the detailed output
-            current_section = None
-            capabilities = []
-            enabled_capabilities = []
+            capabilities_map = {
+                'Other': 'other',
+                'Repeater': 'repeater',
+                'Bridge': 'bridge',
+                'WLAN Access Point': 'wlan-access-point',
+                'Router': 'router',
+                'Telephone': 'telephone',
+                'DOCSIS Cable Device': 'docsis-cable-device',
+                'Station Only': 'station'
+            }
             
             for line in output.splitlines():
                 line = line.strip()
@@ -735,29 +816,38 @@ class NetgearDriver(NetworkDriver):
                 # Skip empty lines and headers
                 if not line or line.startswith("LLDP Remote Device Detail") or line == "Local Interface: " + local_port:
                     continue
-                    
-                # Skip if no LLDP data
-                if "No LLDP data has been received" in line:
-                    break
                 
                 # Parse each field
                 if line.startswith("Remote Identifier:"):
                     remote_id = line.split(":")[1].strip()
                 elif line.startswith("Chassis ID:"):
-                    lldp[local_port]['remote_chassis_id'] = line.split(":")[1].strip()
+                    neighbor['remote_chassis_id'] = line.split(":")[1].strip()
                 elif line.startswith("Port ID:"):
-                    lldp[local_port]['remote_port'] = line.split(":")[1].strip()
+                    neighbor['remote_port'] = line.split(":")[1].strip()
                 elif line.startswith("System Name:"):
-                    lldp[local_port]['remote_system_name'] = line.split(":")[1].strip()
+                    neighbor['remote_system_name'] = line.split(":")[1].strip()
                 elif line.startswith("System Description:"):
-                    lldp[local_port]['remote_system_description'] = line.split(":")[1].strip()
+                    neighbor['remote_system_description'] = line.split(":")[1].strip()
                 elif line.startswith("Port Description:"):
-                    lldp[local_port]['remote_port_description'] = line.split(":")[1].strip()
+                    neighbor['remote_port_description'] = line.split(":")[1].strip()
                 elif line.startswith("System Capabilities Supported:"):
-                    capabilities = [cap.strip() for cap in line.split(":")[1].strip().split(",")]
-                    lldp[local_port]['remote_system_capab'] = capabilities
+                    caps = line.split(":")[1].strip()
+                    if caps:
+                        raw_caps = [cap.strip() for cap in caps.split(",")]
+                        neighbor['remote_system_capab'] = [
+                            capabilities_map[cap] for cap in raw_caps 
+                            if cap in capabilities_map
+                        ]
                 elif line.startswith("System Capabilities Enabled:"):
-                    enabled_capabilities = [cap.strip() for cap in line.split(":")[1].strip().split(",")]
-                    lldp[local_port]['remote_system_enable_capab'] = enabled_capabilities
+                    caps = line.split(":")[1].strip()
+                    if caps:
+                        raw_caps = [cap.strip() for cap in caps.split(",")]
+                        neighbor['remote_system_enable_capab'] = [
+                            capabilities_map[cap] for cap in raw_caps 
+                            if cap in capabilities_map
+                        ]
+            
+            # Add the neighbor to the port's list
+            lldp[local_port].append(neighbor)
             
         return lldp
