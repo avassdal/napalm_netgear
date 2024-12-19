@@ -528,6 +528,9 @@ class NetgearDriver(NetworkDriver):
         for line in output.splitlines():
             line = line.strip()
             
+            if not line:
+                continue
+                
             # Check for main temperature
             if line.startswith("Temp (C)"):
                 try:
