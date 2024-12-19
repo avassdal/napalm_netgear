@@ -527,7 +527,6 @@ class NetgearDriver(NetworkDriver):
         
         for line in output.splitlines():
             line = line.strip()
-            
             if not line:
                 continue
                 
