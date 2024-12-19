@@ -3,7 +3,7 @@
 NAPALM driver for Netgear ProSafe switches. Uses Netmiko's netgear_prosafe driver for SSH connectivity. Tested with M4300 and M4250 series switches.
 
 ## Features
-- Configuration management (get, merge, replace, compare, commit)
+- Configuration management (get, merge, replace, commit)
 - Interface information (status, counters, IP addresses)
 - LLDP neighbor discovery (basic and detailed)
 - MAC address table management
@@ -20,8 +20,10 @@ NAPALM driver for Netgear ProSafe switches. Uses Netmiko's netgear_prosafe drive
 - `get_config` - Get startup, running, or all configurations with sanitization options
 - `load_merge_candidate` - Load configuration to be merged
 - `load_replace_candidate` - Load configuration to be replaced
-- `compare_config` - Compare running config with candidate
 - `commit_config` - Commit the loaded configuration
+- `compare_config` - Compare running config with candidate
+
+**Note**: `compare_config` is not yet fully implemented
 
 ### Network Information
 - `get_interfaces` - Get interface details (status, speed, description)
