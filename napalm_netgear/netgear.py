@@ -251,14 +251,37 @@ class NetgearDriver(NetworkDriver):
         res = []
         command = "show mac-addr-table"
         output = self._send_command(command)
-        fields = parseFixedLenght(["vlan", "mac", "interface", "", "status"], output.splitlines())
+        
+        # Skip header lines until we find the column headers
+        lines = output.splitlines()
+        header_line = None
+        for i, line in enumerate(lines):
+            if "VLAN ID" in line and "MAC Address" in line:
+                header_line = i
+                break
+                
+        if header_line is None:
+            return res
+            
+        # Parse the table using fixed length fields
+        fields = parseFixedLenght(
+            ["vlan", "mac", "interface", "ifindex", "status"],
+            lines[header_line:]
+        )
+        
         for item in fields:
+            if not item["mac"] or not item["vlan"]:
+                continue
+                
+            # Handle both "Management" and "Learned" status
+            is_static = item["status"].strip() == "Management"
+                
             res.append({
-                "mac": item["mac"],
-                "interface": item["interface"],
+                "mac": item["mac"].strip(),
+                "interface": item["interface"].strip(),
                 "vlan": int(item["vlan"]),
                 "active": True,
-                "static": (item["status"] == "Learned"),
+                "static": is_static,
                 "moves": -1,
                 "last_move": -1.0
             })
