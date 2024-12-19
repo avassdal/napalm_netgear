@@ -449,21 +449,45 @@ class NetgearDriver(NetworkDriver):
         command = "show interfaces status all"
         output = self._send_command(command)
         interfaces = []
+        header_found = False
+        
         for line in output.splitlines():
-            # Skip header and empty lines
-            if not line or "-----" in line or "Port" in line:
+            # Skip empty lines
+            if not line.strip():
                 continue
-            # First word in line is interface name
-            interface = line.split()[0]
-            if interface and not interface.startswith("lag"):
-                interfaces.append(interface)
+                
+            # Look for header line
+            if "Port" in line and "Name" in line and "Link" in line:
+                header_found = True
+                continue
+                
+            # Skip separator line
+            if "---------" in line:
+                continue
+                
+            # Only process lines after header
+            if header_found:
+                parts = line.split()
+                if not parts:
+                    continue
+                    
+                # Get interface name (first column)
+                interface = parts[0].strip()
+                
+                # Skip LAG and VLAN interfaces
+                if interface.startswith(("lag", "vlan")):
+                    continue
+                    
+                # Add interface if it's a valid port
+                if interface and "/" in interface:  # Physical ports have format X/Y
+                    interfaces.append(interface)
 
         return {
             'uptime': uptime,
             'vendor': 'Netgear',
-            'os_version': ver_fields.get("Software Version", ""),  # More accurate from show version
+            'os_version': ver_fields.get("Software Version", ""),
             'serial_number': ver_fields.get("Serial Number", ""),
-            'model': ver_fields.get("Machine Model", ""),  # More accurate from show version
+            'model': ver_fields.get("Machine Model", ""),
             'hostname': hostname,
             'fqdn': fqdn,
             'interface_list': interfaces
