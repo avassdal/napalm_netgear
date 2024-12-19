@@ -209,24 +209,30 @@ class NetgearDriver(NetworkDriver):
         interfaces = parseFixedLenght(["name"], output.splitlines())
         for a in interfaces:
             name = a["name"]
-            if(name.startswith("lag")):
-                break
+            if(name.startswith("lag") or name.startswith("vlan")):
+                continue
             command = "show interface %s" % name
             output = self._send_command(command)
-            stats = parseList(output.splitlines())
+            lines = output.splitlines()
+            stats = {}
+            for line in lines:
+                if ':' in line:
+                    key, value = line.split(':', 1)
+                    stats[key.strip()] = value.strip()
+            
             res[name] = {
-                'tx_errors': int(stats['Transmit Packet Errors']),
-                'rx_errors': int(stats['Packets Received With Error']),
-                'tx_discards': int(stats['Transmit Packets Discarded']),
-                'rx_discards': int(stats['Receive Packets Discarded']),
-                'tx_octets': -1,
-                'rx_octets': -1,
-                'tx_unicast_packets': int(stats['Packets Transmitted Without Errors']),
-                'rx_unicast_packets': int(stats['Packets Received Without Error']),
-                'tx_multicast_packets': -1,
-                'rx_multicast_packets': -1,
-                'tx_broadcast_packets': -1,
-                'rx_broadcast_packets': int(stats['Broadcast Packets Received']),
+                'tx_errors': int(stats.get('Transmit Packet Errors', 0)),
+                'rx_errors': int(stats.get('Packets Received With Error', 0)),
+                'tx_discards': int(stats.get('Transmit Packets Discarded', 0)),
+                'rx_discards': int(stats.get('Receive Packets Discarded', 0)),
+                'tx_octets': -1,  # Not available in output
+                'rx_octets': -1,  # Not available in output
+                'tx_unicast_packets': int(stats.get('Packets Transmitted Without Errors', 0)),
+                'rx_unicast_packets': int(stats.get('Packets Received Without Error', 0)),
+                'tx_multicast_packets': -1,  # Not available in output
+                'rx_multicast_packets': -1,  # Not available in output
+                'tx_broadcast_packets': -1,  # Not available in output
+                'rx_broadcast_packets': int(stats.get('Broadcast Packets Received', 0)),
             }
         return res
 
