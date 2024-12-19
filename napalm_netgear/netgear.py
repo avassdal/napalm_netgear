@@ -257,15 +257,34 @@ class NetgearDriver(NetworkDriver):
             })
         return res
 
-    def get_config(self, retrieve="all", full=False, sanitized=False):
-        """Implementation of get_config for Netgear Prosafe.
-
-        Returns the startup or/and running configuration as dictionary.
-        The keys of the dictionary represent the type of configuration
-        (startup or running). The candidate is always empty string,
-        since IOS does not support candidate configuration.
+    def get_config(
+        self,
+        retrieve: str = "all",
+        full: bool = False,
+        sanitized: bool = False,
+        format: str = "text",
+    ) -> models.ConfigDict:
         """
+        Return the configuration of a device.
 
+        Args:
+            retrieve(string): Which configuration type you want to populate, default is all of them.
+                              The rest will be set to "".
+            full(bool): Retrieve all the configuration. For instance, on ios, "sh run all".
+            sanitized(bool): Remove secret data. Default: ``False``.
+            format(string): The configuration format style to be retrieved.
+
+        Returns:
+          The object returned is a dictionary with a key for each configuration store:
+
+            - running(string) - Representation of the native running configuration
+            - candidate(string) - Representation of the native candidate configuration. If the
+              device doesnt differentiate between running and startup configuration this will an
+              empty string
+            - startup(string) - Representation of the native startup configuration. If the
+              device doesnt differentiate between running and startup configuration this will an
+              empty string
+        """
         # The output of get_config should be directly usable by load_replace_candidate()
         # IOS adds some extra, unneeded lines that should be filtered.
         filter_strings = [
@@ -274,7 +293,12 @@ class NetgearDriver(NetworkDriver):
         ]
         filter_pattern = generate_regex_or(filter_strings)
 
-        configs = {"startup": "", "running": "", "candidate": ""}
+        configs: models.ConfigDict = {
+            "startup": "",
+            "running": "",
+            "candidate": ""  # Netgear doesn't support candidate configuration
+        }
+
         # Netgear only supports "all" on "show run"
         run_full = " all" if full else ""
 
@@ -282,12 +306,22 @@ class NetgearDriver(NetworkDriver):
             command = "show startup-config"
             output = self._send_command(command)
             output = re.sub(filter_pattern, "", output, flags=re.M)
+            if sanitized:
+                # Remove password lines
+                output = re.sub(r"^.*password.*$", "", output, flags=re.M)
+                # Remove SNMP community strings
+                output = re.sub(r"^.*community.*$", "", output, flags=re.M)
             configs["startup"] = output.strip()
 
         if retrieve in ("running", "all"):
             command = f"show running-config{run_full}"
             output = self._send_command(command)
             output = re.sub(filter_pattern, "", output, flags=re.M)
+            if sanitized:
+                # Remove password lines
+                output = re.sub(r"^.*password.*$", "", output, flags=re.M)
+                # Remove SNMP community strings
+                output = re.sub(r"^.*community.*$", "", output, flags=re.M)
             configs["running"] = output.strip()
 
         return configs
