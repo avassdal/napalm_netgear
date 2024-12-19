@@ -420,6 +420,18 @@ class NetgearDriver(NetworkDriver):
         output = self._send_command(command)
         sys_fields = parseList(output.splitlines())
 
+        # Get hostname and domain info
+        command = "show hosts"
+        output = self._send_command(command)
+        host_fields = parseList(output.splitlines())
+        
+        hostname = host_fields.get("Host name", "")
+        domain = host_fields.get("Default domain", "")
+        if domain and "not configured" not in domain.lower():
+            fqdn = f"{hostname}.{domain}"
+        else:
+            fqdn = hostname
+
         # Parse uptime from "System Up Time: X days Y hrs Z mins W secs"
         uptime = 0.0
         if "System Up Time" in sys_fields:
@@ -463,8 +475,8 @@ class NetgearDriver(NetworkDriver):
             'os_version': os_version,
             'serial_number': ver_fields["Serial Number"],
             'model': model,
-            'hostname': sys_fields.get("System Name", ""),
-            'fqdn': sys_fields.get("System Name", ""),  # Netgear doesn't support FQDN, use hostname
+            'hostname': hostname,
+            'fqdn': fqdn,  # Now properly constructed from hostname and domain
             'interface_list': interfaces
         }
     
