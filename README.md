@@ -7,7 +7,7 @@ Uses netmiko netgear prosafe driver. Tested with M4300 and M4250.
 - Configuration management (get, merge, replace)
 - Interface information and statistics
 - LLDP neighbor discovery
-- Basic environment monitoring
+- Environment monitoring (CPU, memory, temperature, fans, power)
 - MAC address table management
 
 ## Implemented APIs
@@ -33,7 +33,7 @@ Uses netmiko netgear prosafe driver. Tested with M4300 and M4250.
 
 ### System Information
 - `get_facts` - Get basic device facts (model, serial number, OS version)
-- `get_environment` - Get basic environmental information (CPU, memory)
+- `get_environment` - Get environmental information (CPU, memory, temperature, fans, power)
 
 ## Installation
 
