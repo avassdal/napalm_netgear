@@ -608,7 +608,7 @@ class NetgearDriver(NetworkDriver):
                     state = parts[6].lower()
                     
                     environment["fans"][fan_name] = {
-                        "status": state != "stop" and state != "failed"
+                        "status": state != "failed"
                     }
 
         # Parse power supplies
