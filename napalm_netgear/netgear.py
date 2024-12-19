@@ -661,6 +661,11 @@ class NetgearDriver(NetworkDriver):
             output.splitlines()
         )
         
+        # Initialize all ports with empty lists
+        for entry in fields:
+            if entry["local_port"] and not entry["local_port"].isspace() and entry["local_port"] != "Interface":
+                lldp[entry["local_port"]] = []
+        
         current_port = None
         for entry in fields:
             # Skip header rows and empty entries
@@ -670,10 +675,8 @@ class NetgearDriver(NetworkDriver):
             # If we have a port number, this is the main entry
             if not entry["local_port"].isspace():
                 current_port = entry["local_port"]
-                # Only add ports that have neighbors
+                # Only add neighbors if we have remote info
                 if entry["remote_id"]:
-                    if current_port not in lldp:
-                        lldp[current_port] = []
                     lldp[current_port].append({
                         "hostname": entry["system_name"].strip() or entry["chassis_id"].strip(),
                         "port": entry["port_id"].strip()
@@ -709,8 +712,17 @@ class NetgearDriver(NetworkDriver):
             command = f"show lldp remote-device detail {local_port}"
             output = self._send_command(command)
             
-            # Initialize the port entry
-            lldp[local_port] = {}
+            # Initialize the port entry with default values
+            lldp[local_port] = {
+                'parent_interface': local_port,
+                'remote_port': '',
+                'remote_port_description': '',
+                'remote_chassis_id': '',
+                'remote_system_name': '',
+                'remote_system_description': '',
+                'remote_system_capab': [],
+                'remote_system_enable_capab': []
+            }
             
             # Parse the detailed output
             current_section = None
@@ -723,6 +735,10 @@ class NetgearDriver(NetworkDriver):
                 # Skip empty lines and headers
                 if not line or line.startswith("LLDP Remote Device Detail") or line == "Local Interface: " + local_port:
                     continue
+                    
+                # Skip if no LLDP data
+                if "No LLDP data has been received" in line:
+                    break
                 
                 # Parse each field
                 if line.startswith("Remote Identifier:"):
@@ -743,15 +759,5 @@ class NetgearDriver(NetworkDriver):
                 elif line.startswith("System Capabilities Enabled:"):
                     enabled_capabilities = [cap.strip() for cap in line.split(":")[1].strip().split(",")]
                     lldp[local_port]['remote_system_enable_capab'] = enabled_capabilities
-                elif line.startswith("Management Address:"):
-                    current_section = "mgmt_addr"
-                    lldp[local_port]['remote_management_address'] = {}
-                elif current_section == "mgmt_addr" and line.startswith("    Address:"):
-                    addr = line.split(":")[1].strip()
-                    if addr:
-                        lldp[local_port]['remote_management_address'] = addr
-                
-            # Set parent interface to the physical port
-            lldp[local_port]['parent_interface'] = local_port
             
         return lldp
