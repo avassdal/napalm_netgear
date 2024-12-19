@@ -426,3 +426,210 @@ class NetgearDriver(NetworkDriver):
                 "prefix_length": MAP_SUBNETMASK_PREFIXLENGTH[a["IP Mask"]]
             }
         return interfaces
+
+    def get_environment(self):
+        """
+        Returns a dictionary with the environment information of the device.
+        
+        Example:
+            {
+                "fans": {
+                    "Fan1": {
+                        "status": True
+                    }
+                },
+                "temperature": {
+                    "CPU": {
+                        "is_alert": False,
+                        "is_critical": False,
+                        "temperature": 45.0
+                    }
+                },
+                "power": {
+                    "PSU1": {
+                        "capacity": 50.0,
+                        "output": 8.3,
+                        "status": True
+                    }
+                },
+                "cpu": {
+                    "0": {
+                        "%usage": 25.32
+                    }
+                },
+                "memory": {
+                    "available_ram": 1437136,
+                    "used_ram": 613596
+                }
+            }
+        """
+        environment = {
+            "fans": {},
+            "temperature": {},
+            "power": {},
+            "cpu": {},
+            "memory": {
+                "available_ram": 0,
+                "used_ram": 0
+            }
+        }
+
+        # Get memory information
+        command = "show process memory"
+        output = self._send_command(command)
+        
+        # Parse memory information from the detailed output
+        for line in output.splitlines():
+            line = line.strip()
+            if line.startswith("Total:"):
+                # Skip this as we want free/allocated
+                continue
+            elif line.startswith("Allocated:"):
+                try:
+                    used_mem = int(line.split()[1])
+                    environment["memory"]["used_ram"] = used_mem
+                except (ValueError, IndexError):
+                    pass
+            elif line.startswith("Free:"):
+                try:
+                    free_mem = int(line.split()[1])
+                    environment["memory"]["available_ram"] = free_mem
+                except (ValueError, IndexError):
+                    pass
+
+        # Get CPU information
+        command = "show process cpu"
+        output = self._send_command(command)
+        
+        # Parse CPU information
+        for line in output.splitlines():
+            if "Total CPU Utilization" in line:
+                try:
+                    parts = line.split()
+                    # Use 5 seconds CPU utilization
+                    cpu_usage = float(parts[-3].strip("%"))
+                    environment["cpu"]["0"] = {
+                        "%usage": cpu_usage
+                    }
+                except (ValueError, IndexError):
+                    environment["cpu"]["0"] = {
+                        "%usage": -1.0
+                    }
+
+        # Get environment information
+        command = "show environment"
+        output = self._send_command(command)
+        
+        # Parse the output sections
+        sections = {}
+        current_section = None
+        current_lines = []
+        
+        for line in output.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Check for main temperature
+            if line.startswith("Temp (C)"):
+                try:
+                    temp = float(line.split(".")[-1].strip())
+                    environment["temperature"]["System"] = {
+                        "temperature": temp,
+                        "is_alert": False,
+                        "is_critical": False
+                    }
+                except (ValueError, IndexError):
+                    pass
+                continue
+                
+            # Identify sections
+            if "Temperature Sensors:" in line:
+                if current_section and current_lines:
+                    sections[current_section] = current_lines
+                current_section = "temperature_sensors"
+                current_lines = []
+            elif "Fans:" in line:
+                if current_section and current_lines:
+                    sections[current_section] = current_lines
+                current_section = "fans"
+                current_lines = []
+            elif "Power Modules:" in line:
+                if current_section and current_lines:
+                    sections[current_section] = current_lines
+                current_section = "power"
+                current_lines = []
+            elif current_section:
+                current_lines.append(line)
+        
+        # Add the last section
+        if current_section and current_lines:
+            sections[current_section] = current_lines
+            
+        # Parse temperature sensors
+        if "temperature_sensors" in sections:
+            headers = None
+            for line in sections["temperature_sensors"]:
+                if "----" in line:
+                    continue
+                if headers is None:
+                    headers = [h.lower() for h in line.split()]
+                    continue
+                    
+                parts = line.split()
+                if len(parts) >= 6:  # Ensure we have enough parts
+                    sensor_name = parts[2]  # sensor-System1, sensor-MAC, etc.
+                    try:
+                        temp = float(parts[3])
+                        state = parts[4].lower()
+                        max_temp = float(parts[5])
+                        
+                        environment["temperature"][sensor_name] = {
+                            "temperature": temp,
+                            "is_alert": state != "normal",
+                            "is_critical": state == "critical",
+                        }
+                    except (ValueError, IndexError):
+                        continue
+
+        # Parse fans
+        if "fans" in sections:
+            headers = None
+            for line in sections["fans"]:
+                if "----" in line:
+                    continue
+                if headers is None:
+                    headers = [h.lower() for h in line.split()]
+                    continue
+                    
+                parts = line.split()
+                if len(parts) >= 7:  # Ensure we have enough parts
+                    fan_name = f"Fan{parts[1]}"  # FAN-1 becomes Fan1
+                    state = parts[6].lower()
+                    
+                    environment["fans"][fan_name] = {
+                        "status": state != "stop" and state != "failed"
+                    }
+
+        # Parse power supplies
+        if "power" in sections:
+            headers = None
+            for line in sections["power"]:
+                if "----" in line:
+                    continue
+                if headers is None:
+                    headers = [h.lower() for h in line.split()]
+                    continue
+                    
+                parts = line.split()
+                if len(parts) >= 5:  # Ensure we have enough parts
+                    psu_name = f"PSU{parts[1]}"  # PS-1 becomes PSU1
+                    state = parts[4].lower()
+                    
+                    environment["power"][psu_name] = {
+                        "status": state == "operational",
+                        "capacity": -1.0,  # Power capacity not available
+                        "output": -1.0     # Power output not available
+                    }
+
+        return environment
