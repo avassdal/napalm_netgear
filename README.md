@@ -1,19 +1,87 @@
 # napalm_netgear
-NAPALM module for netgear switches
+NAPALM module for Netgear switches
 
 Uses netmiko netgear prosafe driver. Tested with M4300 and M4250.
 
-## Implemented APIs
- - open
- - close
- - get_config
- - load_merge_candidate
- - commit_config
- - get_interfaces_ip
+## Features
+- Full NAPALM interface compatibility
+- Support for configuration management
+- Interface and LLDP information retrieval
+- Environment monitoring
+- MAC address table management
 
-*partially implemented:*
- - get_mac_address_table
- - get_interfaces
- - get_interfaces_counters
- - get_facts
- - load_replace_candidate
+## Implemented APIs
+
+### Core Methods
+- `open` - Open a connection to the device
+- `close` - Close the connection to the device
+- `is_alive` - Check if the connection to the device is active
+
+### Configuration Management
+- `get_config` - Get startup, running, or all configurations
+- `load_merge_candidate` - Load configuration to be merged
+- `load_replace_candidate` - Load configuration to be replaced
+- `compare_config` - Compare loaded config with running config
+- `commit_config` - Commit the loaded configuration
+- `rollback` - Rollback to previous configuration
+
+### Network Information
+- `get_interfaces` - Get interface details including status and speed
+- `get_interfaces_ip` - Get interface IP addresses and prefixes
+- `get_interfaces_counters` - Get interface traffic statistics
+- `get_lldp_neighbors` - Get basic LLDP neighbor information
+- `get_lldp_neighbors_detail` - Get detailed LLDP neighbor information
+- `get_mac_address_table` - Get MAC address table entries
+
+### System Information
+- `get_facts` - Get device facts (model, serial number, etc.)
+- `get_environment` - Get environmental information (CPU, memory, temperature)
+
+## Installation
+
+```bash
+pip install napalm-netgear
+```
+
+## Usage
+
+```python
+from napalm import get_network_driver
+
+# Initialize driver
+driver = get_network_driver("netgear")
+device = driver(
+    hostname="192.168.1.1",
+    username="admin",
+    password="password"
+)
+
+# Open connection
+device.open()
+
+# Get device facts
+facts = device.get_facts()
+print(facts)
+
+# Get configuration
+config = device.get_config()
+print(config)
+
+# Close connection
+device.close()
+```
+
+## Supported Devices
+
+- Netgear M4300 series
+- Netgear M4250 series
+
+Other Netgear ProSafe switches may work but have not been tested.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the Public Domain - see the [LICENSE](LICENSE) file for details.
