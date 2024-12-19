@@ -16,6 +16,7 @@ from napalm.base.netmiko_helpers import netmiko_args
 from .parser import parseFixedLenght, parseList
 
 MAP_INTERFACE_SPEED = {
+    "25G Full": 25*1000,
     "10G Full": 10*1000,
     "1000 Full": 1000,
     "100 Full": 100,
@@ -161,11 +162,11 @@ class NetgearDriver(NetworkDriver):
 
         command = "show interfaces status all"
         output = self._send_command(command)
-        fields = parseFixedLenght(["name", "label", "state", "", "speed"], output.splitlines())
+        fields = parseFixedLenght(["name", "label", "state", "mode", "speed", "media", "flow", "vlan"], output.splitlines())
 
         interface_dict = {}
         for item in fields:
-            if(item["name"].startswith("lag")):
+            if(item["name"].startswith("lag") or item["name"].startswith("vlan")):
                 continue
             try:
                 speed = MAP_INTERFACE_SPEED[item["speed"]]
