@@ -527,9 +527,7 @@ class NetgearDriver(NetworkDriver):
         
         for line in output.splitlines():
             line = line.strip()
-            if not line:
-                continue
-                
+            
             # Check for main temperature
             if line.startswith("Temp (C)"):
                 try:
@@ -679,4 +677,79 @@ class NetgearDriver(NetworkDriver):
                         "port": entry["port_id"].strip()
                     })
         
+        return lldp
+
+    def get_lldp_neighbors_detail(self):
+        """
+        Returns a detailed view of the LLDP neighbors as a dictionary.
+
+        Example:
+            {
+                'local_port': {
+                    'parent_interface': 'string',
+                    'remote_port': 'string',
+                    'remote_port_description': 'string',
+                    'remote_chassis_id': 'string',
+                    'remote_system_name': 'string',
+                    'remote_system_description': 'string',
+                    'remote_system_capab': ['capabilities'],
+                    'remote_system_enable_capab': ['enabled_capabilities']
+                }
+            }
+        """
+        lldp = {}
+        
+        # First get list of ports with LLDP neighbors
+        neighbors = self.get_lldp_neighbors()
+        
+        # For each port with a neighbor, get the details
+        for local_port in neighbors:
+            command = f"show lldp remote-device detail {local_port}"
+            output = self._send_command(command)
+            
+            # Initialize the port entry
+            lldp[local_port] = {}
+            
+            # Parse the detailed output
+            current_section = None
+            capabilities = []
+            enabled_capabilities = []
+            
+            for line in output.splitlines():
+                line = line.strip()
+                
+                # Skip empty lines and headers
+                if not line or line.startswith("LLDP Remote Device Detail") or line == "Local Interface: " + local_port:
+                    continue
+                
+                # Parse each field
+                if line.startswith("Remote Identifier:"):
+                    remote_id = line.split(":")[1].strip()
+                elif line.startswith("Chassis ID:"):
+                    lldp[local_port]['remote_chassis_id'] = line.split(":")[1].strip()
+                elif line.startswith("Port ID:"):
+                    lldp[local_port]['remote_port'] = line.split(":")[1].strip()
+                elif line.startswith("System Name:"):
+                    lldp[local_port]['remote_system_name'] = line.split(":")[1].strip()
+                elif line.startswith("System Description:"):
+                    lldp[local_port]['remote_system_description'] = line.split(":")[1].strip()
+                elif line.startswith("Port Description:"):
+                    lldp[local_port]['remote_port_description'] = line.split(":")[1].strip()
+                elif line.startswith("System Capabilities Supported:"):
+                    capabilities = [cap.strip() for cap in line.split(":")[1].strip().split(",")]
+                    lldp[local_port]['remote_system_capab'] = capabilities
+                elif line.startswith("System Capabilities Enabled:"):
+                    enabled_capabilities = [cap.strip() for cap in line.split(":")[1].strip().split(",")]
+                    lldp[local_port]['remote_system_enable_capab'] = enabled_capabilities
+                elif line.startswith("Management Address:"):
+                    current_section = "mgmt_addr"
+                    lldp[local_port]['remote_management_address'] = {}
+                elif current_section == "mgmt_addr" and line.startswith("    Address:"):
+                    addr = line.split(":")[1].strip()
+                    if addr:
+                        lldp[local_port]['remote_management_address'] = addr
+                
+            # Set parent interface to the physical port
+            lldp[local_port]['parent_interface'] = local_port
+            
         return lldp
