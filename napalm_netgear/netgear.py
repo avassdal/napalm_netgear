@@ -631,30 +631,34 @@ class NetgearDriver(NetworkDriver):
                     if line.startswith(" "):
                         continue
                         
-                    # Split line into columns
-                    parts = line.split()
-                    if len(parts) >= 3:  # At least interface, remote ID, and chassis ID
-                        interface = parts[0]
-                        # Skip header rows that might appear in the middle
-                        if interface == "Interface":
-                            continue
+                    # Split line into fixed-width columns
+                    # Local Interface (10), RemID (8), Chassis ID (20), Port ID (18), System Name (18)
+                    if len(line) < 10:  # Need at least interface
+                        continue
+                        
+                    interface = line[:10].strip()
+                    # Skip header rows that might appear in the middle
+                    if interface == "Interface":
+                        continue
+                        
+                    # Skip empty interfaces
+                    if not interface:
+                        continue
+                        
+                    # Get remaining fields if present
+                    chassis_id = line[18:38].strip() if len(line) > 38 else None
+                    port_id = line[38:56].strip() if len(line) > 56 else None
+                    system_name = line[56:74].strip() if len(line) > 74 else None
+                    
+                    # Only process if we have valid data
+                    if chassis_id and any(c.isalnum() for c in chassis_id):
+                        if interface not in neighbors:
+                            neighbors[interface] = []
                             
-                        # Get remote chassis ID (MAC address)
-                        chassis_id = parts[2]  # Usually MAC address
-                        
-                        # Get port ID and system name
-                        port_id = parts[3] if len(parts) > 3 else None
-                        system_name = parts[4] if len(parts) > 4 else None
-                        
-                        # Only process if we have valid data
-                        if chassis_id and any(c.isalnum() for c in chassis_id):
-                            if interface not in neighbors:
-                                neighbors[interface] = []
-                                
-                            neighbors[interface].append({
-                                "hostname": system_name or chassis_id,  # Use system name if available
-                                "port": port_id or interface  # Use port ID if found, otherwise interface
-                            })
+                        neighbors[interface].append({
+                            "hostname": system_name or chassis_id,  # Use system name if available
+                            "port": port_id or interface  # Use port ID if found, otherwise interface
+                        })
             
             # Remove any empty interfaces
             neighbors = {k: v for k, v in neighbors.items() if v}
