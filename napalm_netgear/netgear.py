@@ -583,7 +583,18 @@ class NetgearDriver(NetworkDriver):
         return mac_entries
 
     def get_lldp_neighbors(self) -> Dict[str, List[Dict[str, str]]]:
-        """Get LLDP neighbors."""
+        """Get LLDP neighbors.
+        
+        Example:
+            >>> {
+            ...     "1/0/2": [
+            ...         {
+            ...             "hostname": "switch1",  # System name if available
+            ...             "port": "0/10"
+            ...         }
+            ...     ]
+            ... }
+        """
         
         # First try M4500 command
         try:
@@ -638,18 +649,20 @@ class NetgearDriver(NetworkDriver):
                                 cmd_verify=False
                             )
                             
-                            # Parse port ID from detail output
+                            # Parse port ID and system name from detail output
                             port_id = None
+                            system_name = None
                             for detail_line in detail_output.splitlines():
                                 if "Port ID: " in detail_line:
                                     port_id = detail_line.split("Port ID: ", 1)[1].strip()
-                                    break
+                                elif "System Name: " in detail_line:
+                                    system_name = detail_line.split("System Name: ", 1)[1].strip()
                             
                             if interface not in neighbors:
                                 neighbors[interface] = []
                                 
                             neighbors[interface].append({
-                                "hostname": chassis_id,
+                                "hostname": system_name or chassis_id,  # Use system name if available
                                 "port": port_id or interface  # Use port ID if found, otherwise interface
                             })
             
