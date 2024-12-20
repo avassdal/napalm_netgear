@@ -316,6 +316,7 @@ class NetgearDriver(NetworkDriver):
             # Split by comma and get model and version
             parts = [p.strip() for p in desc.split(",")]
             if len(parts) >= 2:
+                # Extract model from first part
                 model = parts[0].split()[0]  # First word of first part
                 version = parts[1].strip()  # Second part is version
                 
@@ -384,14 +385,12 @@ class NetgearDriver(NetworkDriver):
                 if desc:
                     parts = desc.split(",")
                     if len(parts) >= 2:
-                        # Extract model from first part
-                        model_part = parts[0].split()
-                        if "M4350" in parts[0]:
-                            # For M4350, include NETGEAR prefix
-                            model = " ".join(model_part[:2])  # "NETGEAR M4350-24X4V"
-                        else:
-                            # For other models, just take first word
-                            model = model_part[0]  # "M4250-8G2XF-PoE+"
+                        # Extract model from first part - find M4xxx model name
+                        model_part = parts[0]
+                        for word in model_part.split():
+                            if word.startswith("M4"):
+                                model = word
+                                break
                             
                         # Extract version
                         version = parts[1].strip()  # Second part is version
