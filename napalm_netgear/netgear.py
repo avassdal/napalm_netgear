@@ -320,8 +320,13 @@ class NetgearDriver(NetworkDriver):
                     
         return counters
 
-    def _clean_output_line(self, line: str) -> str:
-        """Clean up output line by removing dots and extra whitespace."""
+    def _clean_output_line(self, line: str, remove_dots: bool = True) -> str:
+        """Clean up output line by removing dots and extra whitespace.
+        
+        Args:
+            line: The line to clean
+            remove_dots: If True, remove all dots from the line. If False, keep dots.
+        """
         # First split on the field name
         if ":" in line:
             _, value = line.split(":", 1)
@@ -333,8 +338,10 @@ class NetgearDriver(NetworkDriver):
             else:
                 value = line
         
-        # Remove all dots and clean whitespace
-        value = value.replace(".", "").strip()
+        # Remove dots if requested and clean whitespace
+        if remove_dots:
+            value = value.replace(".", "")
+        value = value.strip()
         return value
 
     def _format_uptime(self, seconds: int) -> str:
@@ -427,7 +434,7 @@ class NetgearDriver(NetworkDriver):
                     parts = [p.strip() for p in desc.split(",")]
                     if len(parts) >= 2:
                         model = parts[0].split()[0]  # First word of first part
-                        os_version = parts[1].strip()  # Second part is version
+                        os_version = self._clean_output_line(parts[1], remove_dots=False)  # Keep dots in version
                 except (IndexError, ValueError) as e:
                     print(f"Error parsing system description: {str(e)}")
             elif "System Name" in line:
