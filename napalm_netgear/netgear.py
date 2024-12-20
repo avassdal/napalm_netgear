@@ -719,104 +719,40 @@ class NetgearDriver(NetworkDriver):
         )
         output += self.device.save_config(confirm=True, confirm_response="")
 
-    def open(self):
+    def open(self) -> None:
         """Open a connection to the device."""
-        device_type = "netgear_prosafe"
-        
-        # Check if required fields are present
-        if self.username == "":
-            raise ConnectionException("username is required")
-        if self.password == "":
-            raise ConnectionException("password is required")
-            
-        try:
-            netmiko_optional_args = {
-                "port": self.optional_args.get("port", 22),
-                "global_delay_factor": 1.0,  # Increased delay
-                "secret": self.password,  # Use login password as enable secret
-                "verbose": True,  # Enable verbose logging
-                "session_log": "netmiko_session.log",  # Log all session output
-                "fast_cli": False,  # Disable fast CLI mode for better reliability
-                "session_timeout": 60,  # Longer timeout
-                "auth_timeout": 30,  # Longer auth timeout
-                "banner_timeout": 20,  # Longer banner timeout
-                "conn_timeout": 30,  # Longer connection timeout
-                "allow_auto_change": True,  # Allow automatic handling of password prompts
-                "ssh_strict": False,  # Don't be strict about SSH key checking
-                "use_keys": False,  # Don't use SSH keys
-                "disabled_algorithms": {
-                    "pubkeys": ["rsa-sha2-256", "rsa-sha2-512"]  # Disable newer algorithms
-                },
+        # Set connection defaults
+        device_args = {
+            "device_type": "netgear_prosafe",
+            "host": self.hostname,
+            "username": self.username,
+            "password": self.password,
+            "port": 22,  # SSH port
+            "global_delay_factor": 1.0,
+            "secret": self.password,  # Use same password for enable
+            "verbose": True,
+            "session_log": "netmiko_session.log",
+            "fast_cli": True,  # Enable fast CLI mode
+            "session_timeout": 60,
+            "auth_timeout": 30,
+            "banner_timeout": 20,
+            "conn_timeout": 30,
+            "allow_auto_change": True,
+            "ssh_strict": False,
+            "use_keys": False,
+            "disabled_algorithms": {
+                "pubkeys": ["rsa-sha2-256", "rsa-sha2-512"]
             }
-            
-            print(f"Attempting connection with args: {netmiko_optional_args}")  # Debug output
-            
-            try:
-                print("Starting _netmiko_open...")  # Debug output
-                self.device = self._netmiko_open(
-                    device_type, netmiko_optional_args=netmiko_optional_args
-                )
-                print("_netmiko_open completed successfully")  # Debug output
-            except Exception as e:
-                print(f"Connection attempt failed: {str(e)}")  # Debug output
-                raise ConnectionException(f"Failed to connect: {str(e)}")
-            
-            print("Connection established, checking device type")  # Debug output
-            
-            # Give device time to settle
-            time.sleep(2)  # Increased sleep time
-            
-            # Clear any pending output
-            self.device.clear_buffer()
-            
-            # Disable paging
-            print("Disabling paging...")  # Debug output
-            self.device.send_command_timing(
-                "no pager",
-                strip_prompt=False,
-                strip_command=False,
-                read_timeout=10,
-                cmd_verify=False
-            )
-            
-            # Check device type and handle enable mode accordingly
-            try:
-                print("Sending show running-config command...")  # Debug output
-                # Use send_command_timing instead of send_command
-                output = self.device.send_command_timing(
-                    "show running-config",
-                    strip_prompt=False,
-                    strip_command=False,
-                    read_timeout=30,
-                    cmd_verify=False
-                )
-                print(f"Running config output: {output[:100]}...")  # Debug output (first 100 chars)
-                
-                # Check if we're already in privileged mode
-                if "#" in self.device.find_prompt():
-                    print("Already in privileged mode, skipping enable")  # Debug output
-                else:
-                    # Determine device type and enable mode requirements
-                    if "SYSTEM CONFIG FILE" in output and "GS108Tv3" in output:
-                        print("Detected GS108Tv3, enabling privileged mode")  # Debug output
-                        self._enable_mode()
-                    elif any(model in output for model in ["M4250", "M4350"]):
-                        print("Detected M4250/M4350, enabling privileged mode")  # Debug output
-                        self._enable_mode()
-                    elif "M4500" in output:
-                        print("Detected M4500, already in privileged mode")  # Debug output
-                    else:
-                        print("Unknown device type, attempting enable mode")  # Debug output
-                        self._enable_mode()
-                    
-            except Exception as e:
-                print(f"Error checking device type: {str(e)}")  # Debug output
-                # Don't raise here, try to proceed without enable mode
-                pass
-                
-        except ConnectionException as e:
-            print(f"Connection failed: {str(e)}")  # Debug output
-            raise ConnectionException(f"Cannot connect to {self.hostname}: {str(e)}")
+        }
+
+        # Update connection args from optional_args
+        device_args.update(self.optional_args)
+
+        try:
+            self.device = netmiko.ConnectHandler(**device_args)
+            self._enable_mode()
+        except (NetMikoTimeoutException, NetMikoAuthenticationException) as e:
+            raise ConnectionException(str(e))
 
     def _enable_mode(self):
         """Enter privileged mode on supported devices."""
