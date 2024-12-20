@@ -356,7 +356,7 @@ class NetgearDriver(NetworkDriver):
             dict: Facts about the device:
                 - uptime (str): System uptime
                 - vendor (str): Always "Netgear"
-                - model (str): Switch model
+                - model (str): Switch model (e.g. M4250-8G2XF-PoE+, M4350-24X4V)
                 - hostname (str): Device hostname
                 - fqdn (str): Fully qualified domain name
                 - os_version (str): Operating system version (format: XX.X.X.XX)
@@ -379,11 +379,21 @@ class NetgearDriver(NetworkDriver):
             
             if "System Description" in line:
                 # Format: "System Description............................. M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.4.26, 1.0.0.11"
+                # Or: "System Description............................. NETGEAR M4350-24X4V 24x10G Copper 4x25G Fiber Managed Switch, 14.0.2.26, B1.0.0.6"
                 desc = self._clean_output_line(line)
                 if desc:
                     parts = desc.split(",")
                     if len(parts) >= 2:
-                        model = parts[0].split()[0]  # First word of first part
+                        # Extract model from first part
+                        model_part = parts[0].split()
+                        if "M4350" in parts[0]:
+                            # For M4350, include NETGEAR prefix
+                            model = " ".join(model_part[:2])  # "NETGEAR M4350-24X4V"
+                        else:
+                            # For other models, just take first word
+                            model = model_part[0]  # "M4250-8G2XF-PoE+"
+                            
+                        # Extract version
                         version = parts[1].strip()  # Second part is version
                         # Format version if it's just digits (130426 -> 13.0.4.26)
                         if version.isdigit() and len(version) == 6:
@@ -430,7 +440,7 @@ class NetgearDriver(NetworkDriver):
                     interface_list.append(fields[0])
         
         # Sort interfaces naturally
-        interface_list.sort(key=lambda x: (int(x.split('/')[0]), int(x.split('/')[1])))
+        interface_list.sort(key=lambda x: tuple(int(n) for n in x.split('/')))
 
         # Build facts dictionary
         facts = {
