@@ -486,7 +486,7 @@ class NetgearDriver(NetworkDriver):
         print(f"\nParsed IPv4 interfaces: {interfaces_ip}")
         
         # Get IPv6 addresses
-        output = self._send_command("show ipv6 interface")
+        output = self._send_command("show ipv6 interface brief")
         print(f"\nIPv6 command output:\n{output}")
         
         if self._is_supported_command(output):

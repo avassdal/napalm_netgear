@@ -552,63 +552,42 @@ def parse_interfaces_ip(output: str) -> Dict[str, Dict[str, Dict[str, Dict[str, 
     """
     interfaces_ip = {}
     
-    # Parse output using fixed width table
-    fields = ["interface", "state", "ip", "mask", "type", "method"]
-    
-    # Find header line
-    header_line = None
-    separator_line = None
-    data_lines = []
-    
+    # Skip if no output or error
+    if not output or "Command not found" in output:
+        return interfaces_ip
+        
+    # Process each line
     for line in output.splitlines():
         line = line.strip()
-        if not line:
+        
+        # Skip empty lines, headers, prompts
+        if not line or "Interface" in line or "-" * 5 in line or line.startswith("(M4250"):
             continue
             
-        if "Interface" in line:
-            header_line = line
-        elif "-" * 5 in line:
-            separator_line = line
-        else:
-            data_lines.append(line)
-            
-    if not header_line or not separator_line:
-        return interfaces_ip
-        
-    # Find column positions from separator line
-    positions = []
-    in_separator = False
-    for i, char in enumerate(separator_line):
-        if char == "-" and not in_separator:
-            positions.append(i)
-            in_separator = True
-        elif char == " " and in_separator:
-            positions.append(i)
-            in_separator = False
-            
-    if len(positions) < 2:
-        return interfaces_ip
-        
-    # Parse each data line using column positions
-    for line in data_lines:
-        if len(line) < positions[-1]:
+        # Split on whitespace and validate fields
+        fields = line.split()
+        if len(fields) < 4:  # Need at least: interface state ip mask
             continue
             
-        # Extract fields using positions
+        # Get interface name (combine first two fields if needed)
+        interface = fields[0]
+        current_pos = 1
+        
+        if not interface.startswith("vlan"):
+            continue
+            
+        # Handle "vlan X" format
+        if interface == "vlan" and len(fields) > 1 and fields[1].isdigit():
+            interface = f"vlan{fields[1]}"
+            current_pos = 2
+            
+        # Get IP and mask (adjusting position based on interface parsing)
         try:
-            interface = line[0:positions[1]].strip().lower()
-            if not interface.startswith("vlan"):
-                continue
-                
-            # Remove space from vlan name
-            interface = interface.replace(" ", "")
-            
-            # Get IP and mask
-            ip = line[positions[2]:positions[3]].strip()
+            ip = fields[current_pos + 1].strip()
             if ip == "unassigned":
                 continue
                 
-            mask = line[positions[3]:positions[4]].strip()
+            mask = fields[current_pos + 2].strip()
             if not all(x.isdigit() for x in mask.split('.')):
                 continue
                 
@@ -629,54 +608,102 @@ def parse_interfaces_ip(output: str) -> Dict[str, Dict[str, Dict[str, Dict[str, 
     return interfaces_ip
 
 def parse_ipv6_interfaces(output: str) -> Dict[str, Dict[str, Dict[str, Dict[str, Any]]]]:
-    """Parse IPv6 addresses from 'show ipv6 interface'.
+    """Parse IPv6 addresses from 'show ipv6 interface brief'.
     
     Args:
         output: Command output to parse
         
     Returns:
         Dictionary of interfaces and their IPv6 addresses in same format as parse_interfaces_ip
+        
+    Example:
+        >>> output = '''
+        ...              Oper.
+        ... Interface    Mode     IPv6 Address/Length
+        ... -----------  -------- ---------------------------------
+        ... vlan 1       Disabled fe80::e246:eeff:fe20:6fd8/64                       [TENT]
+        ... vlan 50      Disabled fe80::e246:eeff:fe20:6fd8/64                       [TENT]
+        ... '''
+        >>> parse_ipv6_interfaces(output)
+        {
+            "vlan1": {
+                "ipv4": {},
+                "ipv6": {
+                    "fe80::e246:eeff:fe20:6fd8": {
+                        "prefix_length": 64
+                    }
+                }
+            },
+            "vlan50": {
+                "ipv4": {},
+                "ipv6": {
+                    "fe80::e246:eeff:fe20:6fd8": {
+                        "prefix_length": 64
+                    }
+                }
+            }
+        }
     """
     interfaces_ip = {}
     
-    # Skip if command not supported or no IPv6 support
-    if "IPv6 not enabled" in output:
+    # Skip if no output or error
+    if not output or "Command not found" in output:
         return interfaces_ip
         
-    # Parse output
-    current_interface = ""
+    # Process each line
     for line in output.splitlines():
         line = line.strip()
         
-        # Skip empty lines
-        if not line:
+        # Skip empty lines, headers, prompts
+        if not line or "Interface" in line or "-" * 5 in line or line.startswith("(M4250"):
             continue
             
-        # Check if line starts with vlan
-        if line.lower().startswith("vlan"):
-            current_interface = line.split()[0].lower().replace(" ", "")
+        # Split on whitespace and validate fields
+        fields = line.split()
+        if len(fields) < 3:  # Need at least: interface mode address
+            continue
+            
+        # Get interface name (combine first two fields if needed)
+        interface = fields[0]
+        current_pos = 1
+        
+        if not interface.startswith("vlan"):
+            continue
+            
+        # Handle "vlan X" format
+        if interface == "vlan" and len(fields) > 1 and fields[1].isdigit():
+            interface = f"vlan{fields[1]}"
+            current_pos = 2
+            
+        # Skip if no IPv6 address
+        ipv6_addr = None
+        for field in fields[current_pos:]:
+            if "/" in field and "::" in field:
+                ipv6_addr = field
+                break
+                
+        if not ipv6_addr:
+            continue
+            
+        # Extract address and prefix length
+        try:
+            addr, prefix = ipv6_addr.split("/")
+            prefix_length = int(prefix)
+            
+            # Remove [TENT] flag if present
+            addr = addr.split()[0]
+            
             # Initialize interface dict if needed
-            if current_interface not in interfaces_ip:
-                interfaces_ip[current_interface] = {"ipv4": {}, "ipv6": {}}
-        elif "IPv6 is enabled" in line:
+            if interface not in interfaces_ip:
+                interfaces_ip[interface] = {"ipv4": {}, "ipv6": {}}
+                
+            # Add IPv6 address
+            interfaces_ip[interface]["ipv6"][addr] = {
+                "prefix_length": prefix_length
+            }
+        except (ValueError, IndexError):
             continue
-        elif "link-local" in line.lower():
-            continue
-        elif "::" in line:  # IPv6 address line
-            # Extract address and prefix length
-            addr_parts = line.split()
-            if addr_parts:
-                ipv6_addr = addr_parts[0]
-                if "/" in ipv6_addr:
-                    addr, prefix = ipv6_addr.split("/")
-                    try:
-                        prefix_length = int(prefix)
-                        interfaces_ip[current_interface]["ipv6"][addr] = {
-                            "prefix_length": prefix_length
-                        }
-                    except (ValueError, KeyError):
-                        continue
-                        
+            
     return interfaces_ip
 
 if __name__ == '__main__':
