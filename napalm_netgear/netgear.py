@@ -1042,12 +1042,65 @@ class NetgearDriver(NetworkDriver):
                         except (ValueError, IndexError):
                             continue
 
-        # Get CPU utilization (common to both models)
+        # Get CPU utilization and memory stats (common to both models)
         command = "show process cpu"
         output = self._send_command(command)
         
         if not "Command not found" in output and not "Invalid input" in output:
+            # Log the raw output for debugging
+            self.log.debug(f"CPU/Memory command output:\n{output}")
+            
+            # Parse memory information
+            free_kb = None
+            alloc_kb = None
+            in_memory_section = False
+            
             for line in output.splitlines():
+                line = line.strip()
+                
+                # Start of memory section
+                if "Memory Utilization Report" in line:
+                    in_memory_section = True
+                    continue
+                # End of memory section
+                elif "CPU Utilization:" in line:
+                    in_memory_section = False
+                    continue
+                
+                if in_memory_section and line:
+                    self.log.debug(f"Processing memory line: {line}")
+                    if "free" in line:
+                        try:
+                            free_kb = int(line.split()[1])
+                            self.log.debug(f"Found free memory: {free_kb} KB")
+                        except (ValueError, IndexError):
+                            pass
+                    elif "alloc" in line:
+                        try:
+                            alloc_kb = int(line.split()[1])
+                            self.log.debug(f"Found allocated memory: {alloc_kb} KB")
+                        except (ValueError, IndexError):
+                            pass
+
+            if free_kb is not None and alloc_kb is not None:
+                total_kb = free_kb + alloc_kb
+                environment["memory"] = {
+                    "available_ram": total_kb * 1024,  # Convert to bytes
+                    "used_ram": alloc_kb * 1024,      # Convert to bytes
+                    "free_ram": free_kb * 1024        # Convert to bytes
+                }
+                self.log.debug(f"Set memory values - total: {total_kb}KB, used: {alloc_kb}KB, free: {free_kb}KB")
+            else:
+                self.log.debug(f"Failed to find both memory values - free: {free_kb}, alloc: {alloc_kb}")
+                environment["memory"] = {
+                    "available_ram": -1,
+                    "used_ram": -1,
+                    "free_ram": -1
+                }
+
+            # Parse CPU information
+            for line in output.splitlines():
+                line = line.strip()
                 # M4350 format: "CPU Utilization: 5%"
                 if "CPU Utilization:" in line and "%" in line:
                     try:
@@ -1080,12 +1133,8 @@ class NetgearDriver(NetworkDriver):
         output = self._send_command(command)
         
         if not "Command not found" in output and not "Invalid input" in output:
-            # Log the raw output for debugging
-            self.log.debug(f"Memory command output:\n{output}")
-            
-            # Try M4350 format first
             for line in output.splitlines():
-                if "Memory Utilization" in line and ":" in line:
+                if "Memory Utilization" in line:
                     try:
                         mem_util = float(line.split(':')[1].strip().rstrip('%'))
                         environment["memory"] = {
@@ -1093,66 +1142,7 @@ class NetgearDriver(NetworkDriver):
                             "used_ram": -1,      # Not available
                             "free_ram": -1       # Not available
                         }
-                        self.log.debug(f"Found M4350 memory format, utilization: {mem_util}%")
-                        break
                     except (ValueError, IndexError):
-                        self.log.debug("Failed to parse M4350 memory format")
                         pass
-
-            # Try M4250 format if memory is still empty
-            if not environment["memory"]:
-                free_kb = None
-                alloc_kb = None
-                for line in output.splitlines():
-                    line = line.strip()
-                    self.log.debug(f"Processing line: {line}")
-                    # More robust parsing for free memory
-                    if any(x in line.lower() for x in ["free", "available"]):
-                        try:
-                            # Split and take first number found
-                            for word in line.split():
-                                try:
-                                    val = int(word)
-                                    free_kb = val
-                                    self.log.debug(f"Found free memory: {free_kb} KB")
-                                    break
-                                except ValueError:
-                                    continue
-                        except (ValueError, IndexError):
-                            pass
-                    # More robust parsing for allocated memory
-                    elif any(x in line.lower() for x in ["alloc", "used"]):
-                        try:
-                            # Split and take first number found
-                            for word in line.split():
-                                try:
-                                    val = int(word)
-                                    alloc_kb = val
-                                    self.log.debug(f"Found allocated memory: {alloc_kb} KB")
-                                    break
-                                except ValueError:
-                                    continue
-                        except (ValueError, IndexError):
-                            pass
-                
-                if free_kb is not None and alloc_kb is not None:
-                    total_kb = free_kb + alloc_kb
-                    environment["memory"] = {
-                        "available_ram": total_kb * 1024,  # Convert to bytes
-                        "used_ram": alloc_kb * 1024,      # Convert to bytes
-                        "free_ram": free_kb * 1024        # Convert to bytes
-                    }
-                    self.log.debug(f"Set memory values - total: {total_kb}KB, used: {alloc_kb}KB, free: {free_kb}KB")
-                else:
-                    self.log.debug(f"Failed to find both memory values - free: {free_kb}, alloc: {alloc_kb}")
-                    # If we failed to parse memory values, set them to -1
-                    environment["memory"] = {
-                        "available_ram": -1,
-                        "used_ram": -1,
-                        "free_ram": -1
-                    }
-
-        else:
-            self.log.debug(f"Memory command failed or not supported. Output: {output}")
 
         return environment
