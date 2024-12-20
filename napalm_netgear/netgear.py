@@ -82,15 +82,34 @@ class NetgearDriver(NetworkDriver):
         """
         interfaces = {}
 
-        # Get interface status
-        output = self.device.send_command_timing(
-            "show interfaces status",
-            strip_prompt=False,
-            strip_command=False,
-            read_timeout=30,
-            cmd_verify=False
-        )
+        # Get interface status - try different command formats
+        commands = [
+            "show interfaces status all",  # M4250 format
+            "show port all",              # M4500 format
+            "show interface status",      # Alternate format
+        ]
         
+        output = None
+        for cmd in commands:
+            try:
+                output = self.device.send_command_timing(
+                    cmd,
+                    strip_prompt=False,
+                    strip_command=False,
+                    read_timeout=30,
+                    cmd_verify=False
+                )
+                if not "Command not found" in output and not "Incomplete command" in output:
+                    print(f"DEBUG: Found working command: {cmd}")
+                    break
+            except Exception as e:
+                print(f"DEBUG: Command {cmd} failed: {str(e)}")
+                continue
+        
+        if not output:
+            print("DEBUG: No working command found")
+            return interfaces
+            
         print(f"DEBUG: Raw interface status output:")
         print(output)
 
