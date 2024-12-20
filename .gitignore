@@ -128,3 +128,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Local test files
+test_connection.py
