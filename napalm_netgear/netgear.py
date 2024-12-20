@@ -452,6 +452,136 @@ class NetgearDriver(NetworkDriver):
         
         return facts
 
+    def get_interfaces_ip(self) -> Dict[str, Dict[str, Dict[str, Dict[str, Any]]]]:
+        """Get interface IP addresses.
+        
+        Returns:
+            dict: Interfaces and their IP addresses, formatted as:
+                {
+                    "interface": {
+                        "ipv4": {
+                            "address": {
+                                "prefix_length": int
+                            }
+                        },
+                        "ipv6": {
+                            "address": {
+                                "prefix_length": int
+                            }
+                        }
+                    }
+                }
+        
+        Example output:
+            {
+                "vlan1": {
+                    "ipv4": {
+                        "10.10.10.17": {
+                            "prefix_length": 24
+                        }
+                    },
+                    "ipv6": {}
+                }
+            }
+        """
+        interfaces_ip = {}
+
+        # Get IPv4 addresses from show ip interface brief
+        output = self._send_command("show ip interface brief")
+        
+        # Skip if command not supported
+        if not self._is_supported_command(output):
+            return interfaces_ip
+            
+        # Parse output
+        for line in output.splitlines():
+            line = line.strip()
+            
+            # Skip empty lines and headers
+            if not line or "Interface" in line or "-" * 5 in line:
+                continue
+                
+            # Split line into fields and validate
+            fields = line.split()
+            if len(fields) < 5:  # Need interface, state, IP, mask, type
+                continue
+                
+            # Extract interface name and normalize
+            interface = fields[0].strip().lower()  # e.g., "vlan 1" -> "vlan1"
+            if not interface.startswith("vlan"):
+                continue
+                
+            # Get IP address (field 2) and mask (field 3)
+            try:
+                ip = fields[2].strip()
+                if ip == "unassigned":
+                    continue
+                    
+                netmask = fields[3].strip()
+                if not all(x.isdigit() for x in netmask.split('.')):
+                    continue
+                    
+                # Convert netmask to prefix length
+                prefix_length = sum(bin(int(x)).count('1') for x in netmask.split('.'))
+                
+                # Normalize interface name (remove space)
+                interface = interface.replace(" ", "")
+                
+                # Initialize interface dict if needed
+                if interface not in interfaces_ip:
+                    interfaces_ip[interface] = {"ipv4": {}, "ipv6": {}}
+                    
+                # Add IP address
+                interfaces_ip[interface]["ipv4"][ip] = {
+                    "prefix_length": prefix_length
+                }
+            except (ValueError, IndexError) as e:
+                # Skip invalid entries
+                continue
+        
+        # Get IPv6 addresses from show ipv6 interface
+        output = self._send_command("show ipv6 interface")
+        
+        # Skip if command not supported or no IPv6 support
+        if not self._is_supported_command(output) or "IPv6 not enabled" in output:
+            return interfaces_ip
+            
+        # Parse output
+        current_interface = ""
+        for line in output.splitlines():
+            line = line.strip()
+            
+            # Skip empty lines
+            if not line:
+                continue
+                
+            # Check if line starts with vlan
+            if line.lower().startswith("vlan"):
+                current_interface = line.split()[0].lower().replace(" ", "")
+                # Initialize interface dict if needed
+                if current_interface not in interfaces_ip:
+                    interfaces_ip[current_interface] = {"ipv4": {}, "ipv6": {}}
+            elif "IPv6 is enabled" in line:
+                continue
+            elif "link-local" in line.lower():
+                continue
+            elif "::" in line:  # IPv6 address line
+                # Extract address and prefix length
+                addr_parts = line.split()
+                if addr_parts:
+                    ipv6_addr = addr_parts[0]
+                    if "/" in ipv6_addr:
+                        addr, prefix = ipv6_addr.split("/")
+                        try:
+                            prefix_length = int(prefix)
+                            interfaces_ip[current_interface]["ipv6"][addr] = {
+                                "prefix_length": prefix_length
+                            }
+                        except (ValueError, KeyError):
+                            continue
+        
+        return interfaces_ip
+
     def get_mac_address_table(self) -> list:
         """Return LLDP neighbors details."""
         # Try GS108Tv3 command first
@@ -619,120 +749,6 @@ class NetgearDriver(NetworkDriver):
                 neighbors[interface]['remote_system_enable_capab'] = value.split(",")
                 
         return neighbors
-
-    def get_interfaces_ip(self) -> Dict[str, Dict[str, Dict[str, Dict[str, Any]]]]:
-        """Get interface IP addresses.
-        
-        Returns:
-            dict: Interfaces and their IP addresses, formatted as:
-                {
-                    "interface": {
-                        "ipv4": {
-                            "address": {
-                                "prefix_length": int
-                            }
-                        },
-                        "ipv6": {
-                            "address": {
-                                "prefix_length": int
-                            }
-                        }
-                    }
-                }
-        """
-        interfaces_ip = {}
-
-        # Get IPv4 addresses from show ip interface brief
-        output = self._send_command("show ip interface brief")
-        
-        # Skip if command not supported
-        if not self._is_supported_command(output):
-            return interfaces_ip
-            
-        # Parse output
-        for line in output.splitlines():
-            line = line.strip()
-            
-            # Skip empty lines and headers
-            if not line or "Interface" in line or "-" * 5 in line:
-                continue
-                
-            # Split line into fields and validate
-            fields = line.split()
-            if len(fields) < 4:  # Need at least interface, state, IP, mask
-                continue
-                
-            # Extract interface name and normalize
-            interface = fields[0].lower()  # e.g., "vlan 1" -> "vlan1"
-            if interface.startswith("vlan"):
-                interface = interface.replace(" ", "")
-            
-            # Get IP and mask (skip if unassigned)
-            ip = fields[2]
-            if ip == "unassigned":
-                continue
-                
-            # Get netmask and convert to prefix length
-            try:
-                netmask = fields[3]
-                if not all(x.isdigit() for x in netmask.split('.')):
-                    continue
-                prefix_length = sum(bin(int(x)).count('1') for x in netmask.split('.'))
-                
-                # Initialize interface dict if needed
-                if interface not in interfaces_ip:
-                    interfaces_ip[interface] = {"ipv4": {}, "ipv6": {}}
-                    
-                # Add IP address
-                interfaces_ip[interface]["ipv4"][ip] = {
-                    "prefix_length": prefix_length
-                }
-            except (ValueError, IndexError) as e:
-                # Skip invalid entries
-                continue
-        
-        # Get IPv6 addresses from show ipv6 interface
-        output = self._send_command("show ipv6 interface")
-        
-        # Skip if command not supported or no IPv6 support
-        if not self._is_supported_command(output) or "IPv6 not enabled" in output:
-            return interfaces_ip
-            
-        # Parse output
-        current_interface = ""
-        for line in output.splitlines():
-            line = line.strip()
-            
-            # Skip empty lines
-            if not line:
-                continue
-                
-            # Check if line starts with vlan
-            if line.lower().startswith("vlan"):
-                current_interface = line.split()[0].lower().replace(" ", "")
-                # Initialize interface dict if needed
-                if current_interface not in interfaces_ip:
-                    interfaces_ip[current_interface] = {"ipv4": {}, "ipv6": {}}
-            elif "IPv6 is enabled" in line:
-                continue
-            elif "link-local" in line.lower():
-                continue
-            elif "::" in line:  # IPv6 address line
-                # Extract address and prefix length
-                addr_parts = line.split()
-                if addr_parts:
-                    ipv6_addr = addr_parts[0]
-                    if "/" in ipv6_addr:
-                        addr, prefix = ipv6_addr.split("/")
-                        try:
-                            prefix_length = int(prefix)
-                            interfaces_ip[current_interface]["ipv6"][addr] = {
-                                "prefix_length": prefix_length
-                            }
-                        except (ValueError, KeyError):
-                            continue
-        
-        return interfaces_ip
 
     def get_config(
         self,
