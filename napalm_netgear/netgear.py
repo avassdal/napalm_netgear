@@ -210,7 +210,23 @@ class NetgearDriver(NetworkDriver):
         """Get interface counters.
         
         Returns:
-            dict: Interface counters keyed by interface name
+            dict: Interface counters keyed by interface name:
+                {
+                    "interface": {
+                        "tx_errors": int,
+                        "rx_errors": int,
+                        "tx_discards": int,
+                        "rx_discards": int,
+                        "tx_octets": int,
+                        "rx_octets": int,
+                        "tx_unicast_packets": int,
+                        "rx_unicast_packets": int,
+                        "tx_multicast_packets": int,
+                        "rx_multicast_packets": int,
+                        "tx_broadcast_packets": int,
+                        "rx_broadcast_packets": int
+                    }
+                }
         """
         counters = {}
         
@@ -218,12 +234,19 @@ class NetgearDriver(NetworkDriver):
         interfaces = self.get_interfaces()
         
         for interface in interfaces:
-            command = f"show interface {interface}"
+            # Use proper interface format (0/1 instead of g1)
+            if interface.startswith('g'):
+                port_num = interface[1:]
+                interface_cmd = f"0/{port_num}"
+            else:
+                interface_cmd = interface
+                
+            command = f"show interface counters {interface_cmd}"
             output = self._send_command(command)
             
-            # Parse counter values using key-value parser
-            parsed = parse_key_value_list(output.splitlines())
-            
+            if not self._is_supported_command(output):
+                continue
+                
             # Initialize counter dict with defaults
             counters[interface] = {
                 'tx_errors': 0,
@@ -240,38 +263,56 @@ class NetgearDriver(NetworkDriver):
                 'rx_broadcast_packets': 0,
             }
             
-            # Map parsed values to counter keys
-            key_map = {
-                'Transmit Packet Errors': 'tx_errors',
-                'Packets Received With Error': 'rx_errors',
-                'Transmit Packets Discarded': 'tx_discards',
-                'Receive Packets Discarded': 'rx_discards',
-                'Bytes Transmitted': 'tx_octets',
-                'Bytes Received': 'rx_octets',
-                'Packets Transmitted Without Errors': 'tx_unicast_packets',
-                'Packets Received Without Error': 'rx_unicast_packets',
-                'Multicast Packets Transmitted': 'tx_multicast_packets',
-                'Multicast Packets Received': 'rx_multicast_packets',
-                'Broadcast Packets Transmitted': 'tx_broadcast_packets',
-                'Broadcast Packets Received': 'rx_broadcast_packets',
-                # GS108Tv3 format
-                'Total Transmit Errors': 'tx_errors',
-                'Total Receive Errors': 'rx_errors', 
-                'Total Transmit Drops': 'tx_discards',
-                'Total Receive Drops': 'rx_discards',
-                'Total Bytes Transmitted': 'tx_octets',
-                'Total Bytes Received': 'rx_octets',
-                'Unicast Packets Transmitted': 'tx_unicast_packets',
-                'Unicast Packets Received': 'rx_unicast_packets'
-            }
-            
-            for key, counter_key in key_map.items():
-                try:
-                    value = int(parsed.get(key, "0"))
-                    counters[interface][counter_key] = value
-                except ValueError:
+            # Parse counter values
+            try:
+                # Skip header lines
+                lines = [line.strip() for line in output.splitlines() if line.strip()]
+                if len(lines) < 4:  # Need header + separator + data
                     continue
                     
+                # Get data line for this interface
+                data_line = None
+                for line in lines:
+                    if interface_cmd in line:
+                        data_line = line
+                        break
+                        
+                if not data_line:
+                    continue
+                    
+                # Split data line into fields
+                fields = data_line.split()
+                if len(fields) < 11:  # Need all counter fields
+                    continue
+                    
+                # Map fields to counter keys (adjust indices based on actual output)
+                field_map = {
+                    'tx_octets': 1,
+                    'rx_octets': 2,
+                    'tx_unicast_packets': 3,
+                    'rx_unicast_packets': 4,
+                    'tx_multicast_packets': 5,
+                    'rx_multicast_packets': 6,
+                    'tx_broadcast_packets': 7,
+                    'rx_broadcast_packets': 8,
+                    'tx_errors': 9,
+                    'rx_errors': 10,
+                    'tx_discards': 11,
+                    'rx_discards': 12
+                }
+                
+                # Parse each field
+                for counter_key, index in field_map.items():
+                    try:
+                        if index < len(fields):
+                            value = int(fields[index])
+                            counters[interface][counter_key] = value
+                    except ValueError:
+                        continue
+                        
+            except Exception:
+                continue
+                
         return counters
 
     def _clean_output_line(self, line: str, remove_dots: bool = True) -> str:
