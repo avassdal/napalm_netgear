@@ -745,6 +745,7 @@ class NetgearDriver(NetworkDriver):
         
         # Parse output to get interfaces with neighbors
         lines = output.splitlines()
+        interfaces = []
         
         # Skip header lines until we find the interface listing
         header_found = False
@@ -757,25 +758,63 @@ class NetgearDriver(NetworkDriver):
                 
             # Split line and get interface if it has a RemID
             parts = line.split()
-            if len(parts) >= 4 and parts[0].startswith(("0/", "1/0/")):
+            if len(parts) >= 2 and parts[0].startswith(("0/", "1/0/")):
                 interface = parts[0]
-                hostname = parts[3]  # System Name column
-                port = parts[2]  # Port ID column
+                if parts[1].strip():  # Only add if RemID exists
+                    interfaces.append(interface)
+        
+        self.log.debug(f"Found interfaces: {interfaces}")
+        
+        # Get detailed info for each interface with neighbors
+        for interface in interfaces:
+            command = f"show lldp remote-device detail {interface}"
+            output = self._send_command(command)
+            self.log.debug(f"\nLLDP detail for {interface}:\n{output}")
+            
+            # Parse detailed output
+            neighbor = {
+                "parent_interface": interface,
+                "remote_chassis_id": "",
+                "remote_port": "",
+                "remote_port_description": "",
+                "remote_system_name": "",
+                "remote_system_description": "",
+                "remote_system_capab": [],
+                "remote_system_enable_capab": [],
+                "remote_management_address": ""
+            }
+            
+            in_capabilities = False
+            for line in output.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
                 
-                # Create neighbor entry with the available information
-                neighbor = {
-                    "parent_interface": interface,
-                    "remote_chassis_id": port,  # Use port ID as chassis ID
-                    "remote_port": port,
-                    "remote_port_description": "",
-                    "remote_system_name": hostname,
-                    "remote_system_description": "",
-                    "remote_system_capab": [],
-                    "remote_system_enable_capab": [],
-                    "remote_management_address": ""
-                }
-                
-                neighbors[interface] = [neighbor]  # List with single neighbor
+                if line.startswith("Chassis ID:"):
+                    neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
+                elif line.startswith("Port ID:"):
+                    neighbor["remote_port"] = line.split(":", 1)[1].strip()
+                elif line.startswith("System Name:"):
+                    neighbor["remote_system_name"] = line.split(":", 1)[1].strip()
+                elif line.startswith("System Description:"):
+                    neighbor["remote_system_description"] = line.split(":", 1)[1].strip()
+                elif line.startswith("Port Description:"):
+                    neighbor["remote_port_description"] = line.split(":", 1)[1].strip()
+                elif line.startswith("System Capabilities Supported:"):
+                    caps = line.split(":", 1)[1].strip()
+                    neighbor["remote_system_capab"] = [c.strip() for c in caps.split(",")]
+                elif line.startswith("System Capabilities Enabled:"):
+                    caps = line.split(":", 1)[1].strip()
+                    neighbor["remote_system_enable_capab"] = [c.strip() for c in caps.split(",")]
+                elif line.startswith("Management Address:"):
+                    # Next line will have Type: IPv4
+                    # Line after that will have Address: x.x.x.x
+                    in_capabilities = True
+                elif in_capabilities and line.startswith("Address:"):
+                    neighbor["remote_management_address"] = line.split(":", 1)[1].strip()
+                    in_capabilities = False
+            
+            neighbors[interface] = [neighbor]
         
         self.log.debug(f"Final neighbors dict: {neighbors}")
         return neighbors
