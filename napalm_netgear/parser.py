@@ -461,37 +461,43 @@ def parse_interface_status(output: str) -> List[Dict[str, str]]:
 
     # Find column positions from separator line
     positions = []
-    in_column = False
+    in_separator = False
     for i, char in enumerate(separator):
-        if char == "-" and not in_column:
+        if char == "-" and not in_separator:
             positions.append(i)
-            in_column = True
-        elif char != "-" and in_column:
-            in_column = False
-    positions.append(len(separator))
-
-    # Parse each data line
+            in_separator = True
+        elif char == " " and in_separator:
+            positions.append(i)
+            in_separator = False
+            
+    if len(positions) < 2:
+        return []
+        
+    # Parse each data line using column positions
     results = []
     for line in lines[header_index + 3:]:
-        if not line or line.startswith(("--More--", "(M4250", "(")):
+        if len(line) < positions[-1]:
             continue
-
-        # Skip LAG and VLAN interfaces
-        if line.strip().startswith(("lag ", "vlan ")):
-            continue
-
-        # Extract values based on column positions
-        values = {}
-        for i, field in enumerate(fields):
-            if i < len(positions) - 1:
-                start = positions[i]
-                end = positions[i + 1]
-                value = line[start:end].strip() if start < len(line) else ""
-                values[field] = value
-
-        if values.get("port") and "/" in values["port"]:  # Only add if we have a valid port number
+            
+        # Extract fields using positions
+        try:
+            port = line[0:positions[1]].strip()
+            if not port.startswith(("0/", "1/", "g")):  # Only add if we have a valid port number
+                continue
+                
+            # Extract values using positions
+            values = {}
+            for i, field in enumerate(fields):
+                if i < len(positions) - 1:
+                    start = positions[i]
+                    end = positions[i + 1]
+                    value = line[start:end].strip() if start < len(line) else ""
+                    values[field] = value
+                    
             results.append(values)
-
+        except (ValueError, IndexError):
+            continue
+            
     return results
 
 def parse_interfaces_ip(output: str) -> Dict[str, Dict[str, Dict[str, Dict[str, Any]]]]:
@@ -546,39 +552,68 @@ def parse_interfaces_ip(output: str) -> Dict[str, Dict[str, Dict[str, Dict[str, 
     """
     interfaces_ip = {}
     
-    # Parse output
+    # Parse output using fixed width table
+    fields = ["interface", "state", "ip", "mask", "type", "method"]
+    
+    # Find header line
+    header_line = None
+    separator_line = None
+    data_lines = []
+    
     for line in output.splitlines():
         line = line.strip()
+        if not line:
+            continue
+            
+        if "Interface" in line:
+            header_line = line
+        elif "-" * 5 in line:
+            separator_line = line
+        else:
+            data_lines.append(line)
+            
+    if not header_line or not separator_line:
+        return interfaces_ip
         
-        # Skip empty lines and headers
-        if not line or "Interface" in line or "-" * 5 in line:
+    # Find column positions from separator line
+    positions = []
+    in_separator = False
+    for i, char in enumerate(separator_line):
+        if char == "-" and not in_separator:
+            positions.append(i)
+            in_separator = True
+        elif char == " " and in_separator:
+            positions.append(i)
+            in_separator = False
+            
+    if len(positions) < 2:
+        return interfaces_ip
+        
+    # Parse each data line using column positions
+    for line in data_lines:
+        if len(line) < positions[-1]:
             continue
             
-        # Split line into fields and validate
-        fields = line.split()
-        if len(fields) < 5:  # Need interface, state, IP, mask, type
-            continue
-            
-        # Extract interface name and normalize
-        interface = fields[0].strip().lower()  # e.g., "vlan 1" -> "vlan1"
-        if not interface.startswith("vlan"):
-            continue
-            
-        # Get IP address (field 2) and mask (field 3)
+        # Extract fields using positions
         try:
-            ip = fields[2].strip()
+            interface = line[0:positions[1]].strip().lower()
+            if not interface.startswith("vlan"):
+                continue
+                
+            # Remove space from vlan name
+            interface = interface.replace(" ", "")
+            
+            # Get IP and mask
+            ip = line[positions[2]:positions[3]].strip()
             if ip == "unassigned":
                 continue
                 
-            netmask = fields[3].strip()
-            if not all(x.isdigit() for x in netmask.split('.')):
+            mask = line[positions[3]:positions[4]].strip()
+            if not all(x.isdigit() for x in mask.split('.')):
                 continue
                 
             # Convert netmask to prefix length
-            prefix_length = sum(bin(int(x)).count('1') for x in netmask.split('.'))
-            
-            # Normalize interface name (remove space)
-            interface = interface.replace(" ", "")
+            prefix_length = sum(bin(int(x)).count('1') for x in mask.split('.'))
             
             # Initialize interface dict if needed
             if interface not in interfaces_ip:
@@ -588,8 +623,7 @@ def parse_interfaces_ip(output: str) -> Dict[str, Dict[str, Dict[str, Dict[str, 
             interfaces_ip[interface]["ipv4"][ip] = {
                 "prefix_length": prefix_length
             }
-        except (ValueError, IndexError) as e:
-            # Skip invalid entries
+        except (ValueError, IndexError):
             continue
             
     return interfaces_ip
