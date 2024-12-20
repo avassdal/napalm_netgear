@@ -94,44 +94,38 @@ class NetgearDriver(NetworkDriver):
         print(f"DEBUG: Raw interface status output:")
         print(output)
 
-        # Parse interface details using parser
-        for line in output.splitlines():
-            line = line.strip()
-            if not line:
+        # Parse interface status table
+        fields = ["port", "link", "admin", "speed", "duplex", "type", "name"]
+        interface_status = parser.parse_fixed_width_table(fields, output.splitlines())
+        print(f"DEBUG: Parsed interface status: {interface_status}")
+
+        # Process each interface
+        for status in interface_status:
+            iface = status.get("port")
+            if not iface:
                 continue
 
-            # Skip command echo and headers
-            if "show interfaces status" in line or "Port" in line or "-" * 5 in line:
+            # Skip if not a valid interface name (should be like 0/1)
+            if not re.match(r'\d+/\d+', iface):
+                print(f"DEBUG: Skipping invalid interface name: {iface}")
                 continue
 
-            # Format: "0/1      Down      Disabled    Auto    Auto    Unknown    None         "
-            fields = line.split()
-            print(f"DEBUG: Processing line: {line}")
-            print(f"DEBUG: Fields: {fields}")
-            
-            if len(fields) >= 3:
-                iface = fields[0]
-                # Skip if not a valid interface name (should be like 0/1)
-                if not re.match(r'\d+/\d+', iface):
-                    print(f"DEBUG: Skipping invalid interface name: {iface}")
-                    continue
+            print(f"DEBUG: Getting details for interface {iface}")
+            # Get detailed interface info
+            detail_output = self.device.send_command_timing(
+                f"show interface {iface}",
+                strip_prompt=False,
+                strip_command=False,
+                read_timeout=30,
+                cmd_verify=False
+            )
+            print(f"DEBUG: Detail output for {iface}:")
+            print(detail_output)
 
-                print(f"DEBUG: Getting details for interface {iface}")
-                # Get detailed interface info
-                detail_output = self.device.send_command_timing(
-                    f"show interface {iface}",
-                    strip_prompt=False,
-                    strip_command=False,
-                    read_timeout=30,
-                    cmd_verify=False
-                )
-                print(f"DEBUG: Detail output for {iface}:")
-                print(detail_output)
-
-                # Parse interface details
-                details = parser.parse_interface_detail(iface, detail_output)
-                print(f"DEBUG: Parsed details for {iface}: {details}")
-                interfaces[iface] = details
+            # Parse interface details
+            details = parser.parse_interface_detail(iface, detail_output)
+            print(f"DEBUG: Parsed details for {iface}: {details}")
+            interfaces[iface] = details
 
         print(f"DEBUG: Final interfaces dict: {interfaces}")
         return interfaces
