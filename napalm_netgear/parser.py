@@ -706,6 +706,104 @@ def parse_ipv6_interfaces(output: str) -> Dict[str, Dict[str, Dict[str, Dict[str
             
     return interfaces_ip
 
+def parse_lldp_detail(output: str) -> Dict[str, Dict[str, Any]]:
+    """Parse detailed LLDP neighbor information.
+    
+    Args:
+        output: Output from 'show lldp remote-device detail <interface>'
+        
+    Returns:
+        Dictionary containing LLDP neighbor details in NAPALM format:
+        {
+            "interface": {
+                "parent_interface": str,
+                "remote_chassis_id": str,
+                "remote_port": str,
+                "remote_port_description": str,
+                "remote_system_name": str,
+                "remote_system_description": str,
+                "remote_system_capab": List[str],
+                "remote_system_enable_capab": List[str]
+            }
+        }
+        
+    Example:
+        >>> output = '''
+        ... LLDP Remote Device Detail
+        ... 
+        ... Local Interface: 0/3
+        ... 
+        ... Remote Identifier: 3
+        ... Chassis ID Subtype: MAC Address
+        ... Chassis ID: D2:21:F9:2B:2E:6F
+        ... Port ID Subtype: MAC Address
+        ... Port ID: D0:21:F9:6B:2E:6D
+        ... System Name: AP01
+        ... System Description: U6-LR, 6.6.78.15404
+        ... Port Description: eth0
+        ... System Capabilities Supported: bridge, WLAN access point, router, station only
+        ... System Capabilities Enabled: bridge, WLAN access point, router
+        ... '''
+        >>> parse_lldp_detail(output)
+        {
+            "0/3": {
+                "parent_interface": "0/3",
+                "remote_chassis_id": "D2:21:F9:2B:2E:6F",
+                "remote_port": "D0:21:F9:6B:2E:6D",
+                "remote_port_description": "eth0",
+                "remote_system_name": "AP01",
+                "remote_system_description": "U6-LR, 6.6.78.15404",
+                "remote_system_capab": ["bridge", "WLAN access point", "router", "station only"],
+                "remote_system_enable_capab": ["bridge", "WLAN access point", "router"]
+            }
+        }
+    """
+    neighbors = {}
+    current_interface = None
+    
+    for line in output.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+            
+        if line.startswith("Local Interface:"):
+            current_interface = line.split(":", 1)[1].strip()
+            neighbors[current_interface] = {
+                "parent_interface": current_interface,
+                "remote_chassis_id": "",
+                "remote_port": "",
+                "remote_port_description": "",
+                "remote_system_name": "",
+                "remote_system_description": "",
+                "remote_system_capab": [],
+                "remote_system_enable_capab": []
+            }
+            
+        elif line.startswith("Chassis ID:"):
+            neighbors[current_interface]["remote_chassis_id"] = line.split(":", 1)[1].strip()
+            
+        elif line.startswith("Port ID:"):
+            neighbors[current_interface]["remote_port"] = line.split(":", 1)[1].strip()
+            
+        elif line.startswith("System Name:"):
+            neighbors[current_interface]["remote_system_name"] = line.split(":", 1)[1].strip()
+            
+        elif line.startswith("System Description:"):
+            neighbors[current_interface]["remote_system_description"] = line.split(":", 1)[1].strip()
+            
+        elif line.startswith("Port Description:"):
+            neighbors[current_interface]["remote_port_description"] = line.split(":", 1)[1].strip()
+            
+        elif line.startswith("System Capabilities Supported:"):
+            capab = line.split(":", 1)[1].strip()
+            neighbors[current_interface]["remote_system_capab"] = [c.strip() for c in capab.split(",")]
+            
+        elif line.startswith("System Capabilities Enabled:"):
+            capab = line.split(":", 1)[1].strip()
+            neighbors[current_interface]["remote_system_enable_capab"] = [c.strip() for c in capab.split(",")]
+            
+    return neighbors
+
 if __name__ == '__main__':
     data="""(M4250-26G4XF-PoE+)#show interfaces status all
 

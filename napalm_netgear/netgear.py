@@ -709,49 +709,33 @@ class NetgearDriver(NetworkDriver):
         """
         neighbors = {}
         
-        # Get LLDP neighbors
+        # Get list of interfaces with LLDP neighbors
         command = "show lldp remote-device"
         output = self._send_command(command)
         
-        # Parse output using key-value parser
-        parsed = parse_key_value_list(output.splitlines())
+        # Parse output to get interfaces with neighbors
+        lines = output.splitlines()
+        interfaces = []
         
-        # Convert parsed data to LLDP neighbors format
-        for key, value in parsed.items():
-            if key.startswith("Interface"):
-                interface = key.split(":")[1].strip()
-                neighbors[interface] = {
-                    'parent_interface': interface,
-                    'remote_chassis_id': "",
-                    'remote_port': "",
-                    'remote_port_description': "",
-                    'remote_system_name': "",
-                    'remote_system_description': "",
-                    'remote_system_capab': [],
-                    'remote_system_enable_capab': []
-                }
-                
-            elif key.startswith("Chassis ID"):
-                neighbors[interface]['remote_chassis_id'] = value
-                
-            elif key.startswith("Port ID"):
-                neighbors[interface]['remote_port'] = value
-                
-            elif key.startswith("System Name"):
-                neighbors[interface]['remote_system_name'] = value
-                
-            elif key.startswith("Port Description"):
-                neighbors[interface]['remote_port_description'] = value
-                
-            elif key.startswith("System Description"):
-                neighbors[interface]['remote_system_description'] = value
-                
-            elif key.startswith("System Capabilities"):
-                neighbors[interface]['remote_system_capab'] = value.split(",")
-                
-            elif key.startswith("Enabled Capabilities"):
-                neighbors[interface]['remote_system_enable_capab'] = value.split(",")
-                
+        # Skip header lines
+        for line in lines[2:]:  # Skip header lines
+            if not line.strip():
+                continue
+            parts = line.split()
+            if len(parts) >= 1:
+                interface = parts[0]
+                if interface.startswith(("0/", "1/0/")):  # Valid interface names
+                    interfaces.append(interface)
+        
+        # Get detailed info for each interface with neighbors
+        for interface in interfaces:
+            command = f"show lldp remote-device detail {interface}"
+            output = self._send_command(command)
+            
+            # Parse detailed output
+            interface_neighbors = parser.parse_lldp_detail(output)
+            neighbors.update(interface_neighbors)
+        
         return neighbors
 
     def get_config(
