@@ -431,34 +431,59 @@ def parse_interface_status(output: str) -> List[Dict[str, str]]:
              'mode': '1000 Full', 'speed': 'Copper', 'type': '', 'vlan': '1'}
         ]
     """
-    # Skip header lines and empty lines
+    # Skip empty lines
     lines = [line.strip() for line in output.splitlines() if line.strip()]
     if len(lines) < 3:
         return []
         
     # Find the header line with field names
     header_line = None
-    for line in lines:
+    separator_line = None
+    for i, line in enumerate(lines):
         if "Link" in line and "Physical" in line:
             header_line = line
+            if i + 1 < len(lines) and "-" in lines[i + 1]:
+                separator_line = lines[i + 1]
             break
-    if not header_line:
+            
+    if not header_line or not separator_line:
         return []
             
     # Define field names based on M4250 format
     fields = ["port", "name", "link", "state", "mode", "speed", "type", "vlan"]
     
-    # Parse table using fixed width parser
-    data_lines = []
-    parsing = False
-    for line in lines:
-        if "---" in line:  # Start parsing after separator line
-            parsing = True
+    # Find column positions based on separator line
+    positions = []
+    current_pos = 0
+    for i, char in enumerate(separator_line):
+        if char == "-" and (i == 0 or separator_line[i-1] != "-"):
+            positions.append(current_pos)
+        current_pos += 1
+    positions.append(len(separator_line))
+    
+    # Parse each data line
+    results = []
+    for line in lines[lines.index(separator_line) + 1:]:
+        if not line or line.startswith("("):  # Skip prompt line
             continue
-        if parsing and line and not line.startswith("("):
-            data_lines.append(line)
             
-    return parse_fixed_width_table(fields, data_lines)
+        # Skip LAG and VLAN interfaces
+        if line.strip().startswith(("lag ", "vlan ")):
+            continue
+            
+        # Extract values based on column positions
+        values = {}
+        for i, field in enumerate(fields):
+            if i < len(positions) - 1:
+                start = positions[i]
+                end = positions[i + 1]
+                value = line[start:end].strip() if start < len(line) else ""
+                values[field] = value
+                
+        if values.get("port"):  # Only add if we have a port number
+            results.append(values)
+            
+    return results
 
 if __name__ == '__main__':
     data="""(M4250-26G4XF-PoE+)#show interfaces status all
