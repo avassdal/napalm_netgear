@@ -1,6 +1,6 @@
 # napalm_netgear
 
-NAPALM driver for Netgear ProSafe switches. Uses Netmiko's netgear_prosafe driver for SSH connectivity. Tested with M4300, M4250, and M4350 series switches.
+NAPALM driver for Netgear ProSafe switches. Uses Netmiko's netgear_prosafe driver for SSH connectivity. Tested with M4300, M4250, M4350 series switches and GS108Tv3.
 
 ## Features
 - Configuration management (get, merge, replace, commit)
@@ -94,6 +94,7 @@ device.close()
 - Netgear M4300 series
 - Netgear M4250 series
 - Netgear M4350 series
+- Netgear GS108Tv3
 
 Other Netgear ProSafe switches may work but have not been tested.
 
