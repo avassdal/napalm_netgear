@@ -741,11 +741,10 @@ class NetgearDriver(NetworkDriver):
         # Get list of interfaces with LLDP neighbors
         command = "show lldp remote-device all"
         output = self._send_command(command)
-        self.log.debug(f"LLDP all output:\n{output}")  # Debug
+        self.log.debug(f"LLDP all output:\n{output}")
         
         # Parse output to get interfaces with neighbors
         lines = output.splitlines()
-        interfaces = []
         
         # Skip header lines until we find the interface listing
         header_found = False
@@ -758,28 +757,27 @@ class NetgearDriver(NetworkDriver):
                 
             # Split line and get interface if it has a RemID
             parts = line.split()
-            if len(parts) >= 2 and parts[0].startswith(("0/", "1/0/")):
+            if len(parts) >= 4 and parts[0].startswith(("0/", "1/0/")):
                 interface = parts[0]
-                if parts[1].strip():  # Only add if RemID exists
-                    interfaces.append(interface)
+                hostname = parts[3]  # System Name column
+                port = parts[2]  # Port ID column
+                
+                # Create neighbor entry with the available information
+                neighbor = {
+                    "parent_interface": interface,
+                    "remote_chassis_id": port,  # Use port ID as chassis ID
+                    "remote_port": port,
+                    "remote_port_description": "",
+                    "remote_system_name": hostname,
+                    "remote_system_description": "",
+                    "remote_system_capab": [],
+                    "remote_system_enable_capab": [],
+                    "remote_management_address": ""
+                }
+                
+                neighbors[interface] = [neighbor]  # List with single neighbor
         
-        self.log.debug(f"Found interfaces: {interfaces}")  # Debug
-        
-        # Get detailed info for each interface with neighbors
-        for interface in interfaces:
-            command = f"show lldp remote-device detail {interface}"
-            output = self._send_command(command)
-            self.log.debug(f"\nLLDP detail for {interface}:\n{output}")  # Debug
-            
-            # Parse detailed output
-            interface_neighbors = parser.parse_lldp_detail(output)
-            self.log.debug(f"Parsed neighbors for {interface}: {interface_neighbors}")  # Debug
-            
-            if interface in interface_neighbors:
-                # Convert single neighbor dict to a list of neighbors
-                neighbors[interface] = [interface_neighbors[interface]]
-        
-        self.log.debug(f"Final neighbors dict: {neighbors}")  # Debug
+        self.log.debug(f"Final neighbors dict: {neighbors}")
         return neighbors
 
     def get_config(
