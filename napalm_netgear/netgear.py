@@ -349,6 +349,7 @@ class NetgearDriver(NetworkDriver):
         
         # First try M4500 command
         try:
+            # Get basic neighbor info
             output = self.device.send_command_timing(
                 "show lldp remote-device all",
                 strip_prompt=False,
@@ -388,14 +389,30 @@ class NetgearDriver(NetworkDriver):
                         # Get remote chassis ID (MAC address)
                         chassis_id = parts[2]  # Usually MAC address
                         
-                        if interface not in neighbors:
-                            neighbors[interface] = []
-                            
-                        # Only add if we have valid data
+                        # Only process if we have valid data
                         if chassis_id and any(c.isalnum() for c in chassis_id):
+                            # Get detailed info for this interface
+                            detail_output = self.device.send_command_timing(
+                                f"show lldp remote-device detail {interface}",
+                                strip_prompt=False,
+                                strip_command=False,
+                                read_timeout=10,
+                                cmd_verify=False
+                            )
+                            
+                            # Parse port ID from detail output
+                            port_id = None
+                            for detail_line in detail_output.splitlines():
+                                if "Port ID: " in detail_line:
+                                    port_id = detail_line.split("Port ID: ", 1)[1].strip()
+                                    break
+                            
+                            if interface not in neighbors:
+                                neighbors[interface] = []
+                                
                             neighbors[interface].append({
                                 "hostname": chassis_id,
-                                "port": interface
+                                "port": port_id or interface  # Use port ID if found, otherwise interface
                             })
             
             # Remove any empty interfaces
@@ -406,7 +423,7 @@ class NetgearDriver(NetworkDriver):
         except Exception as e:
             print(f"Error getting LLDP neighbors: {str(e)}")
             return {}
-            
+
     def get_lldp_neighbors_detail(self) -> dict:
         """Return detailed view of the LLDP neighbors.
         
