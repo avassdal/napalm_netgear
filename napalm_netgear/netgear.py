@@ -115,8 +115,9 @@ class NetgearDriver(NetworkDriver):
             if not iface:
                 continue
 
-            # Skip LAG/VLAN interfaces for now
-            if iface.startswith(('lag ', 'vlan ')):
+            # Skip LAG/VLAN interfaces and invalid interface names
+            if iface.startswith(('lag ', 'vlan ', '(')) or not re.match(r'\d+/\d+', iface):
+                print(f"DEBUG: Skipping invalid interface name: {iface}")
                 continue
 
             # Get interface details
