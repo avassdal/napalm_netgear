@@ -357,7 +357,7 @@ class NetgearDriver(NetworkDriver):
             dict: Facts about the device:
                 - uptime (str): System uptime
                 - vendor (str): Always "Netgear"
-                - model (str): Switch model (e.g. M4250-8G2XF-PoE+, M4350-24X4V)
+                - model (str): Switch model (e.g. M4250-8G2XF-PoE+, M4350-24X4V, GS108Tv3)
                 - hostname (str): Device hostname
                 - fqdn (str): Fully qualified domain name
                 - os_version (str): Operating system version (format: XX.X.X.XX)
@@ -381,14 +381,15 @@ class NetgearDriver(NetworkDriver):
             if "System Description" in line:
                 # Format: "System Description............................. M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.4.26, 1.0.0.11"
                 # Or: "System Description............................. NETGEAR M4350-24X4V 24x10G Copper 4x25G Fiber Managed Switch, 14.0.2.26, B1.0.0.6"
+                # Or: "System Description............................. GS108Tv3 8-Port Gigabit Smart Managed Pro Switch, 7.0.7.3"
                 desc = self._clean_output_line(line)
                 if desc:
                     parts = desc.split(",")
                     if len(parts) >= 2:
-                        # Extract model from first part - find M4xxx model name
+                        # Extract model from first part - find M4xxx or GS model name
                         model_part = parts[0]
                         for word in model_part.split():
-                            if word.startswith("M4"):
+                            if word.startswith(("M4", "GS")):
                                 model = word
                                 break
                             
