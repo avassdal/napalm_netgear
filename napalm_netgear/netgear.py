@@ -43,6 +43,7 @@ class NetgearDriver(NetworkDriver):
         self.password = password
         self.timeout = timeout
         self.optional_args = optional_args if optional_args else {}
+        self.log = logger
 
     def _send_command(self, command: str, read_timeout: Optional[int] = None) -> str:
         """Send command with optional timeout.
@@ -1080,7 +1081,7 @@ class NetgearDriver(NetworkDriver):
         
         if not "Command not found" in output and not "Invalid input" in output:
             # Log the raw output for debugging
-            logger.debug(f"Memory command output:\n{output}")
+            self.log.debug(f"Memory command output:\n{output}")
             
             # Try M4350 format first
             for line in output.splitlines():
@@ -1092,10 +1093,10 @@ class NetgearDriver(NetworkDriver):
                             "used_ram": -1,      # Not available
                             "free_ram": -1       # Not available
                         }
-                        logger.debug(f"Found M4350 memory format, utilization: {mem_util}%")
+                        self.log.debug(f"Found M4350 memory format, utilization: {mem_util}%")
                         break
                     except (ValueError, IndexError):
-                        logger.debug("Failed to parse M4350 memory format")
+                        self.log.debug("Failed to parse M4350 memory format")
                         pass
 
             # Try M4250 format if memory is still empty
@@ -1104,7 +1105,7 @@ class NetgearDriver(NetworkDriver):
                 alloc_kb = None
                 for line in output.splitlines():
                     line = line.strip()
-                    logger.debug(f"Processing line: {line}")
+                    self.log.debug(f"Processing line: {line}")
                     # More robust parsing for free memory
                     if any(x in line.lower() for x in ["free", "available"]):
                         try:
@@ -1113,7 +1114,7 @@ class NetgearDriver(NetworkDriver):
                                 try:
                                     val = int(word)
                                     free_kb = val
-                                    logger.debug(f"Found free memory: {free_kb} KB")
+                                    self.log.debug(f"Found free memory: {free_kb} KB")
                                     break
                                 except ValueError:
                                     continue
@@ -1127,7 +1128,7 @@ class NetgearDriver(NetworkDriver):
                                 try:
                                     val = int(word)
                                     alloc_kb = val
-                                    logger.debug(f"Found allocated memory: {alloc_kb} KB")
+                                    self.log.debug(f"Found allocated memory: {alloc_kb} KB")
                                     break
                                 except ValueError:
                                     continue
@@ -1141,14 +1142,17 @@ class NetgearDriver(NetworkDriver):
                         "used_ram": alloc_kb * 1024,      # Convert to bytes
                         "free_ram": free_kb * 1024        # Convert to bytes
                     }
-                    logger.debug(f"Set memory values - total: {total_kb}KB, used: {alloc_kb}KB, free: {free_kb}KB")
+                    self.log.debug(f"Set memory values - total: {total_kb}KB, used: {alloc_kb}KB, free: {free_kb}KB")
                 else:
-                    logger.debug(f"Failed to find both memory values - free: {free_kb}, alloc: {alloc_kb}")
+                    self.log.debug(f"Failed to find both memory values - free: {free_kb}, alloc: {alloc_kb}")
                     # If we failed to parse memory values, set them to -1
                     environment["memory"] = {
                         "available_ram": -1,
                         "used_ram": -1,
                         "free_ram": -1
                     }
+
+        else:
+            self.log.debug(f"Memory command failed or not supported. Output: {output}")
 
         return environment
