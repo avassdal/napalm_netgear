@@ -4,7 +4,7 @@ import socket
 from typing import Dict, List, Optional, Any, Union, Tuple
 import time
 import re
-import parser  # Import parser at the top
+from . import parser  # Use relative import
 
 from napalm.base.base import NetworkDriver
 from napalm.base.exceptions import ConnectionClosedException, ConnectionException, CommandErrorException
@@ -707,7 +707,7 @@ class NetgearDriver(NetworkDriver):
                 "no pager",
                 strip_prompt=False,
                 strip_command=False,
-                read_timeout=10,  # Increased timeout
+                read_timeout=10,
                 cmd_verify=False
             )
             
@@ -719,7 +719,7 @@ class NetgearDriver(NetworkDriver):
                     "show running-config",
                     strip_prompt=False,
                     strip_command=False,
-                    read_timeout=30,  # Increased timeout
+                    read_timeout=30,
                     cmd_verify=False
                 )
                 print(f"Running config output: {output[:100]}...")  # Debug output (first 100 chars)
