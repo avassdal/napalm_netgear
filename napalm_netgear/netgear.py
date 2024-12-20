@@ -355,6 +355,7 @@ class NetgearDriver(NetworkDriver):
         model = ""
         hostname = ""
         serial_number = ""
+        os_version = ""
         
         for line in sysinfo_output.splitlines():
             line = line.strip()
@@ -381,9 +382,16 @@ class NetgearDriver(NetworkDriver):
                     print(f"Error parsing uptime: {str(e)}")
                     uptime = 0
             elif "System Description" in line:
-                # Get model from description
-                desc_parts = line.split(".", 1)[1].strip().split(",")[0].strip().split()
-                model = desc_parts[0] if desc_parts else ""
+                # Format: "System Description............................. M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.4.26, 1.0.0.11"
+                try:
+                    desc = line.split(".", 1)[1].strip()
+                    # Split by comma and get model and version
+                    parts = [p.strip() for p in desc.split(",")]
+                    if len(parts) >= 2:
+                        model = parts[0].split()[0]  # First word of first part
+                        os_version = parts[1].strip()  # Second part is version
+                except (IndexError, ValueError) as e:
+                    print(f"Error parsing system description: {str(e)}")
             elif "System Name" in line:
                 hostname = line.split(".", 1)[1].strip()
         
@@ -414,7 +422,7 @@ class NetgearDriver(NetworkDriver):
             "model": model,
             "hostname": hostname,
             "fqdn": f"{hostname}.{domain}" if domain else hostname,
-            "os_version": "13.0.4.26",  # TODO: Get from version output
+            "os_version": os_version,
             "serial_number": serial_number,
             "interface_list": sorted(interface_list)
         }
