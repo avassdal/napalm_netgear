@@ -585,12 +585,22 @@ class NetgearDriver(NetworkDriver):
     def get_lldp_neighbors(self) -> Dict[str, List[Dict[str, str]]]:
         """Get LLDP neighbors.
         
-        Example:
+        Example M4350:
             >>> {
             ...     "1/0/2": [
             ...         {
             ...             "hostname": "P3-4250-KONTOR",  # System name if available
             ...             "port": "0/10"
+            ...         }
+            ...     ]
+            ... }
+            
+        Example M4250:
+            >>> {
+            ...     "0/10": [
+            ...         {
+            ...             "hostname": "P4-4350-01",  # System name if available
+            ...             "port": "1/0/2"
             ...         }
             ...     ]
             ... }
@@ -632,7 +642,7 @@ class NetgearDriver(NetworkDriver):
                         continue
                         
                     # Split line into fixed-width columns
-                    # Local Interface (10), RemID (8), Chassis ID (20), Port ID (18), System Name (20)
+                    # Local Interface (10), RemID (8), Chassis ID (20), Port ID (20), System Name (20)
                     if len(line) < 10:  # Need at least interface
                         continue
                         
@@ -647,13 +657,17 @@ class NetgearDriver(NetworkDriver):
                         
                     # Get remaining fields if present
                     chassis_id = line[18:38].strip() if len(line) > 38 else None
-                    port_id = line[38:56].strip() if len(line) > 56 else None
-                    system_name = line[56:76].strip() if len(line) > 76 else None
+                    port_id = line[38:58].strip() if len(line) > 58 else None  # Increased width to 20
+                    system_name = line[58:78].strip() if len(line) > 78 else None  # Adjusted start
                     
                     # Only process if we have valid data
                     if chassis_id and any(c.isalnum() for c in chassis_id):
                         if interface not in neighbors:
                             neighbors[interface] = []
+                            
+                        # Clean up system name (remove extra spaces)
+                        if system_name:
+                            system_name = ' '.join(system_name.split())
                             
                         neighbors[interface].append({
                             "hostname": system_name or chassis_id,  # Use system name if available
