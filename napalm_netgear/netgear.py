@@ -629,6 +629,8 @@ class NetgearDriver(NetworkDriver):
             # Skip header lines and empty lines
             lines = [line.strip() for line in output.splitlines() if line.strip()]
             header_found = False
+            column_starts = []
+            column_ends = []
             
             for line in lines:
                 if "LLDP Remote Device Summary" in line:
@@ -636,23 +638,34 @@ class NetgearDriver(NetworkDriver):
                     
                 if "Interface" in line and "RemID" in line:
                     header_found = True
+                    header_line = line
                     continue
                     
-                if header_found and line:
-                    # Skip separator lines
-                    if "-" in line and not any(c.isalnum() for c in line):
-                        continue
+                if header_found and "-" in line and not any(c.isalnum() for c in line):
+                    # Found separator line, calculate column positions
+                    current_pos = 0
+                    in_column = False
+                    
+                    for i, char in enumerate(line):
+                        if char == "-" and not in_column:
+                            column_starts.append(current_pos)
+                            in_column = True
+                        elif char == " " and in_column:
+                            column_ends.append(current_pos)
+                            in_column = False
+                        current_pos += 1
                         
+                    if in_column:
+                        column_ends.append(current_pos)
+                    continue
+                    
+                if header_found and column_starts and line:
                     # Skip OUI lines (indented)
                     if line.startswith(" "):
                         continue
                         
-                    # Split line into fixed-width columns based on header
-                    # Local Interface (10), RemID (8), Chassis ID (20), Port ID (20), System Name (20), OUI (12)
-                    if len(line) < 10:  # Need at least interface
-                        continue
-                        
-                    interface = line[:10].strip()
+                    # Get fields using column positions
+                    interface = line[column_starts[0]:column_ends[0]].strip()
                     # Skip header rows that might appear in the middle
                     if interface == "Interface":
                         continue
@@ -662,9 +675,9 @@ class NetgearDriver(NetworkDriver):
                         continue
                         
                     # Get remaining fields if present
-                    chassis_id = line[18:38].strip() if len(line) > 38 else None
-                    port_id = line[40:60].strip() if len(line) > 60 else None  # Adjusted offset
-                    system_name = line[62:82].strip() if len(line) > 82 else None  # Adjusted offset
+                    chassis_id = line[column_starts[2]:column_ends[2]].strip() if len(column_starts) > 2 else None
+                    port_id = line[column_starts[3]:column_ends[3]].strip() if len(column_starts) > 3 else None
+                    system_name = line[column_starts[4]:column_ends[4]].strip() if len(column_starts) > 4 else None
                     
                     # Only process if we have valid data
                     if chassis_id and any(c.isalnum() for c in chassis_id):
