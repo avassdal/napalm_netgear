@@ -119,7 +119,7 @@ class NetgearDriver(NetworkDriver):
             lines.pop(0)
             
         # Parse interface status table starting from separator line
-        fields = ["port", "name", "link", "admin", "speed", "duplex", "media", "flow_control", "vlan"]
+        fields = ["port", "name", "link_state", "physical_mode", "physical_status", "media_type", "flow_control", "vlan"]
         interface_status = parser.parse_fixed_width_table(fields, lines)
         print(f"DEBUG: Parsed interface status: {interface_status}")
 
@@ -150,9 +150,9 @@ class NetgearDriver(NetworkDriver):
             details = {
                 'mac_address': '',  # Not available in show interface output
                 'description': status.get('name', ''),
-                'is_enabled': status.get('admin', '').lower() != 'disabled',
-                'is_up': status.get('link', '').lower() == 'up',
-                'speed': float(status.get('speed', '0').replace('Full', '').replace('Auto', '0').strip()) if status.get('speed') else 0.0,
+                'is_enabled': status.get('physical_mode', '').lower() != 'disabled',
+                'is_up': status.get('link_state', '').lower() == 'up',
+                'speed': float(status.get('physical_status', '0').replace('Full', '').replace('Auto', '0').strip()) if status.get('physical_status') else 0.0,
                 'mtu': 1500,  # Default MTU
                 'last_flapped': -1.0
             }
