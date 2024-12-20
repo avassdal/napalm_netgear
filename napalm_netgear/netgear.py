@@ -227,6 +227,24 @@ class NetgearDriver(NetworkDriver):
                         "rx_broadcast_packets": int
                     }
                 }
+                
+        Example:
+            >>> {
+            ...     "0/1": {
+            ...         "tx_errors": 0,
+            ...         "rx_errors": 0,
+            ...         "tx_discards": 0,
+            ...         "rx_discards": 0,
+            ...         "tx_octets": 0,
+            ...         "rx_octets": 1234567,
+            ...         "tx_unicast_packets": 0,
+            ...         "rx_unicast_packets": 1234,
+            ...         "tx_multicast_packets": 0,
+            ...         "rx_multicast_packets": 12,
+            ...         "tx_broadcast_packets": 0,
+            ...         "rx_broadcast_packets": 7
+            ...     }
+            ... }
         """
         counters = {}
         
@@ -265,10 +283,6 @@ class NetgearDriver(NetworkDriver):
                 interface = fields[0]
                 if interface.startswith("ch"):
                     continue  # Skip channel interfaces
-                    
-                # Convert 0/X to gX format
-                if interface.startswith("0/"):
-                    interface = f"g{interface[2:]}"
                     
                 # Initialize counter dict with defaults
                 counters[interface] = {
