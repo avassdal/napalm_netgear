@@ -344,71 +344,52 @@ class NetgearDriver(NetworkDriver):
                 
         return mac_entries
 
-    def get_lldp_neighbors(self) -> dict:
-        """Return LLDP neighbors details."""
-        # Try GS108Tv3 command first
-        command = "show lldp neighbor"
-        output = self._send_command(command)
+    def get_lldp_neighbors(self) -> Dict[str, List[Dict[str, str]]]:
+        """Get LLDP neighbors."""
         
-        if "Device ID" in output and "Port ID" in output:  # GS108Tv3 format
-            return parse_gs108tv3_lldp_neighbors(output)
+        # First try M4500 command
+        try:
+            output = self.device.send_command_timing(
+                "show lldp remote-device all",
+                strip_prompt=False,
+                strip_command=False,
+                read_timeout=30,  # Longer timeout
+                cmd_verify=False
+            )
             
-        # Try M4250/M4350/M4500 format
-        command = "show lldp remote-device all"
-        output = self._send_command(command)
-        
-        neighbors = {}
-        # Skip header lines
-        lines = output.splitlines()
-        header_found = False
-        
-        for line in lines:
-            if "Interface" in line and "Remote ID" in line:
-                header_found = True
-                continue
+            # Parse the output
+            neighbors = {}
             
-            if not header_found:
-                continue
+            # Skip header lines and empty lines
+            lines = [line.strip() for line in output.splitlines() if line.strip()]
+            header_found = False
             
-            # Skip separator lines
-            if "-" * 5 in line:
-                continue
+            for line in lines:
+                if "Interface" in line and "RemID" in line:
+                    header_found = True
+                    continue
+                    
+                if header_found and line:
+                    # Split line into columns
+                    parts = line.split()
+                    if len(parts) >= 3:  # At least interface, remote ID, and chassis ID
+                        interface = parts[0]
+                        hostname = parts[2]  # Chassis ID is typically the hostname
+                        
+                        if interface not in neighbors:
+                            neighbors[interface] = []
+                            
+                        neighbors[interface].append({
+                            "hostname": hostname,
+                            "port": parts[0]  # Using local interface as port for now
+                        })
             
-            # Parse fields
-            fields = line.split()
-            if len(fields) < 3:
-                continue
+            return neighbors
             
-            try:
-                local_port = fields[0]
-                remote_id = fields[1]
-                remote_port = fields[2]
-            except IndexError:
-                continue
+        except Exception as e:
+            print(f"Error getting LLDP neighbors: {str(e)}")
+            return {}
             
-            # Get remote system name
-            command = f"show lldp remote-device detail {local_port}"
-            detail_output = self._send_command(command)
-            remote_name = ""
-            
-            for detail_line in detail_output.splitlines():
-                if "System Name:" in detail_line:
-                    remote_name = detail_line.split(":", 1)[1].strip()
-                    break
-            
-            # Initialize interface if not present
-            if local_port not in neighbors:
-                neighbors[local_port] = []
-            
-            # Add neighbor
-            neighbor = {
-                "hostname": remote_name or remote_id,  # Use ID if name not found
-                "port": remote_port
-            }
-            neighbors[local_port].append(neighbor)
-            
-        return neighbors
-
     def get_lldp_neighbors_detail(self) -> dict:
         """Return detailed view of the LLDP neighbors.
         
@@ -588,15 +569,15 @@ class NetgearDriver(NetworkDriver):
         try:
             netmiko_optional_args = {
                 "port": self.optional_args.get("port", 22),
-                "global_delay_factor": 0.5,  # Even shorter delay
+                "global_delay_factor": 1.0,  # Increased delay
                 "secret": self.password,  # Use login password as enable secret
                 "verbose": True,  # Enable verbose logging
                 "session_log": "netmiko_session.log",  # Log all session output
-                "fast_cli": True,  # Enable fast CLI mode
-                "session_timeout": 5,  # Very short timeout
-                "auth_timeout": 5,  # Very short auth timeout
-                "banner_timeout": 2,  # Very short banner timeout
-                "conn_timeout": 5,  # Very short connection timeout
+                "fast_cli": False,  # Disable fast CLI mode for better reliability
+                "session_timeout": 60,  # Longer timeout
+                "auth_timeout": 30,  # Longer auth timeout
+                "banner_timeout": 20,  # Longer banner timeout
+                "conn_timeout": 30,  # Longer connection timeout
                 "allow_auto_change": True,  # Allow automatic handling of password prompts
                 "ssh_strict": False,  # Don't be strict about SSH key checking
                 "use_keys": False,  # Don't use SSH keys
@@ -620,7 +601,7 @@ class NetgearDriver(NetworkDriver):
             print("Connection established, checking device type")  # Debug output
             
             # Give device time to settle
-            time.sleep(1)
+            time.sleep(2)  # Increased sleep time
             
             # Clear any pending output
             self.device.clear_buffer()
@@ -631,7 +612,7 @@ class NetgearDriver(NetworkDriver):
                 "no pager",
                 strip_prompt=False,
                 strip_command=False,
-                read_timeout=2,
+                read_timeout=10,  # Increased timeout
                 cmd_verify=False
             )
             
@@ -643,7 +624,7 @@ class NetgearDriver(NetworkDriver):
                     "show running-config",
                     strip_prompt=False,
                     strip_command=False,
-                    read_timeout=5,
+                    read_timeout=30,  # Increased timeout
                     cmd_verify=False
                 )
                 print(f"Running config output: {output[:100]}...")  # Debug output (first 100 chars)
