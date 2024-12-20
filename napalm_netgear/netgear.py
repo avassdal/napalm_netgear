@@ -343,108 +343,63 @@ class NetgearDriver(NetworkDriver):
 
     def get_facts(self) -> Dict[str, Any]:
         """Return a set of facts from the devices."""
-        
-        # Get device info
-        version_output = self.device.send_command_timing(
-            "show version",
-            strip_prompt=False,
-            strip_command=False,
-            read_timeout=30,
-            cmd_verify=False
-        )
-        
-        # Get hostname
-        hostname_output = self.device.send_command_timing(
-            "show hosts",
-            strip_prompt=False,
-            strip_command=False,
-            read_timeout=30,
-            cmd_verify=False
-        )
-        
-        # Get system info including uptime
-        sysinfo_output = self.device.send_command_timing(
-            "show sysinfo",
-            strip_prompt=False,
-            strip_command=False,
-            read_timeout=30,
-            cmd_verify=False
-        )
-        
-        print("Debug sysinfo output:")
-        print(sysinfo_output)
-        
-        # Parse uptime and system info
-        uptime = 0
-        model = ""
-        hostname = ""
-        serial_number = ""
-        os_version = ""
-        
-        for line in sysinfo_output.splitlines():
-            line = line.strip()
-            if "System Up Time" in line:
-                # Format: "System Up Time................................. 25 days 4 hrs 20 mins 53 secs"
-                try:
-                    time_str = self._clean_output_line(line)
-                    parts = time_str.lower().split()
-                    
-                    # Convert to seconds
-                    for i in range(0, len(parts), 2):
-                        value = float(parts[i])
-                        unit = parts[i+1].rstrip('s')  # Remove trailing 's' if present
-                        
-                        if unit.startswith('day'):
-                            uptime += value * 86400
-                        elif unit.startswith('hr'):
-                            uptime += value * 3600
-                        elif unit.startswith('min'):
-                            uptime += value * 60
-                        elif unit.startswith('sec'):
-                            uptime += value
-                except (ValueError, IndexError) as e:
-                    print(f"Error parsing uptime: {str(e)}")
-                    uptime = 0
-            elif "System Description" in line:
-                # Format: "System Description............................. M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.4.26, 1.0.0.11"
-                desc = self._clean_output_line(line)
-                model, os_version = self._parse_version(desc)
-            elif "System Name" in line:
-                hostname = self._clean_output_line(line)
-        
-        # Get serial number from version output if not in sysinfo
-        if not serial_number:
-            for line in version_output.splitlines():
-                if "Serial Number" in line:
-                    serial_number = self._clean_output_line(line)
-                    serial_number = serial_number.split()[0] if serial_number else ""
-                    break
-        
-        # Get domain from hostname output
-        domain = ""
-        for line in hostname_output.splitlines():
-            if "Default domain" in line and "not configured" not in line.lower():
-                domain = self._clean_output_line(line)
-                domain = domain.split()[0] if domain else ""
-                break
-        
-        # Get interfaces
-        interfaces = self.get_interfaces()
-        interface_list = sorted(interfaces.keys(), key=lambda x: (int(x.split('/')[0]), int(x.split('/')[1])))
+        # Get system info
+        cmd = "show sysinfo"
+        output = self._send_command(cmd)
+        print(f"Debug sysinfo output:\n{cmd}\n\n{output}")
 
-        # Build facts dictionary
-        facts = {
-            "uptime": self._format_uptime(int(uptime)),  # Format uptime as string
+        # Parse system description
+        desc = ""
+        uptime = ""
+        hostname = ""
+        for line in output.splitlines():
+            if "System Description" in line:
+                desc = line.split(".")[-1].strip()
+            elif "System Up Time" in line:
+                uptime = line.split(".")[-1].strip()
+            elif "System Name" in line:
+                hostname = line.split(".")[-1].strip()
+
+        # Parse model and version from description
+        model, version = self._parse_version(desc)
+
+        # Get interface list from status command
+        interfaces = []
+        cmd = "show interfaces status all"
+        output = self._send_command(cmd)
+        print(f"Sending command: {cmd}")
+        print(f"No read_timeout specified")
+        print(f"Command output: {cmd}\n\n{output[:50]}...")
+
+        # Parse interface list from status output
+        for line in output.splitlines():
+            if not line.strip():
+                continue
+            # Skip header lines
+            if any(x in line for x in ["Link", "Port", "------"]):
+                continue
+            # Extract interface name
+            parts = line.split()
+            if not parts:
+                continue
+            iface = parts[0]
+            # Skip LAG/VLAN interfaces
+            if iface.startswith(("lag ", "vlan ", "(")):
+                continue
+            # Only add physical interfaces
+            if re.match(r'\d+/\d+', iface):
+                interfaces.append(iface)
+
+        return {
+            "uptime": uptime,
             "vendor": "Netgear",
             "model": model,
             "hostname": hostname,
-            "fqdn": f"{hostname}.{domain}" if domain else hostname,
-            "os_version": os_version,
-            "serial_number": serial_number,
-            "interface_list": interface_list
+            "fqdn": hostname,  # FQDN not available, use hostname
+            "os_version": version,
+            "serial_number": "",  # Serial number not available in sysinfo
+            "interface_list": sorted(interfaces)
         }
-        
-        return facts
 
     def get_mac_address_table(self) -> list:
         """Return LLDP neighbors details."""
