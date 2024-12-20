@@ -38,27 +38,29 @@ class NetgearDriver(NetworkDriver):
         self.timeout = timeout
         self.optional_args = optional_args if optional_args else {}
 
-    def _send_command(self, command, read_timeout=None):
-        """Send command with optional timeout."""
+    def _send_command(self, command: str, read_timeout: Optional[int] = None) -> str:
+        """Send command with optional timeout.
+        
+        Args:
+            command: Command to send
+            read_timeout: Read timeout in seconds, defaults to 10
+            
+        Returns:
+            Command output as string
+        """
+        if not read_timeout:
+            read_timeout = 10  # Default timeout
+            
         try:
             print(f"Sending command: {command}")  # Debug output
-            if read_timeout:
-                print(f"Using read_timeout: {read_timeout}")  # Debug output
-                output = self.device.send_command_timing(
-                    command,
-                    strip_prompt=False,
-                    strip_command=False,
-                    read_timeout=read_timeout,
-                    cmd_verify=False  # Don't verify command echo
-                )
-            else:
-                print("No read_timeout specified")  # Debug output
-                output = self.device.send_command_timing(
-                    command,
-                    strip_prompt=False,
-                    strip_command=False,
-                    cmd_verify=False  # Don't verify command echo
-                )
+            print(f"Using read_timeout: {read_timeout}")  # Debug output
+            output = self.device.send_command_timing(
+                command,
+                strip_prompt=False,
+                strip_command=False,
+                read_timeout=read_timeout,
+                cmd_verify=False  # Don't verify command echo
+            )
             print(f"Command output: {output[:100]}...")  # Debug output (first 100 chars)
             return output
         except Exception as e:
