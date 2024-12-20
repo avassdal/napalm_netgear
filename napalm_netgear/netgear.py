@@ -28,6 +28,10 @@ from napalm_netgear.parser import (
     parse_ipv6_interfaces,
 )
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class NetgearDriver(NetworkDriver):
     """Netgear Driver."""
 
@@ -1076,7 +1080,7 @@ class NetgearDriver(NetworkDriver):
         
         if not "Command not found" in output and not "Invalid input" in output:
             # Log the raw output for debugging
-            print(f"DEBUG: Memory command output:\n{output}")
+            logger.debug(f"Memory command output:\n{output}")
             
             # Try M4350 format first
             for line in output.splitlines():
@@ -1088,10 +1092,10 @@ class NetgearDriver(NetworkDriver):
                             "used_ram": -1,      # Not available
                             "free_ram": -1       # Not available
                         }
-                        print(f"DEBUG: Found M4350 memory format, utilization: {mem_util}%")
+                        logger.debug(f"Found M4350 memory format, utilization: {mem_util}%")
                         break
                     except (ValueError, IndexError):
-                        print("DEBUG: Failed to parse M4350 memory format")
+                        logger.debug("Failed to parse M4350 memory format")
                         pass
 
             # Try M4250 format if memory is still empty
@@ -1100,7 +1104,7 @@ class NetgearDriver(NetworkDriver):
                 alloc_kb = None
                 for line in output.splitlines():
                     line = line.strip()
-                    print(f"DEBUG: Processing line: {line}")
+                    logger.debug(f"Processing line: {line}")
                     # More robust parsing for free memory
                     if any(x in line.lower() for x in ["free", "available"]):
                         try:
@@ -1109,7 +1113,7 @@ class NetgearDriver(NetworkDriver):
                                 try:
                                     val = int(word)
                                     free_kb = val
-                                    print(f"DEBUG: Found free memory: {free_kb} KB")
+                                    logger.debug(f"Found free memory: {free_kb} KB")
                                     break
                                 except ValueError:
                                     continue
@@ -1123,7 +1127,7 @@ class NetgearDriver(NetworkDriver):
                                 try:
                                     val = int(word)
                                     alloc_kb = val
-                                    print(f"DEBUG: Found allocated memory: {alloc_kb} KB")
+                                    logger.debug(f"Found allocated memory: {alloc_kb} KB")
                                     break
                                 except ValueError:
                                     continue
@@ -1137,8 +1141,14 @@ class NetgearDriver(NetworkDriver):
                         "used_ram": alloc_kb * 1024,      # Convert to bytes
                         "free_ram": free_kb * 1024        # Convert to bytes
                     }
-                    print(f"DEBUG: Set memory values - total: {total_kb}KB, used: {alloc_kb}KB, free: {free_kb}KB")
+                    logger.debug(f"Set memory values - total: {total_kb}KB, used: {alloc_kb}KB, free: {free_kb}KB")
                 else:
-                    print(f"DEBUG: Failed to find both memory values - free: {free_kb}, alloc: {alloc_kb}")
+                    logger.debug(f"Failed to find both memory values - free: {free_kb}, alloc: {alloc_kb}")
+                    # If we failed to parse memory values, set them to -1
+                    environment["memory"] = {
+                        "available_ram": -1,
+                        "used_ram": -1,
+                        "free_ram": -1
+                    }
 
         return environment
