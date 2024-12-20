@@ -589,7 +589,7 @@ class NetgearDriver(NetworkDriver):
             >>> {
             ...     "1/0/2": [
             ...         {
-            ...             "hostname": "switch1",  # System name if available
+            ...             "hostname": "P3-4250-KONTOR",  # System name if available
             ...             "port": "0/10"
             ...         }
             ...     ]
@@ -627,6 +627,10 @@ class NetgearDriver(NetworkDriver):
                     if "-" in line and not any(c.isalnum() for c in line):
                         continue
                         
+                    # Skip OUI lines (indented)
+                    if line.startswith(" "):
+                        continue
+                        
                     # Split line into columns
                     parts = line.split()
                     if len(parts) >= 3:  # At least interface, remote ID, and chassis ID
@@ -638,26 +642,12 @@ class NetgearDriver(NetworkDriver):
                         # Get remote chassis ID (MAC address)
                         chassis_id = parts[2]  # Usually MAC address
                         
+                        # Get port ID and system name
+                        port_id = parts[3] if len(parts) > 3 else None
+                        system_name = parts[4] if len(parts) > 4 else None
+                        
                         # Only process if we have valid data
                         if chassis_id and any(c.isalnum() for c in chassis_id):
-                            # Get detailed info for this interface
-                            detail_output = self.device.send_command_timing(
-                                f"show lldp remote-device detail {interface}",
-                                strip_prompt=False,
-                                strip_command=False,
-                                read_timeout=10,
-                                cmd_verify=False
-                            )
-                            
-                            # Parse port ID and system name from detail output
-                            port_id = None
-                            system_name = None
-                            for detail_line in detail_output.splitlines():
-                                if "Port ID: " in detail_line:
-                                    port_id = detail_line.split("Port ID: ", 1)[1].strip()
-                                elif "System Name: " in detail_line:
-                                    system_name = detail_line.split("System Name: ", 1)[1].strip()
-                            
                             if interface not in neighbors:
                                 neighbors[interface] = []
                                 
