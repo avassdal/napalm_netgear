@@ -90,6 +90,9 @@ class NetgearDriver(NetworkDriver):
             read_timeout=30,
             cmd_verify=False
         )
+        
+        print(f"DEBUG: Raw interface status output:")
+        print(output)
 
         # Parse interface details using parser
         for line in output.splitlines():
@@ -103,12 +106,17 @@ class NetgearDriver(NetworkDriver):
 
             # Format: "0/1      Down      Disabled    Auto    Auto    Unknown    None         "
             fields = line.split()
+            print(f"DEBUG: Processing line: {line}")
+            print(f"DEBUG: Fields: {fields}")
+            
             if len(fields) >= 3:
                 iface = fields[0]
                 # Skip if not a valid interface name (should be like 0/1)
                 if not re.match(r'\d+/\d+', iface):
+                    print(f"DEBUG: Skipping invalid interface name: {iface}")
                     continue
 
+                print(f"DEBUG: Getting details for interface {iface}")
                 # Get detailed interface info
                 detail_output = self.device.send_command_timing(
                     f"show interface {iface}",
@@ -117,11 +125,15 @@ class NetgearDriver(NetworkDriver):
                     read_timeout=30,
                     cmd_verify=False
                 )
+                print(f"DEBUG: Detail output for {iface}:")
+                print(detail_output)
 
                 # Parse interface details
                 details = parser.parse_interface_detail(iface, detail_output)
+                print(f"DEBUG: Parsed details for {iface}: {details}")
                 interfaces[iface] = details
 
+        print(f"DEBUG: Final interfaces dict: {interfaces}")
         return interfaces
 
     def get_interfaces_counters(self) -> dict:
