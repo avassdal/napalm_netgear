@@ -67,189 +67,109 @@ class NetgearDriver(NetworkDriver):
         ])
 
     def get_interfaces(self) -> Dict[str, Dict[str, Any]]:
-        """Get interface details.
-        
-        Returns a dictionary of dictionaries. The keys for the first dictionary will be the \
-        interfaces in the devices. The inner dictionary will contain the following data:
-            * is_up (True/False)
-            * is_enabled (True/False)
-            * description (string)
-            * last_flapped (float in seconds)
-            * speed (float in Mbps)
-            * MTU (in Bytes)
-            * mac_address (string)
+        """
+        Get interface details.
+
+        Returns a dictionary of dictionaries. The keys for the first dictionary will be the interfaces in the devices.
+        The inner dictionary will contain the following data for each interface:
+         * is_up (True/False)
+         * is_enabled (True/False)
+         * description (string)
+         * speed (float in Mbit)
+         * mtu (int)
+         * mac_address (string)
         """
         interfaces = {}
-        
-        # Try M4500 command first
+
+        # Get interface status
         output = self.device.send_command_timing(
-            "show port all",
+            "show interfaces status",
             strip_prompt=False,
             strip_command=False,
             read_timeout=30,
             cmd_verify=False
         )
-        
-        if not self._is_supported_command(output):
-            # Try M4250/M4350 command
-            output = self.device.send_command_timing(
-                "show interfaces status",
+
+        # Get interface config for description and admin status
+        config_output = self.device.send_command_timing(
+            "show interfaces configuration",
+            strip_prompt=False,
+            strip_command=False,
+            read_timeout=30,
+            cmd_verify=False
+        )
+
+        # Parse interface status
+        for line in output.splitlines():
+            line = line.strip()
+            if not line or "-----" in line or "Port" in line:
+                continue
+
+            # Format: "0/1      Down      Disabled    Auto    Auto    Unknown    None         "
+            fields = line.split()
+            if len(fields) >= 2:
+                iface = fields[0]
+                status = fields[1].lower()
+                admin_status = fields[2].lower()
+
+                # Initialize interface data
+                interfaces[iface] = {
+                    "is_up": status == "up",
+                    "is_enabled": admin_status != "disabled",
+                    "description": "",
+                    "speed": 0.0,
+                    "mtu": 1500,  # Default MTU
+                    "mac_address": "",
+                }
+
+        # Parse interface config for descriptions
+        current_iface = None
+        for line in config_output.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+
+            # Check if this is an interface line
+            if line.startswith("Interface "):
+                current_iface = line.split()[1]
+                continue
+
+            # If we have a current interface, look for description
+            if current_iface and "Description............................." in line:
+                desc = self._clean_output_line(line)
+                if current_iface in interfaces:
+                    interfaces[current_iface]["description"] = desc
+
+        # Get interface details (speed, MAC, MTU)
+        for iface in list(interfaces.keys()):
+            detail_output = self.device.send_command_timing(
+                f"show interface {iface}",
                 strip_prompt=False,
                 strip_command=False,
                 read_timeout=30,
                 cmd_verify=False
             )
-            
-            if not self._is_supported_command(output):
-                return interfaces
-            
-            # Parse M4250/M4350 output
-            lines = [line.strip() for line in output.splitlines() if line.strip()]
-            header_found = False
-            
-            for line in lines:
-                if "Port" in line and "Status" in line:
-                    header_found = True
-                    continue
-                    
-                if header_found and line:
-                    # Skip separator lines
-                    if "-" in line and not any(c.isalnum() for c in line):
-                        continue
-                        
-                    # Split line into columns
-                    parts = line.split()
-                    if len(parts) >= 4:  # Port, Type, Status, etc
-                        interface = parts[0]
-                        # Skip header rows that might appear in the middle
-                        if interface == "Port":
-                            continue
-                            
-                        status = parts[2].lower()
-                        
-                        # Get interface details
-                        detail_output = self.device.send_command_timing(
-                            f"show interface {interface}",
-                            strip_prompt=False,
-                            strip_command=False,
-                            read_timeout=10,
-                            cmd_verify=False
-                        )
-                        
-                        # Parse interface details
-                        mac_address = ""
-                        mtu = 1500  # Default MTU
-                        speed = 0
-                        description = ""
-                        
-                        for detail_line in detail_output.splitlines():
-                            if "MAC Address:" in detail_line:
-                                mac_address = detail_line.split(":", 1)[1].strip()
-                            elif "MTU:" in detail_line:
-                                try:
-                                    mtu = int(detail_line.split(":", 1)[1].strip())
-                                except (ValueError, IndexError):
-                                    pass
-                            elif "Port Speed:" in detail_line:
-                                speed_str = detail_line.split(":", 1)[1].strip()
-                                try:
-                                    if "10G" in speed_str:
-                                        speed = 10000
-                                    elif "1G" in speed_str:
-                                        speed = 1000
-                                    elif "100M" in speed_str:
-                                        speed = 100
-                                    elif "10M" in speed_str:
-                                        speed = 10
-                                except (ValueError, IndexError):
-                                    pass
-                            elif "Port Description:" in detail_line:
-                                description = detail_line.split(":", 1)[1].strip()
-                        
-                        interfaces[interface] = {
-                            "is_up": status == "up",
-                            "is_enabled": status != "disabled",
-                            "description": description,
-                            "last_flapped": -1.0,  # Not supported
-                            "speed": float(speed),
-                            "mtu": mtu,
-                            "mac_address": mac_address
-                        }
-            
-        else:
-            # Parse M4500 output
-            lines = [line.strip() for line in output.splitlines() if line.strip()]
-            header_found = False
-            
-            for line in lines:
-                if "Interface" in line and "Status" in line:
-                    header_found = True
-                    continue
-                    
-                if header_found and line:
-                    # Skip separator lines
-                    if "-" in line and not any(c.isalnum() for c in line):
-                        continue
-                        
-                    # Split line into columns
-                    parts = line.split()
-                    if len(parts) >= 4:  # Interface, Status, etc
-                        interface = parts[0]
-                        # Skip header rows that might appear in the middle
-                        if interface == "Interface":
-                            continue
-                            
-                        status = parts[1].lower()
-                        
-                        # Get interface details
-                        detail_output = self.device.send_command_timing(
-                            f"show interface {interface}",
-                            strip_prompt=False,
-                            strip_command=False,
-                            read_timeout=10,
-                            cmd_verify=False
-                        )
-                        
-                        # Parse interface details
-                        mac_address = ""
-                        mtu = 1500  # Default MTU
-                        speed = 0
-                        description = ""
-                        
-                        for detail_line in detail_output.splitlines():
-                            if "MAC Address:" in detail_line:
-                                mac_address = detail_line.split(":", 1)[1].strip()
-                            elif "MTU:" in detail_line:
-                                try:
-                                    mtu = int(detail_line.split(":", 1)[1].strip())
-                                except (ValueError, IndexError):
-                                    pass
-                            elif "Port Speed:" in detail_line:
-                                speed_str = detail_line.split(":", 1)[1].strip()
-                                try:
-                                    if "10G" in speed_str:
-                                        speed = 10000
-                                    elif "1G" in speed_str:
-                                        speed = 1000
-                                    elif "100M" in speed_str:
-                                        speed = 100
-                                    elif "10M" in speed_str:
-                                        speed = 10
-                                except (ValueError, IndexError):
-                                    pass
-                            elif "Port Description:" in detail_line:
-                                description = detail_line.split(":", 1)[1].strip()
-                        
-                        interfaces[interface] = {
-                            "is_up": status == "up",
-                            "is_enabled": status != "disabled",
-                            "description": description,
-                            "last_flapped": -1.0,  # Not supported
-                            "speed": float(speed),
-                            "mtu": mtu,
-                            "mac_address": mac_address
-                        }
-        
+
+            for line in detail_output.splitlines():
+                line = line.strip()
+                if "MAC Address" in line:
+                    mac = self._clean_output_line(line)
+                    interfaces[iface]["mac_address"] = mac.split()[0] if mac else ""
+                elif "MTU Size" in line:
+                    mtu = self._clean_output_line(line)
+                    try:
+                        interfaces[iface]["mtu"] = int(mtu.split()[0])
+                    except (ValueError, IndexError):
+                        pass
+                elif "Port Speed" in line:
+                    speed = self._clean_output_line(line)
+                    try:
+                        # Convert to Mbit (e.g., "1000 Mbps" -> 1000.0)
+                        speed_val = float(speed.split()[0])
+                        interfaces[iface]["speed"] = speed_val
+                    except (ValueError, IndexError):
+                        pass
+
         return interfaces
 
     def get_interfaces_counters(self) -> dict:
