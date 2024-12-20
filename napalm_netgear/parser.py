@@ -769,20 +769,35 @@ def parse_lldp_detail(output: str) -> Dict[str, Dict[str, Any]]:
             
         elif line.startswith("System Capabilities Supported:"):
             capab = line.split(":", 1)[1].strip()
-            neighbors[current_interface]["remote_system_capab"] = [c.strip() for c in capab.split(",")]
+            if capab:  # Only add capabilities if not empty
+                neighbors[current_interface]["remote_system_capab"] = [
+                    c.strip() for c in capab.split(",") if c.strip()
+                ]
             
         elif line.startswith("System Capabilities Enabled:"):
             capab = line.split(":", 1)[1].strip()
-            neighbors[current_interface]["remote_system_enable_capab"] = [c.strip() for c in capab.split(",")]
+            if capab:  # Only add capabilities if not empty
+                neighbors[current_interface]["remote_system_enable_capab"] = [
+                    c.strip() for c in capab.split(",") if c.strip()
+                ]
             
         elif line == "Management Address:":
             in_mgmt_addr = True
         elif in_mgmt_addr and line.startswith("Type:"):
             mgmt_addr_next = True
         elif mgmt_addr_next and line.startswith("Address:"):
-            neighbors[current_interface]["remote_management_address"] = line.split(":", 1)[1].strip()
+            addr = line.split(":", 1)[1].strip()
+            if addr:  # Only set management address if not empty
+                neighbors[current_interface]["remote_management_address"] = addr
             mgmt_addr_next = False
             in_mgmt_addr = False
+            
+    # Clean up empty capability lists
+    for interface in neighbors:
+        if not neighbors[interface]["remote_system_capab"]:
+            neighbors[interface]["remote_system_capab"] = []
+        if not neighbors[interface]["remote_system_enable_capab"]:
+            neighbors[interface]["remote_system_enable_capab"] = []
             
     return neighbors
 
