@@ -320,75 +320,66 @@ class NetgearDriver(NetworkDriver):
                     
         return counters
 
-    def get_facts(self) -> dict:
-        """Returns a dictionary containing the following information:
-         * uptime - Uptime of the device in seconds.
-         * vendor - Manufacturer of the device.
-         * model - Device model.
-         * hostname - Hostname of the device
-         * fqdn - Fqdn of the device
-         * os_version - String with the OS version running on the device.
-         * serial_number - Serial number of the device
-         * interface_list - List of the interfaces of the device
-        """
+    def get_facts(self) -> Dict[str, Any]:
+        """Return a set of facts from the devices."""
+        
+        # Get device info
+        version_output = self.device.send_command_timing(
+            "show version",
+            strip_prompt=False,
+            strip_command=False,
+            read_timeout=30,
+            cmd_verify=False
+        )
+        
+        # Get hostname
+        hostname_output = self.device.send_command_timing(
+            "show hosts",
+            strip_prompt=False,
+            strip_command=False,
+            read_timeout=30,
+            cmd_verify=False
+        )
+        
+        # Parse hostname
+        hostname = ""
+        domain = ""
+        for line in hostname_output.splitlines():
+            if "Host name" in line:
+                hostname = line.split(".", 1)[1].strip()
+            elif "Default domain" in line:
+                domain = line.split(".", 1)[1].strip() if "." in line else ""
+        
+        # Parse version info
+        model = ""
+        os_version = ""
+        serial_number = ""
+        
+        for line in version_output.splitlines():
+            line = line.strip()
+            if "System Description" in line:
+                model = line.split(".", 1)[1].strip()
+            elif "Software Version" in line:
+                os_version = line.split(".", 1)[1].strip()
+            elif "Serial Number" in line:
+                serial_number = line.split(".", 1)[1].strip()
+        
+        # Get interfaces
+        interfaces = self.get_interfaces()
+        interface_list = list(interfaces.keys())
+        
+        # Build facts dictionary
         facts = {
-            'uptime': 0,
-            'vendor': 'Netgear',
-            'model': '',
-            'hostname': '',
-            'fqdn': '',
-            'os_version': '',
-            'serial_number': '',
-            'interface_list': []
+            "uptime": 0,  # Not available
+            "vendor": "Netgear",
+            "model": model,
+            "hostname": hostname,
+            "fqdn": f"{hostname}.{domain}" if domain else hostname,
+            "os_version": os_version,
+            "serial_number": serial_number,
+            "interface_list": sorted(interface_list)
         }
         
-        # Get system information from running config
-        command = "show running-config"
-        output = self._send_command(command)
-        
-        if "SYSTEM CONFIG FILE" in output:  # GS108Tv3 format
-            info = parse_gs108tv3_system_info(output)
-            facts.update(info)
-            
-            # Get interface list from config
-            for line in output.splitlines():
-                if line.startswith('interface g'):
-                    port = line.split()[1]
-                    if port not in facts['interface_list']:
-                        facts['interface_list'].append(port)
-                        
-        else:  # M4250/M4350/M4500 format
-            # Get system information
-            command = "show version"
-            output = self._send_command(command)
-            parsed = parse_key_value_list(output.splitlines())
-            
-            facts.update({
-                'model': parsed.get('Machine Model', ''),
-                'os_version': parsed.get('Software Version', ''),
-                'serial_number': parsed.get('Serial Number', ''),
-            })
-            
-            # Get hostname
-            command = "show hosts"
-            output = self._send_command(command)
-            parsed = parse_key_value_list(output.splitlines())
-            facts['hostname'] = parsed.get('Host Name', '')
-            facts['fqdn'] = facts['hostname']
-            
-            # Get uptime
-            command = "show system"
-            output = self._send_command(command)
-            parsed = parse_key_value_list(output.splitlines())
-            try:
-                facts['uptime'] = int(parsed.get('System Up Time', '0').split()[0])
-            except ValueError:
-                facts['uptime'] = -1
-                
-            # Get interface list from status
-            interfaces = self.get_interfaces()
-            facts['interface_list'] = sorted(list(interfaces.keys()))
-            
         return facts
 
     def get_mac_address_table(self) -> list:
