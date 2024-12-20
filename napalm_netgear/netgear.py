@@ -744,8 +744,8 @@ class NetgearDriver(NetworkDriver):
             "port": 22,  # SSH port
             "global_delay_factor": 1.0,
             "secret": self.password,  # Use same password for enable
-            "verbose": True,
-            "session_log": "netmiko_session.log",
+            "verbose": False,  # Disable verbose logging
+            "session_log": None,  # Disable session logging
             "fast_cli": True,  # Enable fast CLI mode
             "session_timeout": 60,
             "auth_timeout": 30,
@@ -771,51 +771,10 @@ class NetgearDriver(NetworkDriver):
     def _enable_mode(self):
         """Enter privileged mode on supported devices."""
         try:
-            print("Attempting to enter enable mode...")  # Debug output
-            
-            # First check if we're already in enable mode
-            output = self.device.find_prompt()
-            print(f"Current prompt: {output}")  # Debug output
-            
-            if "#" in output:
-                print("Already in enable mode")  # Debug output
-                return
-                
-            # Send enable command and wait for password prompt
-            output = self.device.send_command_timing(
-                "enable",
-                strip_prompt=False,
-                strip_command=False,
-                read_timeout=5
-            )
-            print(f"Enable command output: {output}")  # Debug output
-            
-            # Look for various password prompts
-            password_prompts = [
-                "Password:",
-                "password:",
-                "Enter password:",
-                "Enter enable password:",
-                "Password: "
-            ]
-            
-            if any(prompt in output for prompt in password_prompts):
-                print("Password prompt detected, sending password...")  # Debug output
-                # Send the same password used for login
-                output = self.device.send_command_timing(
-                    self.password,
-                    strip_prompt=False,
-                    strip_command=False,
-                    read_timeout=5
-                )
-                print(f"Password response: {output}")  # Debug output
-                
-                if "#" not in output:
-                    raise ConnectionException("Failed to enter enable mode - incorrect password or unexpected response")
-            else:
-                print(f"No password prompt found in output: {output}")  # Debug output
-                raise ConnectionException("Failed to enter enable mode - no password prompt")
-                    
-        except Exception as e:
-            print(f"Error in enable mode: {str(e)}")  # Debug output
-            raise ConnectionException(f"Error entering enable mode: {str(e)}")
+            self.device.enable(cmd_verify=False)
+        except Exception:
+            pass
+
+    def close(self) -> None:
+        """Close the connection to the device."""
+        self.device.disconnect()
