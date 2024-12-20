@@ -52,8 +52,6 @@ class NetgearDriver(NetworkDriver):
             read_timeout = 10  # Default timeout
             
         try:
-            print(f"Sending command: {command}")  # Debug output
-            print(f"Using read_timeout: {read_timeout}")  # Debug output
             output = self.device.send_command_timing(
                 command,
                 strip_prompt=False,
@@ -61,11 +59,9 @@ class NetgearDriver(NetworkDriver):
                 read_timeout=read_timeout,
                 cmd_verify=False  # Don't verify command echo
             )
-            print(f"Command output: {output[:100]}...")  # Debug output (first 100 chars)
             return output
         except Exception as e:
-            print(f"Error sending command: {str(e)}")  # Debug output
-            raise CommandErrorException(f"Failed to send command {command}: {str(e)}")
+            raise CommandErrorException(f"Failed to send command '{command}': {str(e)}")
 
     def _is_supported_command(self, output: str) -> bool:
         """Check if command output indicates it's supported."""
@@ -433,7 +429,7 @@ class NetgearDriver(NetworkDriver):
             if not line.strip() or "Link" in line or "-" * 5 in line:
                 continue
                 
-            # Split line and get first field (port)
+            # Split line into columns
             fields = line.split()
             if fields and "/" in fields[0]:  # Only physical interfaces
                 if not fields[0].startswith(("lag", "vlan")):
