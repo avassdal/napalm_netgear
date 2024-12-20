@@ -589,7 +589,7 @@ class NetgearDriver(NetworkDriver):
             >>> {
             ...     "1/0/2": [
             ...         {
-            ...             "hostname": "P3-4250-KONTOR",  # System name if available
+            ...             "hostname": "SWITCH-1",  # System name if available
             ...             "port": "0/10"
             ...         }
             ...     ]
@@ -599,13 +599,13 @@ class NetgearDriver(NetworkDriver):
             >>> {
             ...     "0/3": [
             ...         {
-            ...             "hostname": "AP01",  # System name if available
-            ...             "port": "D0:21:F9:6B:2E:6D"
+            ...             "hostname": "AP-1",  # System name if available
+            ...             "port": "00:11:22:33:44:55"
             ...         }
             ...     ],
             ...     "0/10": [
             ...         {
-            ...             "hostname": "P4-4350-01",
+            ...             "hostname": "SWITCH-2",
             ...             "port": "1/0/2"
             ...         }
             ...     ]
