@@ -643,16 +643,19 @@ class NetgearDriver(NetworkDriver):
         interfaces_ip = {}
 
         # Get IPv4 addresses from show ip interface
-        output = self._send_command("show ip interface")
+        output = self._send_command("show ip interface brief")
+        print(f"IPv4 output:\n{output}")
         
         # Skip if command not supported
         if not self._is_supported_command(output):
+            print("IPv4 command not supported")
             return interfaces_ip
             
         # Parse output
         current_interface = ""
         for line in output.splitlines():
             line = line.strip()
+            print(f"Processing line: {line}")
             
             # Skip empty lines and headers
             if not line or "Interface" in line or "-" * 5 in line:
@@ -663,6 +666,8 @@ class NetgearDriver(NetworkDriver):
             if not fields:
                 continue
                 
+            print(f"Fields: {fields}")
+            
             # First field is interface name
             if "/" in fields[0]:  # Physical interface
                 current_interface = fields[0]
@@ -684,15 +689,18 @@ class NetgearDriver(NetworkDriver):
         
         # Get IPv6 addresses from show ipv6 interface
         output = self._send_command("show ipv6 interface")
+        print(f"\nIPv6 output:\n{output}")
         
         # Skip if command not supported
         if not self._is_supported_command(output):
+            print("IPv6 command not supported")
             return interfaces_ip
             
         # Parse output
         current_interface = ""
         for line in output.splitlines():
             line = line.strip()
+            print(f"Processing IPv6 line: {line}")
             
             # Skip empty lines and headers
             if not line:
@@ -723,6 +731,7 @@ class NetgearDriver(NetworkDriver):
                         except (ValueError, KeyError):
                             continue
         
+        print(f"\nFinal result: {interfaces_ip}")
         return interfaces_ip
 
     def get_config(
