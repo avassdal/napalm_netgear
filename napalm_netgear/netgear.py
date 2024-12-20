@@ -657,7 +657,7 @@ class NetgearDriver(NetworkDriver):
             if not line or "Interface" in line or "-" * 5 in line:
                 continue
                 
-            # Split line into fields
+            # Split line into fields and validate
             fields = line.split()
             if len(fields) < 4:  # Need at least interface, state, IP, mask
                 continue
@@ -667,19 +667,29 @@ class NetgearDriver(NetworkDriver):
             if interface.startswith("vlan"):
                 interface = interface.replace(" ", "")
             
-            # Get IP and mask
+            # Get IP and mask (skip if unassigned)
             ip = fields[2]
-            if ip != "unassigned":
+            if ip == "unassigned":
+                continue
+                
+            # Get netmask and convert to prefix length
+            try:
+                netmask = fields[3]
+                if not all(x.isdigit() for x in netmask.split('.')):
+                    continue
+                prefix_length = sum(bin(int(x)).count('1') for x in netmask.split('.'))
+                
                 # Initialize interface dict if needed
                 if interface not in interfaces_ip:
                     interfaces_ip[interface] = {"ipv4": {}, "ipv6": {}}
                     
-                # Convert netmask to prefix length
-                netmask = fields[3]
-                prefix_length = sum(bin(int(x)).count('1') for x in netmask.split('.'))
+                # Add IP address
                 interfaces_ip[interface]["ipv4"][ip] = {
                     "prefix_length": prefix_length
                 }
+            except (ValueError, IndexError) as e:
+                # Skip invalid entries
+                continue
         
         # Get IPv6 addresses from show ipv6 interface
         output = self._send_command("show ipv6 interface")
