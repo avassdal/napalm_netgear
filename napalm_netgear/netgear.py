@@ -1,7 +1,7 @@
 """NAPALM driver for Netgear switches."""
 
 import socket
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any, Union, Tuple
 import time
 import re
 
@@ -344,6 +344,34 @@ class NetgearDriver(NetworkDriver):
         value = value.strip()
         return value
 
+    def _parse_version(self, desc: str) -> Tuple[str, str]:
+        """Parse model and version from system description.
+        
+        Args:
+            desc: System description line
+            
+        Returns:
+            Tuple of (model, version)
+        """
+        try:
+            # Remove dots from description but keep commas
+            desc = desc.replace(".", "").strip()
+            
+            # Split by comma and get model and version
+            parts = [p.strip() for p in desc.split(",")]
+            if len(parts) >= 2:
+                model = parts[0].split()[0]  # First word of first part
+                version = parts[1].strip()  # Second part is version
+                
+                # Add dots back to version (format: XX.X.X.XX)
+                if len(version) == 6:  # 130426 -> 13.0.4.26
+                    version = f"{version[0:2]}.{version[2]}.{version[3]}.{version[4:6]}"
+                return model, version
+        except (IndexError, ValueError) as e:
+            print(f"Error parsing version: {str(e)}")
+        
+        return "", ""
+
     def _format_uptime(self, seconds: int) -> str:
         """Convert uptime in seconds to days, hours, minutes, seconds format."""
         days = seconds // 86400
@@ -431,19 +459,8 @@ class NetgearDriver(NetworkDriver):
                     uptime = 0
             elif "System Description" in line:
                 # Format: "System Description............................. M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.4.26, 1.0.0.11"
-                try:
-                    desc = self._clean_output_line(line)
-                    print(f"Debug desc: {desc}")
-                    # Split by comma and get model and version
-                    parts = [p.strip() for p in desc.split(",")]
-                    print(f"Debug parts: {parts}")
-                    if len(parts) >= 2:
-                        model = parts[0].split()[0]  # First word of first part
-                        os_version = parts[1].strip()  # Second part is version
-                        print(f"Debug model: {model}")
-                        print(f"Debug os_version: {os_version}")
-                except (IndexError, ValueError) as e:
-                    print(f"Error parsing system description: {str(e)}")
+                desc = self._clean_output_line(line)
+                model, os_version = self._parse_version(desc)
             elif "System Name" in line:
                 hostname = self._clean_output_line(line)
         
