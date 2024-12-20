@@ -787,8 +787,6 @@ class NetgearDriver(NetworkDriver):
             in_capabilities = False
             for line in output.splitlines():
                 line = line.strip()
-                if not line:
-                    continue
                 
                 if line.startswith("Chassis ID:"):
                     neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
@@ -934,13 +932,26 @@ class NetgearDriver(NetworkDriver):
 
     def open(self) -> None:
         """Open a connection to the device."""
+        # Detect if this is an M4500 switch based on hostname
+        is_m4500 = False
+        try:
+            # Try to resolve the hostname to see if it contains M4500
+            if self.hostname:
+                is_m4500 = 'M4500' in self.hostname.upper()
+        except Exception:
+            # If hostname resolution fails, we'll default to standard port
+            pass
+
+        # Set the appropriate port
+        port = 1234 if is_m4500 else 22
+
         # Set connection defaults
         device_args = {
             "device_type": "netgear_prosafe",
             "host": self.hostname,
             "username": self.username,
             "password": self.password,
-            "port": 22,  # SSH port
+            "port": port,  # SSH port
             "global_delay_factor": 1.0,
             "secret": self.password,  # Use same password for enable
             "verbose": False,  # Disable verbose logging
