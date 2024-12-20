@@ -320,6 +320,13 @@ class NetgearDriver(NetworkDriver):
                     
         return counters
 
+    def _clean_output_line(self, line: str) -> str:
+        """Clean up output line by removing dots and extra whitespace."""
+        # Split on dots, take last part, and clean up whitespace
+        if "." in line:
+            line = line.split(":", 1)[1] if ":" in line else line.split(".", 1)[1]
+        return line.strip()
+
     def get_facts(self) -> Dict[str, Any]:
         """Return a set of facts from the devices."""
         
@@ -362,7 +369,7 @@ class NetgearDriver(NetworkDriver):
             if "System Up Time" in line:
                 # Format: "System Up Time................................. 25 days 4 hrs 20 mins 53 secs"
                 try:
-                    time_str = line.split(".", 1)[1].strip()
+                    time_str = self._clean_output_line(line)
                     parts = time_str.lower().split()
                     
                     # Convert to seconds
@@ -384,7 +391,7 @@ class NetgearDriver(NetworkDriver):
             elif "System Description" in line:
                 # Format: "System Description............................. M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.4.26, 1.0.0.11"
                 try:
-                    desc = line.split(".", 1)[1].strip()
+                    desc = self._clean_output_line(line)
                     # Split by comma and get model and version
                     parts = [p.strip() for p in desc.split(",")]
                     if len(parts) >= 2:
@@ -393,13 +400,13 @@ class NetgearDriver(NetworkDriver):
                 except (IndexError, ValueError) as e:
                     print(f"Error parsing system description: {str(e)}")
             elif "System Name" in line:
-                hostname = line.split(".", 1)[1].strip()
+                hostname = self._clean_output_line(line)
         
         # Get serial number from version output if not in sysinfo
         if not serial_number:
             for line in version_output.splitlines():
                 if "Serial Number" in line:
-                    serial_number = line.split(".", 1)[1].strip().strip('.')
+                    serial_number = self._clean_output_line(line)
                     serial_number = serial_number.split()[0] if serial_number else ""
                     break
         
@@ -407,7 +414,7 @@ class NetgearDriver(NetworkDriver):
         domain = ""
         for line in hostname_output.splitlines():
             if "Default domain" in line and "not configured" not in line.lower():
-                domain = line.split(".", 1)[1].strip().strip('.')
+                domain = self._clean_output_line(line)
                 domain = domain.split()[0] if domain else ""
                 break
         
