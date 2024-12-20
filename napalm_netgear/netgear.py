@@ -598,98 +598,165 @@ class NetgearDriver(NetworkDriver):
 
     def get_lldp_neighbors(self) -> Dict[str, List[Dict[str, str]]]:
         """Get LLDP neighbors.
-
-        Returns:
-            dict: Interfaces and their LLDP neighbors in NetBox format:
-                {
-                    "interface": [
-                        {
-                            "hostname": str,  # Remote system name
-                            "port": str       # Remote port ID
-                        }
-                    ]
-                }
+        
+        Example M4350:
+            >>> {
+            ...     "1/0/2": [
+            ...         {
+            ...             "hostname": "SWITCH-1",  # System name if available
+            ...             "port": "0/10"
+            ...         }
+            ...     ]
+            ... }
+            
+        Example M4250:
+            >>> {
+            ...     "0/3": [
+            ...         {
+            ...             "hostname": "AP-1",  # System name if available
+            ...             "port": "00:11:22:33:44:55"
+            ...         }
+            ...     ],
+            ...     "0/10": [
+            ...         {
+            ...             "hostname": "SWITCH-2",
+            ...             "port": "1/0/2"
+            ...         }
+            ...     ]
+            ... }
         """
+        
+        # First try M4500 command
         try:
-            output = self._send_command("show lldp remote-device all")
+            # Get basic neighbor info
+            output = self.device.send_command_timing(
+                "show lldp remote-device all",
+                strip_prompt=False,
+                strip_command=False,
+                read_timeout=30,  # Longer timeout
+                cmd_verify=False
+            )
+            
+            # Parse the output
             neighbors = {}
-
+            
             # Skip header lines and empty lines
             lines = [line.strip() for line in output.splitlines() if line.strip()]
             header_found = False
-
+            column_starts = []
+            column_ends = []
+            
             for line in lines:
+                if "LLDP Remote Device Summary" in line:
+                    continue
+                    
                 if "Interface" in line and "RemID" in line:
                     header_found = True
+                    header_line = line
                     continue
-
-                if header_found and line and not line.startswith(" "):
-                    # Split line into fields
-                    parts = line.split()
-                    if len(parts) >= 5:  # Need at least interface, chassis ID, port ID, system name
-                        interface = parts[0]
-                        port_id = parts[3]
-                        system_name = ' '.join(parts[4:])  # Rest of line is system name
-
-                        # Initialize interface if not present
+                    
+                if header_found and "-" in line and not any(c.isalnum() for c in line):
+                    # Found separator line, calculate column positions
+                    current_pos = 0
+                    in_column = False
+                    
+                    for i, char in enumerate(line):
+                        if char == "-" and not in_column:
+                            column_starts.append(current_pos)
+                            in_column = True
+                        elif char == " " and in_column:
+                            column_ends.append(current_pos)
+                            in_column = False
+                        current_pos += 1
+                        
+                    if in_column:
+                        column_ends.append(current_pos)
+                    continue
+                    
+                if header_found and column_starts and line:
+                    # Skip OUI lines (indented)
+                    if line.startswith(" "):
+                        continue
+                        
+                    # Get fields using column positions
+                    interface = line[column_starts[0]:column_ends[0]].strip()
+                    # Skip header rows that might appear in the middle
+                    if interface == "Interface":
+                        continue
+                        
+                    # Skip empty interfaces
+                    if not interface:
+                        continue
+                        
+                    # Get remaining fields if present
+                    chassis_id = line[column_starts[2]:column_ends[2]].strip() if len(column_starts) > 2 else None
+                    port_id = line[column_starts[3]:column_ends[3]].strip() if len(column_starts) > 3 else None
+                    system_name = line[column_starts[4]:column_ends[4]].strip() if len(column_starts) > 4 else None
+                    
+                    # Only process if we have valid data
+                    if chassis_id and any(c.isalnum() for c in chassis_id):
                         if interface not in neighbors:
                             neighbors[interface] = []
-
-                        # Add neighbor info
+                            
+                        # Clean up system name (remove extra spaces)
+                        if system_name:
+                            system_name = ' '.join(system_name.split())
+                            
                         neighbors[interface].append({
-                            "hostname": system_name.strip() if system_name else "",
-                            "port": port_id.strip() if port_id else ""
+                            "hostname": system_name or chassis_id,  # Use system name if available
+                            "port": port_id or interface  # Use port ID if found, otherwise interface
                         })
-
+            
+            # Remove any empty interfaces
+            neighbors = {k: v for k, v in neighbors.items() if v}
+            
             return neighbors
+            
         except Exception as e:
             return {}
 
-    def get_lldp_neighbors_detail(self) -> Dict[str, Dict[str, Any]]:
+    def get_lldp_neighbors_detail(self) -> dict:
         """Return detailed view of the LLDP neighbors.
-
+        
         Returns:
-            dict: Detailed LLDP neighbors keyed by interface in NetBox format:
-                {
-                    "interface": {
-                        "parent_interface": str,
-                        "remote_chassis_id": str,
-                        "remote_port": str,
-                        "remote_port_description": str,
-                        "remote_system_name": str,
-                        "remote_system_description": str,
-                        "remote_system_capab": List[str],
-                        "remote_system_enable_capab": List[str],
-                        "remote_management_address": str
-                    }
-                }
+            dict: Detailed LLDP neighbors keyed by interface
         """
         neighbors = {}
-
-        try:
-            # Get list of interfaces with LLDP neighbors
-            output = self._send_command("show lldp remote-device all")
-            interfaces = []
-
-            # Parse output to get interfaces with neighbors
-            for line in output.splitlines():
-                if not line.strip() or "Interface" in line or "-" * 5 in line:
-                    continue
-                if not line.startswith(" "):  # Skip indented lines (OUI info)
-                    parts = line.split()
-                    if len(parts) >= 2 and parts[0].startswith(("0/", "1/0/")):
-                        interfaces.append(parts[0])
-
-            # Get detailed info for each interface with neighbors
-            for interface in interfaces:
-                output = self._send_command(f"show lldp remote-device detail {interface}")
-                interface_neighbors = parser.parse_lldp_detail(output)
-                if interface_neighbors:
-                    neighbors.update(interface_neighbors)
-
-            return neighbors
-        except Exception as e:
-            return {}
+        
+        # Get list of interfaces with LLDP neighbors
+        command = "show lldp remote-device all"
+        output = self._send_command(command)
+        
+        # Parse output to get interfaces with neighbors
+        lines = output.splitlines()
+        interfaces = []
+        
+        # Skip header lines until we find the interface listing
+        header_found = False
+        for line in lines:
+            if "Interface  RemID   Chassis ID" in line:
+                header_found = True
+                continue
+            if not header_found or not line.strip():
+                continue
+                
+            # Split line and get interface if it has a RemID
+            parts = line.split()
+            if len(parts) >= 2 and parts[0].startswith(("0/", "1/0/")):
+                interface = parts[0]
+                if parts[1].strip():  # Only add if RemID exists
+                    interfaces.append(interface)
+        
+        # Get detailed info for each interface with neighbors
+        for interface in interfaces:
+            command = f"show lldp remote-device detail {interface}"
+            output = self._send_command(command)
+            
+            # Parse detailed output
+            interface_neighbors = parser.parse_lldp_detail(output)
+            neighbors.update(interface_neighbors)
+        
+        return neighbors
 
     def get_config(
         self,
