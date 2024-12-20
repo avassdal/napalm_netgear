@@ -1043,17 +1043,32 @@ class NetgearDriver(NetworkDriver):
         
         if not "Command not found" in output and not "Invalid input" in output:
             for line in output.splitlines():
-                if "CPU Utilization" in line:
+                # M4350 format: "CPU Utilization: 5%"
+                if "CPU Utilization:" in line and "%" in line:
                     try:
                         cpu_util = float(line.split(':')[1].strip().rstrip('%'))
                         environment["cpu"][0] = {
                             "%usage": cpu_util
                         }
+                        break
                     except (ValueError, IndexError):
                         environment["cpu"][0] = {
                             "%usage": 0.0
                         }
-                    break
+                # M4250 format: "Total CPU Utilization           13.03%   17.95%   21.11%"
+                elif "Total CPU Utilization" in line and "%" in line:
+                    try:
+                        # Use 5 seconds utilization
+                        fields = line.split()
+                        cpu_util = float(fields[-3].rstrip('%'))
+                        environment["cpu"][0] = {
+                            "%usage": cpu_util
+                        }
+                        break
+                    except (ValueError, IndexError):
+                        environment["cpu"][0] = {
+                            "%usage": 0.0
+                        }
 
         # Get memory stats (common to both models)
         command = "show memory stats"
