@@ -395,6 +395,9 @@ class NetgearDriver(NetworkDriver):
             cmd_verify=False
         )
         
+        print("Debug sysinfo output:")
+        print(sysinfo_output)
+        
         # Parse uptime and system info
         uptime = 0
         model = ""
@@ -430,11 +433,15 @@ class NetgearDriver(NetworkDriver):
                 # Format: "System Description............................. M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.4.26, 1.0.0.11"
                 try:
                     desc = self._clean_output_line(line)
+                    print(f"Debug desc: {desc}")
                     # Split by comma and get model and version
                     parts = [p.strip() for p in desc.split(",")]
+                    print(f"Debug parts: {parts}")
                     if len(parts) >= 2:
                         model = parts[0].split()[0]  # First word of first part
-                        os_version = self._clean_output_line(parts[1], remove_dots=False)  # Keep dots in version
+                        os_version = parts[1].strip()  # Second part is version
+                        print(f"Debug model: {model}")
+                        print(f"Debug os_version: {os_version}")
                 except (IndexError, ValueError) as e:
                     print(f"Error parsing system description: {str(e)}")
             elif "System Name" in line:
