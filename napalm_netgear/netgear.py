@@ -136,9 +136,12 @@ class NetgearDriver(NetworkDriver):
                 interface_info["is_up"] = True
                 
             # Get speed from Physical Status for M4250
-            speed_str = status.get("mode", "")  # Try mode first
+            # First try physical_status/mode column
+            speed_str = status.get("mode", "")  # Try Physical Status first
+            if not speed_str and "physical_status" in status:
+                speed_str = status.get("physical_status", "")  # Try Physical Status field
             if not speed_str:
-                speed_str = status.get("speed", "")  # Fall back to speed
+                speed_str = status.get("speed", "")  # Fall back to speed field
             
             if speed_str:
                 interface_info["speed"] = parser.MAP_INTERFACE_SPEED.get(speed_str, 0.0)
