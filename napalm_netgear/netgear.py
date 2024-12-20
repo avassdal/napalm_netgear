@@ -597,9 +597,15 @@ class NetgearDriver(NetworkDriver):
             
         Example M4250:
             >>> {
+            ...     "0/3": [
+            ...         {
+            ...             "hostname": "AP01",  # System name if available
+            ...             "port": "D0:21:F9:6B:2E:6D"
+            ...         }
+            ...     ],
             ...     "0/10": [
             ...         {
-            ...             "hostname": "P4-4350-01",  # System name if available
+            ...             "hostname": "P4-4350-01",
             ...             "port": "1/0/2"
             ...         }
             ...     ]
@@ -641,8 +647,8 @@ class NetgearDriver(NetworkDriver):
                     if line.startswith(" "):
                         continue
                         
-                    # Split line into fixed-width columns
-                    # Local Interface (10), RemID (8), Chassis ID (20), Port ID (20), System Name (20)
+                    # Split line into fixed-width columns based on header
+                    # Local Interface (10), RemID (8), Chassis ID (20), Port ID (20), System Name (20), OUI (12)
                     if len(line) < 10:  # Need at least interface
                         continue
                         
@@ -657,8 +663,8 @@ class NetgearDriver(NetworkDriver):
                         
                     # Get remaining fields if present
                     chassis_id = line[18:38].strip() if len(line) > 38 else None
-                    port_id = line[38:58].strip() if len(line) > 58 else None  # Increased width to 20
-                    system_name = line[58:78].strip() if len(line) > 78 else None  # Adjusted start
+                    port_id = line[40:60].strip() if len(line) > 60 else None  # Adjusted offset
+                    system_name = line[62:82].strip() if len(line) > 82 else None  # Adjusted offset
                     
                     # Only process if we have valid data
                     if chassis_id and any(c.isalnum() for c in chassis_id):
