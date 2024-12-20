@@ -731,6 +731,7 @@ def parse_lldp_detail(output: str) -> Dict[str, Dict[str, Any]]:
     neighbors = {}
     current_interface = None
     in_mgmt_addr = False
+    mgmt_addr_next = False
     
     for line in output.splitlines():
         line = line.strip()
@@ -776,8 +777,11 @@ def parse_lldp_detail(output: str) -> Dict[str, Dict[str, Any]]:
             
         elif line == "Management Address:":
             in_mgmt_addr = True
-        elif in_mgmt_addr and line.startswith("    Address:"):
+        elif in_mgmt_addr and line.startswith("Type:"):
+            mgmt_addr_next = True
+        elif mgmt_addr_next and line.startswith("Address:"):
             neighbors[current_interface]["remote_management_address"] = line.split(":", 1)[1].strip()
+            mgmt_addr_next = False
             in_mgmt_addr = False
             
     return neighbors
