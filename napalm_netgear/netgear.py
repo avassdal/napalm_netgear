@@ -341,6 +341,42 @@ class NetgearDriver(NetworkDriver):
             cmd_verify=False
         )
         
+        # Get uptime
+        uptime_output = self.device.send_command_timing(
+            "show switch",
+            strip_prompt=False,
+            strip_command=False,
+            read_timeout=30,
+            cmd_verify=False
+        )
+        
+        # Parse uptime
+        uptime = 0
+        for line in uptime_output.splitlines():
+            if "System Up Time" in line:
+                # Format is typically: "System Up Time......................... 10 days 2 hr 15 min 10 sec"
+                try:
+                    time_str = line.split(".", 1)[1].strip()
+                    parts = time_str.lower().split()
+                    
+                    # Convert to seconds
+                    for i in range(0, len(parts), 2):
+                        value = float(parts[i])
+                        unit = parts[i+1].rstrip('s')  # Remove trailing 's' if present
+                        
+                        if unit.startswith('day'):
+                            uptime += value * 86400
+                        elif unit.startswith('hr') or unit.startswith('hour'):
+                            uptime += value * 3600
+                        elif unit.startswith('min'):
+                            uptime += value * 60
+                        elif unit.startswith('sec'):
+                            uptime += value
+                except (ValueError, IndexError) as e:
+                    print(f"Error parsing uptime: {str(e)}")
+                    uptime = 0
+                break
+        
         # Parse hostname
         hostname = ""
         domain = ""
@@ -377,7 +413,7 @@ class NetgearDriver(NetworkDriver):
         
         # Build facts dictionary
         facts = {
-            "uptime": 0,  # Not available
+            "uptime": int(uptime),  # Convert to integer seconds
             "vendor": "Netgear",
             "model": model,
             "hostname": hostname,
