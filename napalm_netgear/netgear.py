@@ -337,6 +337,27 @@ class NetgearDriver(NetworkDriver):
         value = value.replace(".", "").strip()
         return value
 
+    def _format_uptime(self, seconds: int) -> str:
+        """Convert uptime in seconds to days, hours, minutes, seconds format."""
+        days = seconds // 86400
+        seconds %= 86400
+        hours = seconds // 3600
+        seconds %= 3600
+        minutes = seconds // 60
+        seconds %= 60
+        
+        parts = []
+        if days > 0:
+            parts.append(f"{days} {'days' if days != 1 else 'day'}")
+        if hours > 0:
+            parts.append(f"{hours} {'hrs' if hours != 1 else 'hr'}")
+        if minutes > 0:
+            parts.append(f"{minutes} {'mins' if minutes != 1 else 'min'}")
+        if seconds > 0 or not parts:  # Include seconds if non-zero or if all other parts are zero
+            parts.append(f"{seconds} {'secs' if seconds != 1 else 'sec'}")
+        
+        return " ".join(parts)
+
     def get_facts(self) -> Dict[str, Any]:
         """Return a set of facts from the devices."""
         
@@ -434,7 +455,7 @@ class NetgearDriver(NetworkDriver):
         
         # Build facts dictionary
         facts = {
-            "uptime": int(uptime),  # Convert to integer seconds
+            "uptime": self._format_uptime(int(uptime)),  # Format uptime as string
             "vendor": "Netgear",
             "model": model,
             "hostname": hostname,
