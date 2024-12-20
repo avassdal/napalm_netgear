@@ -351,7 +351,7 @@ class NetgearDriver(NetworkDriver):
                 - model (str): Switch model
                 - hostname (str): Device hostname
                 - fqdn (str): Fully qualified domain name
-                - os_version (str): Operating system version
+                - os_version (str): Operating system version (format: XX.X.X.XX)
                 - serial_number (str): Device serial number
                 - interface_list (list): List of interface names
         """
@@ -376,7 +376,12 @@ class NetgearDriver(NetworkDriver):
                     parts = desc.split(",")
                     if len(parts) >= 2:
                         model = parts[0].split()[0]  # First word of first part
-                        os_version = parts[1].strip()  # Second part is version
+                        version = parts[1].strip()  # Second part is version
+                        # Format version if it's just digits (130426 -> 13.0.4.26)
+                        if version.isdigit() and len(version) == 6:
+                            os_version = f"{version[0:2]}.{version[2]}.{version[3]}.{version[4:6]}"
+                        else:
+                            os_version = version
                         
             elif "System Name" in line:
                 hostname = self._clean_output_line(line)
@@ -389,6 +394,16 @@ class NetgearDriver(NetworkDriver):
                 serial_number = self._clean_output_line(line)
                 if serial_number:
                     serial_number = serial_number.split()[0]
+
+        # If serial number not in sysinfo, try show version
+        if not serial_number:
+            version_output = self._send_command("show version")
+            for line in version_output.splitlines():
+                if "Serial Number" in line:
+                    serial = self._clean_output_line(line)
+                    if serial:
+                        serial_number = serial.split()[0]
+                    break
 
         # Get interfaces from status command
         output = self._send_command("show interfaces status all")
