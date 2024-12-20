@@ -1,12 +1,12 @@
 """NAPALM driver for Netgear switches."""
 
 import socket
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Any, Union
 import time
 import re
 
 from napalm.base.base import NetworkDriver
-from napalm.base.exceptions import ConnectionClosedException, ConnectionException
+from napalm.base.exceptions import ConnectionClosedException, ConnectionException, CommandErrorException
 from napalm.base.helpers import mac
 from napalm.base.netmiko_helpers import netmiko_args
 
