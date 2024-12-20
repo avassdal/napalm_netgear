@@ -1051,37 +1051,37 @@ class NetgearDriver(NetworkDriver):
             self.log.debug(f"CPU/Memory command output:\n{output}")
             
             # Parse memory information
+            in_memory_section = False
             free_kb = None
             alloc_kb = None
-            in_memory_section = False
             
             for line in output.splitlines():
                 line = line.strip()
                 
-                # Start of memory section
+                # Memory section starts with "Memory Utilization Report"
                 if "Memory Utilization Report" in line:
                     in_memory_section = True
                     continue
-                # End of memory section
+                # Memory section ends when we hit CPU Utilization
                 elif "CPU Utilization:" in line:
                     in_memory_section = False
                     continue
                 
                 if in_memory_section and line:
                     self.log.debug(f"Processing memory line: {line}")
-                    if "free" in line:
+                    fields = line.split()
+                    if len(fields) >= 2:
                         try:
-                            free_kb = int(line.split()[1])
-                            self.log.debug(f"Found free memory: {free_kb} KB")
-                        except (ValueError, IndexError):
-                            pass
-                    elif "alloc" in line:
-                        try:
-                            alloc_kb = int(line.split()[1])
-                            self.log.debug(f"Found allocated memory: {alloc_kb} KB")
+                            if "free" in fields[0].lower():
+                                free_kb = int(fields[1])
+                                self.log.debug(f"Found free memory: {free_kb} KB")
+                            elif "alloc" in fields[0].lower():
+                                alloc_kb = int(fields[1])
+                                self.log.debug(f"Found allocated memory: {alloc_kb} KB")
                         except (ValueError, IndexError):
                             pass
 
+            # Set memory values if we found them
             if free_kb is not None and alloc_kb is not None:
                 total_kb = free_kb + alloc_kb
                 environment["memory"] = {
@@ -1100,7 +1100,6 @@ class NetgearDriver(NetworkDriver):
 
             # Parse CPU information
             for line in output.splitlines():
-                line = line.strip()
                 # M4350 format: "CPU Utilization: 5%"
                 if "CPU Utilization:" in line and "%" in line:
                     try:
@@ -1127,22 +1126,5 @@ class NetgearDriver(NetworkDriver):
                         environment["cpu"][0] = {
                             "%usage": 0.0
                         }
-
-        # Get memory stats (common to both models)
-        command = "show memory stats"
-        output = self._send_command(command)
-        
-        if not "Command not found" in output and not "Invalid input" in output:
-            for line in output.splitlines():
-                if "Memory Utilization" in line:
-                    try:
-                        mem_util = float(line.split(':')[1].strip().rstrip('%'))
-                        environment["memory"] = {
-                            "available_ram": -1,  # Not available
-                            "used_ram": -1,      # Not available
-                            "free_ram": -1       # Not available
-                        }
-                    except (ValueError, IndexError):
-                        pass
 
         return environment
