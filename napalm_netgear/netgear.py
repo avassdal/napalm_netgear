@@ -365,24 +365,41 @@ class NetgearDriver(NetworkDriver):
             header_found = False
             
             for line in lines:
+                if "LLDP Remote Device Summary" in line:
+                    continue
+                    
                 if "Interface" in line and "RemID" in line:
                     header_found = True
                     continue
                     
                 if header_found and line:
+                    # Skip separator lines
+                    if "-" in line and not any(c.isalnum() for c in line):
+                        continue
+                        
                     # Split line into columns
                     parts = line.split()
                     if len(parts) >= 3:  # At least interface, remote ID, and chassis ID
                         interface = parts[0]
-                        hostname = parts[2]  # Chassis ID is typically the hostname
+                        # Skip header rows that might appear in the middle
+                        if interface == "Interface":
+                            continue
+                            
+                        # Get remote chassis ID (MAC address)
+                        chassis_id = parts[2]  # Usually MAC address
                         
                         if interface not in neighbors:
                             neighbors[interface] = []
                             
-                        neighbors[interface].append({
-                            "hostname": hostname,
-                            "port": parts[0]  # Using local interface as port for now
-                        })
+                        # Only add if we have valid data
+                        if chassis_id and any(c.isalnum() for c in chassis_id):
+                            neighbors[interface].append({
+                                "hostname": chassis_id,
+                                "port": interface
+                            })
+            
+            # Remove any empty interfaces
+            neighbors = {k: v for k, v in neighbors.items() if v}
             
             return neighbors
             
