@@ -1075,6 +1075,9 @@ class NetgearDriver(NetworkDriver):
         output = self._send_command(command)
         
         if not "Command not found" in output and not "Invalid input" in output:
+            # Log the raw output for debugging
+            print(f"DEBUG: Memory command output:\n{output}")
+            
             # Try M4350 format first
             for line in output.splitlines():
                 if "Memory Utilization" in line and ":" in line:
@@ -1085,22 +1088,28 @@ class NetgearDriver(NetworkDriver):
                             "used_ram": -1,      # Not available
                             "free_ram": -1       # Not available
                         }
+                        print(f"DEBUG: Found M4350 memory format, utilization: {mem_util}%")
+                        break
                     except (ValueError, IndexError):
+                        print("DEBUG: Failed to parse M4350 memory format")
                         pass
-                    break
 
             # Try M4250 format if memory is still empty
             if not environment["memory"]:
                 free_kb = None
                 alloc_kb = None
                 for line in output.splitlines():
+                    line = line.strip()
+                    print(f"DEBUG: Processing line: {line}")
                     # More robust parsing for free memory
                     if any(x in line.lower() for x in ["free", "available"]):
                         try:
                             # Split and take first number found
                             for word in line.split():
                                 try:
-                                    free_kb = int(word)
+                                    val = int(word)
+                                    free_kb = val
+                                    print(f"DEBUG: Found free memory: {free_kb} KB")
                                     break
                                 except ValueError:
                                     continue
@@ -1112,7 +1121,9 @@ class NetgearDriver(NetworkDriver):
                             # Split and take first number found
                             for word in line.split():
                                 try:
-                                    alloc_kb = int(word)
+                                    val = int(word)
+                                    alloc_kb = val
+                                    print(f"DEBUG: Found allocated memory: {alloc_kb} KB")
                                     break
                                 except ValueError:
                                     continue
@@ -1126,5 +1137,8 @@ class NetgearDriver(NetworkDriver):
                         "used_ram": alloc_kb * 1024,      # Convert to bytes
                         "free_ram": free_kb * 1024        # Convert to bytes
                     }
+                    print(f"DEBUG: Set memory values - total: {total_kb}KB, used: {alloc_kb}KB, free: {free_kb}KB")
+                else:
+                    print(f"DEBUG: Failed to find both memory values - free: {free_kb}, alloc: {alloc_kb}")
 
         return environment
