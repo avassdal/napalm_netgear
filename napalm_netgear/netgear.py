@@ -305,6 +305,10 @@ class NetgearDriver(NetworkDriver):
             
         return counters
 
+    def get_interface_counters(self) -> dict:
+        """Alias for get_interfaces_counters to match NAPALM CLI."""
+        return self.get_interfaces_counters()
+        
     def _clean_output_line(self, line: str, remove_dots: bool = True) -> str:
         """Clean up output line by removing dots and extra whitespace.
         
