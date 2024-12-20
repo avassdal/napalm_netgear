@@ -382,7 +382,7 @@ class NetgearDriver(NetworkDriver):
                 if desc:
                     parts = desc.split(",")
                     if len(parts) >= 2:
-                        # Extract model from first part - find M4xxx or GS model name
+                        # Extract model from first part
                         model_part = parts[0]
                         for word in model_part.split():
                             if word.startswith(("M4", "GS")):
@@ -642,20 +642,16 @@ class NetgearDriver(NetworkDriver):
         """
         interfaces_ip = {}
 
-        # Get IPv4 addresses from show ip interface
+        # Get IPv4 addresses from show ip interface brief
         output = self._send_command("show ip interface brief")
-        print(f"IPv4 output:\n{output}")
         
         # Skip if command not supported
         if not self._is_supported_command(output):
-            print("IPv4 command not supported")
             return interfaces_ip
             
         # Parse output
-        current_interface = ""
         for line in output.splitlines():
             line = line.strip()
-            print(f"Processing line: {line}")
             
             # Skip empty lines and headers
             if not line or "Interface" in line or "-" * 5 in line:
@@ -663,52 +659,47 @@ class NetgearDriver(NetworkDriver):
                 
             # Split line into fields
             fields = line.split()
-            if not fields:
+            if len(fields) < 4:  # Need at least interface, state, IP, mask
                 continue
                 
-            print(f"Fields: {fields}")
+            # Extract interface name and normalize
+            interface = fields[0].lower()  # e.g., "vlan 1" -> "vlan1"
+            if interface.startswith("vlan"):
+                interface = interface.replace(" ", "")
             
-            # First field is interface name
-            if "/" in fields[0]:  # Physical interface
-                current_interface = fields[0]
+            # Get IP and mask
+            ip = fields[2]
+            if ip != "unassigned":
                 # Initialize interface dict if needed
-                if current_interface not in interfaces_ip:
-                    interfaces_ip[current_interface] = {"ipv4": {}, "ipv6": {}}
+                if interface not in interfaces_ip:
+                    interfaces_ip[interface] = {"ipv4": {}, "ipv6": {}}
                     
-                # Get IP and prefix length
-                if len(fields) >= 2:
-                    ip = fields[1]
-                    if ip != "unassigned":
-                        # Convert netmask to prefix length
-                        if len(fields) >= 3:
-                            netmask = fields[2]
-                            prefix_length = sum(bin(int(x)).count('1') for x in netmask.split('.'))
-                            interfaces_ip[current_interface]["ipv4"][ip] = {
-                                "prefix_length": prefix_length
-                            }
+                # Convert netmask to prefix length
+                netmask = fields[3]
+                prefix_length = sum(bin(int(x)).count('1') for x in netmask.split('.'))
+                interfaces_ip[interface]["ipv4"][ip] = {
+                    "prefix_length": prefix_length
+                }
         
         # Get IPv6 addresses from show ipv6 interface
         output = self._send_command("show ipv6 interface")
-        print(f"\nIPv6 output:\n{output}")
         
-        # Skip if command not supported
-        if not self._is_supported_command(output):
-            print("IPv6 command not supported")
+        # Skip if command not supported or no IPv6 support
+        if not self._is_supported_command(output) or "IPv6 not enabled" in output:
             return interfaces_ip
             
         # Parse output
         current_interface = ""
         for line in output.splitlines():
             line = line.strip()
-            print(f"Processing IPv6 line: {line}")
             
-            # Skip empty lines and headers
+            # Skip empty lines
             if not line:
                 continue
                 
-            # Check if line starts with interface name
-            if line[0].isdigit():  # Interface names start with numbers
-                current_interface = line.split()[0]
+            # Check if line starts with vlan
+            if line.lower().startswith("vlan"):
+                current_interface = line.split()[0].lower().replace(" ", "")
                 # Initialize interface dict if needed
                 if current_interface not in interfaces_ip:
                     interfaces_ip[current_interface] = {"ipv4": {}, "ipv6": {}}
@@ -731,7 +722,6 @@ class NetgearDriver(NetworkDriver):
                         except (ValueError, KeyError):
                             continue
         
-        print(f"\nFinal result: {interfaces_ip}")
         return interfaces_ip
 
     def get_config(
