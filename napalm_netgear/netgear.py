@@ -230,89 +230,65 @@ class NetgearDriver(NetworkDriver):
         """
         counters = {}
         
-        # Get list of interfaces first
-        interfaces = self.get_interfaces()
-        
-        for interface in interfaces:
-            # Use proper interface format (0/1 instead of g1)
-            if interface.startswith('g'):
-                port_num = interface[1:]
-                interface_cmd = f"0/{port_num}"
-            else:
-                interface_cmd = interface
-                
-            command = f"show interface counters {interface_cmd}"
-            output = self._send_command(command)
+        # Get interface counters
+        output = self._send_command("show interface counters")
+        if not self._is_supported_command(output):
+            return {}
             
-            if not self._is_supported_command(output):
-                continue
-                
-            # Initialize counter dict with defaults
-            counters[interface] = {
-                'tx_errors': 0,
-                'rx_errors': 0,
-                'tx_discards': 0,
-                'rx_discards': 0,
-                'tx_octets': 0,
-                'rx_octets': 0,
-                'tx_unicast_packets': 0,
-                'rx_unicast_packets': 0,
-                'tx_multicast_packets': 0,
-                'rx_multicast_packets': 0,
-                'tx_broadcast_packets': 0,
-                'rx_broadcast_packets': 0,
-            }
+        # Parse counter values
+        try:
+            # Skip empty lines and prompts
+            lines = [line.strip() for line in output.splitlines() 
+                    if line.strip() and not line.startswith("(M4250")]
             
-            # Parse counter values
-            try:
-                # Skip header lines
-                lines = [line.strip() for line in output.splitlines() if line.strip()]
-                if len(lines) < 4:  # Need header + separator + data
+            # Find header line
+            header_line = None
+            for i, line in enumerate(lines):
+                if "Port" in line and "InOctets" in line:
+                    header_line = line
+                    data_start = i + 2  # Skip separator line
+                    break
+                    
+            if not header_line:
+                return {}
+                
+            # Parse each interface line
+            for line in lines[data_start:]:
+                if not line or line.startswith("CPU"):
+                    break
+                    
+                fields = line.split()
+                if len(fields) < 8:  # Need at least port and basic counters
                     continue
                     
-                # Get data line for this interface
-                data_line = None
-                for line in lines:
-                    if interface_cmd in line:
-                        data_line = line
-                        break
-                        
-                if not data_line:
-                    continue
+                # Get interface name
+                interface = fields[0]
+                if interface.startswith("ch"):
+                    continue  # Skip channel interfaces
                     
-                # Split data line into fields
-                fields = data_line.split()
-                if len(fields) < 11:  # Need all counter fields
-                    continue
+                # Convert 0/X to gX format
+                if interface.startswith("0/"):
+                    interface = f"g{interface[2:]}"
                     
-                # Map fields to counter keys (adjust indices based on actual output)
-                field_map = {
-                    'tx_octets': 1,
-                    'rx_octets': 2,
-                    'tx_unicast_packets': 3,
-                    'rx_unicast_packets': 4,
-                    'tx_multicast_packets': 5,
-                    'rx_multicast_packets': 6,
-                    'tx_broadcast_packets': 7,
-                    'rx_broadcast_packets': 8,
-                    'tx_errors': 9,
-                    'rx_errors': 10,
-                    'tx_discards': 11,
-                    'rx_discards': 12
+                # Initialize counter dict with defaults
+                counters[interface] = {
+                    'tx_errors': 0,
+                    'rx_errors': int(fields[7]) if len(fields) > 7 else 0,  # Rx Error
+                    'tx_discards': 0,
+                    'rx_discards': int(fields[5]) if len(fields) > 5 else 0,  # InDropPkts
+                    'tx_octets': 0,
+                    'rx_octets': int(fields[1]) if len(fields) > 1 else 0,  # InOctets
+                    'tx_unicast_packets': 0,
+                    'rx_unicast_packets': int(fields[2]) if len(fields) > 2 else 0,  # InUcastPkts
+                    'tx_multicast_packets': 0,
+                    'rx_multicast_packets': int(fields[3]) if len(fields) > 3 else 0,  # InMcastPkts
+                    'tx_broadcast_packets': 0,
+                    'rx_broadcast_packets': int(fields[4]) if len(fields) > 4 else 0,  # InBcastPkts
                 }
                 
-                # Parse each field
-                for counter_key, index in field_map.items():
-                    try:
-                        if index < len(fields):
-                            value = int(fields[index])
-                            counters[interface][counter_key] = value
-                    except ValueError:
-                        continue
-                        
-            except Exception:
-                continue
-                
+        except Exception:
+            return {}
+            
         return counters
 
     def _clean_output_line(self, line: str, remove_dots: bool = True) -> str:
