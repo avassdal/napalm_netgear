@@ -650,7 +650,7 @@ class NetgearDriver(NetworkDriver):
                 if "LLDP Remote Device Summary" in line:
                     continue
                     
-                if "Interface" in line and "RemID" in line:
+                if "Interface  RemID   Chassis ID" in line:
                     header_found = True
                     header_line = line
                     continue
@@ -788,23 +788,23 @@ class NetgearDriver(NetworkDriver):
             for line in output.splitlines():
                 line = line.strip()
                 
-                if line.startswith("Chassis ID:"):
+                if "Chassis ID:" in line:
                     neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
-                elif line.startswith("Port ID:"):
+                elif "Port ID:" in line:
                     neighbor["remote_port"] = line.split(":", 1)[1].strip()
-                elif line.startswith("System Name:"):
+                elif "System Name:" in line:
                     neighbor["remote_system_name"] = line.split(":", 1)[1].strip()
-                elif line.startswith("System Description:"):
+                elif "System Description:" in line:
                     neighbor["remote_system_description"] = line.split(":", 1)[1].strip()
-                elif line.startswith("Port Description:"):
+                elif "Port Description:" in line:
                     neighbor["remote_port_description"] = line.split(":", 1)[1].strip()
-                elif line.startswith("System Capabilities Supported:"):
+                elif "System Capabilities Supported:" in line:
                     caps = line.split(":", 1)[1].strip()
                     neighbor["remote_system_capab"] = [c.strip() for c in caps.split(",")]
-                elif line.startswith("System Capabilities Enabled:"):
+                elif "System Capabilities Enabled:" in line:
                     caps = line.split(":", 1)[1].strip()
                     neighbor["remote_system_enable_capab"] = [c.strip() for c in caps.split(",")]
-                elif line.startswith("Management Address:"):
+                elif "Management Address:" in line:
                     # Next line will have Type: IPv4
                     # Line after that will have Address: x.x.x.x
                     in_capabilities = True
@@ -932,26 +932,12 @@ class NetgearDriver(NetworkDriver):
 
     def open(self) -> None:
         """Open a connection to the device."""
-        # Detect if this is an M4500 switch based on hostname
-        is_m4500 = False
-        try:
-            # Try to resolve the hostname to see if it contains M4500
-            if self.hostname:
-                is_m4500 = 'M4500' in self.hostname.upper()
-        except Exception:
-            # If hostname resolution fails, we'll default to standard port
-            pass
-
-        # Set the appropriate port
-        port = 1234 if is_m4500 else 22
-
         # Set connection defaults
         device_args = {
             "device_type": "netgear_prosafe",
             "host": self.hostname,
             "username": self.username,
             "password": self.password,
-            "port": port,  # SSH port
             "global_delay_factor": 1.0,
             "secret": self.password,  # Use same password for enable
             "verbose": False,  # Disable verbose logging
@@ -972,11 +958,24 @@ class NetgearDriver(NetworkDriver):
         # Update connection args from optional_args
         device_args.update(self.optional_args)
 
+        # Try port 1234 first (M4500 series)
         try:
-            self.device = ConnectHandler(**device_args)
+            self.device = ConnectHandler(
+                **device_args,
+                port=1234
+            )
             self._enable_mode()
+            return
         except (NetMikoTimeoutException, NetMikoAuthenticationException) as e:
-            raise ConnectionException(str(e))
+            # If connection fails, try standard port 22
+            try:
+                self.device = ConnectHandler(
+                    **device_args,
+                    port=22
+                )
+                self._enable_mode()
+            except (NetMikoTimeoutException, NetMikoAuthenticationException) as e2:
+                raise ConnectionException(f"Failed to connect on both ports 1234 and 22: {str(e2)}")
 
     def _enable_mode(self):
         """Enter privileged mode on supported devices."""
