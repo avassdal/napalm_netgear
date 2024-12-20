@@ -88,112 +88,25 @@ class NetgearDriver(NetworkDriver):
             return 0.0  # Return 0 for non-numeric speeds
 
     def get_interfaces(self) -> Dict[str, Dict[str, Any]]:
-        """
-        Get interface details.
+        """Get interface details.
 
-        Returns a dictionary of dictionaries. The keys for the first dictionary will be the interfaces in the devices.
-        The inner dictionary will contain the following data for each interface:
-         * is_up (True/False)
-         * is_enabled (True/False)
-         * description (string)
-         * speed (float in Mbit)
-         * mtu (int)
-         * mac_address (string)
+        Returns:
+            dict: Interfaces in Napalm format
         """
         interfaces = {}
 
-        # Get interface status - try different command formats
-        commands = [
-            "show interfaces status all",  # M4250 format
-            "show port all",              # M4500 format
-            "show interface status",      # Alternate format
-        ]
-        
-        output = None
-        working_cmd = None
-        for cmd in commands:
-            try:
-                output = self.device.send_command_timing(
-                    cmd,
-                    strip_prompt=False,
-                    strip_command=False,
-                    read_timeout=30,
-                    cmd_verify=False
-                )
-                if not "Command not found" in output and not "Incomplete command" in output:
-                    print(f"DEBUG: Found working command: {cmd}")
-                    working_cmd = cmd
-                    break
-            except Exception as e:
-                print(f"DEBUG: Command {cmd} failed: {str(e)}")
-                continue
-        
-        if not output:
-            print("DEBUG: No working command found")
-            return interfaces
-            
+        # Get interface status
+        cmd = "show interfaces status all"
+        output = self._send_command(cmd)
+        print(f"DEBUG: Found working command: {cmd}")
         print(f"DEBUG: Raw interface status output:")
         print(output)
 
-        # Skip header lines and get to the separator line
-        lines = output.splitlines()
-        while lines and not lines[0].strip().startswith("-"):
-            lines.pop(0)
-
-        # Get header line from output
-        header = None
-        header_lines = []
-        for line in output.splitlines():
-            if "Port" in line:
-                header_lines.append(line)
-                # Look for second header line in M4250 format
-                if len(header_lines) == 1 and "Physical" in output.splitlines()[output.splitlines().index(line) - 1]:
-                    header_lines.insert(0, output.splitlines()[output.splitlines().index(line) - 1])
-                break
-
-        if not header_lines:
-            print("DEBUG: Could not find header line")
-            return interfaces
-
-        # Combine multi-line headers
-        header = " ".join(header_lines)
-        print(f"DEBUG: Found header line: {header}")
-            
-        # Determine model and field layout based on header
-        if "Physical Mode" in header:
-            # M4250 format:
-            # Link    Physical    Physical    Media       Flow
-            # Port       Name     State      Mode        Status      Type        Control     VLAN
-            fields = ["port", "name", "link_state", "physical_mode", "physical_status", "media_type", "flow_control", "vlan"]
-            
-            # Parse each line into a dict with correct field mapping
-            interfaces_status = []
-            for line in output.splitlines():
-                if line and not line.startswith('-') and not line.startswith('Port') and not "Link" in line:
-                    parts = line.split()
-                    if len(parts) >= 8:  # Ensure we have enough fields
-                        interface = {}
-                        interface['port'] = parts[0]
-                        interface['name'] = parts[1] if len(parts[1].strip()) > 0 else ''
-                        interface['link'] = parts[2]  # Link State
-                        interface['admin'] = 'up' if parts[2].lower() == 'up' else 'down'
-                        interface['speed'] = parts[4] if len(parts) > 4 else ''  # Physical Status
-                        interface['type'] = parts[5] if len(parts) > 5 else ''  # Media Type
-                        interfaces_status.append(interface)
-            return interfaces_status
-        elif "Link" in header and "State" in header:
-            # M4500 format:
-            # Port    Name      Link    State    Mode      Speed    Type     VLAN
-            fields = ["port", "name", "link", "state", "mode", "speed", "type", "vlan"]
-        else:
-            # Default format:
-            # Port    Link    Admin    Speed   Duplex   Type    Name
-            fields = ["port", "link", "admin", "speed", "duplex", "type", "name"]
-
-        print(f"DEBUG: Using fields: {fields}")
-            
-        # Parse interface status table starting from separator line
-        interface_status = parser.parse_fixed_width_table(fields, lines)
+        # Parse interface status table
+        interface_status = parser.parse_fixed_width_table(
+            ["port", "name", "link", "state", "mode", "speed", "type", "vlan"],
+            output.splitlines()
+        )
         print(f"DEBUG: Parsed interface status: {interface_status}")
 
         # Process each interface
@@ -202,58 +115,87 @@ class NetgearDriver(NetworkDriver):
             if not iface:
                 continue
 
-            # Skip if not a valid interface name (should be like 0/1)
-            if not re.match(r'\d+/\d+', iface):
-                print(f"DEBUG: Skipping invalid interface name: {iface}")
+            # Skip LAG/VLAN interfaces for now
+            if iface.startswith(('lag ', 'vlan ')):
                 continue
 
+            # Get interface details
             print(f"DEBUG: Getting details for interface {iface}")
-            # Get detailed interface info
-            detail_output = self.device.send_command_timing(
-                f"show interface {iface}",
-                strip_prompt=False,
-                strip_command=False,
-                read_timeout=30,
-                cmd_verify=False
-            )
+            cmd = f"show interface {iface}"
+            details = self._send_command(cmd)
             print(f"DEBUG: Detail output for {iface}:")
-            print(detail_output)
+            print(details)
 
-            # Parse interface details based on model
-            details = {
-                'mac_address': '',  # Not available in show interface output
-                'description': status.get('name', ''),
-                'mtu': 1500,  # Default MTU
-                'last_flapped': -1.0
-            }
+            # Parse interface details
+            interface_info = parser.parse_interface_detail(iface, details)
+            print(f"DEBUG: Parsed details for {iface}: {interface_info}")
 
-            # Handle different field layouts
-            if "physical_mode" in status:
-                # M4250 format
-                details.update({
-                    'is_enabled': status.get('physical_mode', '').lower() != 'disabled',
-                    'is_up': status.get('link_state', '').lower() == 'up',
-                    'speed': self._parse_speed(status.get('physical_status', '0')),
-                })
-            elif "state" in status:
-                # M4500 format
-                details.update({
-                    'is_enabled': status.get('state', '').lower() != 'disabled',
-                    'is_up': status.get('link', '').lower() == 'up',
-                    'speed': self._parse_speed(status.get('speed', '0')),
-                })
-            else:
-                # Default format
-                details.update({
-                    'is_enabled': status.get('admin', '').lower() != 'disabled',
-                    'is_up': status.get('link', '').lower() == 'up',
-                    'speed': self._parse_speed(status.get('speed', '0')),
-                })
+            # Update interface info with status
+            if status.get("link", "").lower() == "up":
+                interface_info["is_up"] = True
+                
+            # Get speed from Physical Status for M4250
+            speed_str = status.get("mode", "")  # Try mode first
+            if not speed_str:
+                speed_str = status.get("speed", "")  # Fall back to speed
+            
+            if speed_str:
+                interface_info["speed"] = parser.MAP_INTERFACE_SPEED.get(speed_str, 0.0)
 
-            print(f"DEBUG: Parsed details for {iface}: {details}")
-            interfaces[iface] = details
+            interfaces[iface] = interface_info
 
         print(f"DEBUG: Final interfaces dict: {interfaces}")
+        return interfaces
+
+    def _parse_interface_status(self, output):
+        """Parse the output of 'show interfaces status all'."""
+        interfaces = []
+        header = None
+        fields = None
+
+        for line in output.splitlines():
+            # Skip empty lines
+            if not line.strip():
+                continue
+
+            # Check for M4250 format header
+            if "Link    Physical    Physical    Media" in line:
+                fields = ['port', 'name', 'link_state', 'physical_mode', 'physical_status', 'media_type', 'flow_control', 'vlan']
+                continue
+            # Check for M4500 format header
+            elif "Port       Name                    Link" in line:
+                fields = ['port', 'name', 'link', 'state', 'mode', 'speed', 'type', 'vlan']
+                continue
+            # Default format header
+            elif "Port" in line and "Link" in line:
+                fields = ['port', 'link', 'admin', 'speed', 'duplex', 'type', 'name']
+                continue
+
+            if not fields:
+                continue
+
+            # Skip separator line
+            if '-' * 5 in line:
+                continue
+
+            # Parse values based on field mapping
+            values = line.split()
+            if not values:
+                continue
+
+            interface = {}
+            for i, field in enumerate(fields):
+                if i < len(values):
+                    interface[field] = values[i]
+                else:
+                    interface[field] = ''
+
+            # Skip invalid interfaces
+            if not interface.get('port') or interface['port'].startswith('lag') or interface['port'].startswith('vlan'):
+                continue
+
+            interfaces.append(interface)
+
         return interfaces
 
     def get_interfaces_counters(self) -> dict:
