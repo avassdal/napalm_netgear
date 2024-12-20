@@ -90,6 +90,7 @@ class NetgearDriver(NetworkDriver):
         ]
         
         output = None
+        working_cmd = None
         for cmd in commands:
             try:
                 output = self.device.send_command_timing(
@@ -101,6 +102,7 @@ class NetgearDriver(NetworkDriver):
                 )
                 if not "Command not found" in output and not "Incomplete command" in output:
                     print(f"DEBUG: Found working command: {cmd}")
+                    working_cmd = cmd
                     break
             except Exception as e:
                 print(f"DEBUG: Command {cmd} failed: {str(e)}")
@@ -117,9 +119,38 @@ class NetgearDriver(NetworkDriver):
         lines = output.splitlines()
         while lines and not lines[0].strip().startswith("-"):
             lines.pop(0)
+
+        # Get header line from output
+        header = None
+        for line in output.splitlines():
+            if "Port" in line:
+                header = line
+                break
+
+        if not header:
+            print("DEBUG: Could not find header line")
+            return interfaces
+
+        print(f"DEBUG: Found header line: {header}")
+            
+        # Determine model and field layout based on header
+        if "Physical Mode" in header:
+            # M4250 format:
+            # Port       Name                    Link    Physical    Physical    Media       Flow
+            #                                    State   Mode        Status      Type        Control     VLAN
+            fields = ["port", "name", "link_state", "physical_mode", "physical_status", "media_type", "flow_control", "vlan"]
+        elif "Link" in header and "State" in header:
+            # M4500 format:
+            # Port    Name      Link    State    Mode      Speed    Type     VLAN
+            fields = ["port", "name", "link", "state", "mode", "speed", "type", "vlan"]
+        else:
+            # Default format:
+            # Port    Link    Admin    Speed   Duplex   Type    Name
+            fields = ["port", "link", "admin", "speed", "duplex", "type", "name"]
+
+        print(f"DEBUG: Using fields: {fields}")
             
         # Parse interface status table starting from separator line
-        fields = ["port", "name", "link_state", "physical_mode", "physical_status", "media_type", "flow_control", "vlan"]
         interface_status = parser.parse_fixed_width_table(fields, lines)
         print(f"DEBUG: Parsed interface status: {interface_status}")
 
@@ -146,16 +177,37 @@ class NetgearDriver(NetworkDriver):
             print(f"DEBUG: Detail output for {iface}:")
             print(detail_output)
 
-            # Parse interface details
+            # Parse interface details based on model
             details = {
                 'mac_address': '',  # Not available in show interface output
                 'description': status.get('name', ''),
-                'is_enabled': status.get('physical_mode', '').lower() != 'disabled',
-                'is_up': status.get('link_state', '').lower() == 'up',
-                'speed': float(status.get('physical_status', '0').replace('Full', '').replace('Auto', '0').strip()) if status.get('physical_status') else 0.0,
                 'mtu': 1500,  # Default MTU
                 'last_flapped': -1.0
             }
+
+            # Handle different field layouts
+            if "physical_mode" in status:
+                # M4250 format
+                details.update({
+                    'is_enabled': status.get('physical_mode', '').lower() != 'disabled',
+                    'is_up': status.get('link_state', '').lower() == 'up',
+                    'speed': float(status.get('physical_status', '0').replace('Full', '').replace('Auto', '0').strip()) if status.get('physical_status') else 0.0,
+                })
+            elif "state" in status:
+                # M4500 format
+                details.update({
+                    'is_enabled': status.get('state', '').lower() != 'disabled',
+                    'is_up': status.get('link', '').lower() == 'up',
+                    'speed': float(status.get('speed', '0').replace('Full', '').replace('Auto', '0').strip()) if status.get('speed') else 0.0,
+                })
+            else:
+                # Default format
+                details.update({
+                    'is_enabled': status.get('admin', '').lower() != 'disabled',
+                    'is_up': status.get('link', '').lower() == 'up',
+                    'speed': float(status.get('speed', '0').replace('Full', '').replace('Auto', '0').strip()) if status.get('speed') else 0.0,
+                })
+
             print(f"DEBUG: Parsed details for {iface}: {details}")
             interfaces[iface] = details
 
