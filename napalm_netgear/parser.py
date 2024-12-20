@@ -65,6 +65,8 @@ def normalize_interface_name(interface: Optional[str]) -> Optional[str]:
         return f"g{interface}"
     elif interface.startswith('0/'):
         return interface  # M4250/M4500 format
+    elif interface.startswith('1/'):
+        return interface  # M4350 format
     elif '/' in interface and not interface.startswith(('lag ', 'vlan ')):
         parts = interface.split('/')
         if len(parts) == 3:  # M4350 format (1/0/1)
@@ -409,68 +411,73 @@ def parse_interface_status(output: str) -> List[Dict[str, str]]:
         List of dictionaries containing interface status:
             - port: Interface name
             - name: Interface description
-            - link: Link state (Up/Down)
-            - state: Interface state
-            - mode: Interface mode/speed
-            - speed: Physical media type
-            - type: Port type
-            - vlan: VLAN membership
+            - link: Link state (Up/Down) 
+            - state: Physical mode (Auto, 10G Full, etc)
+            - mode: Physical status (1000 Full, 10G Full, etc)
+            - speed: Media type (Copper, 10GBase-SR, etc)
+            - type: Flow control (Inactive)
+            - vlan: VLAN membership (1, 50, Trunk, etc)
             
     Example:
         >>> output = '''
-        ... Port      Name       Link  State  Mode      Speed     Type      VLAN
-        ... --------- ---------- ----- ------ --------- --------- --------- ----
-        ... 0/1                  Down  Auto             Copper              1
-        ... 0/2                  Up    Auto   1000 Full Copper             1
+        ...                                    Link    Physical    Physical    Media       Flow
+        ... Port       Name                    State   Mode        Status      Type        Control     VLAN
+        ... ---------  ----------------------  ------  ----------  ----------  ----------  ----------  ----------
+        ... 0/1                                Down    Auto                                Inactive    50
+        ... 0/2                                Up      Auto        1000 Full   Copper      Inactive    1
         ... '''
         >>> parse_interface_status(output)
         [
             {'port': '0/1', 'name': '', 'link': 'Down', 'state': 'Auto',
-             'mode': '', 'speed': 'Copper', 'type': '', 'vlan': '1'},
+             'mode': '', 'speed': '', 'type': 'Inactive', 'vlan': '50'},
             {'port': '0/2', 'name': '', 'link': 'Up', 'state': 'Auto',
-             'mode': '1000 Full', 'speed': 'Copper', 'type': '', 'vlan': '1'}
+             'mode': '1000 Full', 'speed': 'Copper', 'type': 'Inactive', 'vlan': '1'}
         ]
     """
     # Skip empty lines
     lines = [line.strip() for line in output.splitlines() if line.strip()]
     if len(lines) < 3:
         return []
-        
-    # Find the header line with field names
-    header_line = None
-    separator_line = None
+
+    # Find the header lines
+    header_index = -1
     for i, line in enumerate(lines):
-        if "Link" in line and "Physical" in line:
-            header_line = line
-            if i + 1 < len(lines) and "-" in lines[i + 1]:
-                separator_line = lines[i + 1]
+        if "Link    Physical    Physical    Media" in line:
+            header_index = i
             break
-            
-    if not header_line or not separator_line:
+    
+    if header_index == -1:
         return []
-            
-    # Define field names based on M4250 format
+
+    # Get the column headers and separator line
+    header1 = lines[header_index]
+    header2 = lines[header_index + 1]
+    separator = lines[header_index + 2]
+
+    # Define fields
     fields = ["port", "name", "link", "state", "mode", "speed", "type", "vlan"]
-    
-    # Find column positions based on separator line
+
+    # Find column positions from separator line
     positions = []
-    current_pos = 0
-    for i, char in enumerate(separator_line):
-        if char == "-" and (i == 0 or separator_line[i-1] != "-"):
-            positions.append(current_pos)
-        current_pos += 1
-    positions.append(len(separator_line))
-    
+    in_column = False
+    for i, char in enumerate(separator):
+        if char == "-" and not in_column:
+            positions.append(i)
+            in_column = True
+        elif char != "-" and in_column:
+            in_column = False
+    positions.append(len(separator))
+
     # Parse each data line
     results = []
-    for line in lines[lines.index(separator_line) + 1:]:
-        if not line or line.startswith("("):  # Skip prompt line
+    for line in lines[header_index + 3:]:
+        if not line or line.startswith(("--More--", "(M4250", "(")):
             continue
-            
+
         # Skip LAG and VLAN interfaces
         if line.strip().startswith(("lag ", "vlan ")):
             continue
-            
+
         # Extract values based on column positions
         values = {}
         for i, field in enumerate(fields):
@@ -479,10 +486,10 @@ def parse_interface_status(output: str) -> List[Dict[str, str]]:
                 end = positions[i + 1]
                 value = line[start:end].strip() if start < len(line) else ""
                 values[field] = value
-                
-        if values.get("port"):  # Only add if we have a port number
+
+        if values.get("port") and "/" in values["port"]:  # Only add if we have a valid port number
             results.append(values)
-            
+
     return results
 
 if __name__ == '__main__':
@@ -491,36 +498,36 @@ if __name__ == '__main__':
                                    Link    Physical    Physical    Media       Flow
 Port       Name                    State   Mode        Status      Type        Control     VLAN
 ---------  ----------------------  ------  ----------  ----------  ----------  ----------  ----------
-0/1                                Down    Auto                                        Inactive     Trunk
-0/2                                Down    Auto                                        Inactive     Trunk
-0/3                                Down    Auto                                        Inactive     Trunk
-0/4                                Down    Auto                                        Inactive     Trunk
-0/5                                Down    Auto                                        Inactive     Trunk
-0/6                                Down    Auto                                        Inactive     Trunk
-0/7                                Down    Auto                                        Inactive     Trunk
-0/8                                Down    Auto                                        Inactive     Trunk
-0/9                                Down    Auto                                        Inactive     Trunk
-0/10                               Down    Auto                                        Inactive     Trunk
-0/11                               Down    Auto                                        Inactive     Trunk
-0/12                               Down    Auto                                        Inactive     Trunk
-0/13                               Down    Auto                                        Inactive     Trunk
-0/14                               Down    Auto                                        Inactive     Trunk
-0/15                               Down    Auto                                        Inactive     Trunk
-0/16                               Down    Auto                                        Inactive     Trunk
-0/17                               Down    Auto                                        Inactive     Trunk
-0/18                               Down    Auto                                        Inactive     Trunk
-0/19                               Down    Auto                                        Inactive     Trunk
-0/20                               Down    Auto                                        Inactive     Trunk
-0/21                               Down    Auto                                        Inactive     Trunk
-0/22                               Down    Auto                                        Inactive     Trunk
-0/23                               Down    Auto                                        Inactive     Trunk
-0/24                               Down    Auto                                        Inactive     Trunk
-0/25                               Down    Auto                                        Inactive     Trunk
-0/26                               Down    Auto                                        Inactive     Trunk
-0/27                               Down    10G Full                                    Inactive     Trunk
-0/28                               Down    10G Full                                    Inactive     Trunk
-0/29                               Down    10G Full                                    Inactive     Trunk
-0/30                               Up      10G Full    10G Full    10GBase-LR          Inactive     Trunk
+0/1                                Down    Auto                                Inactive    50
+0/2                                Up      Auto        1000 Full   Copper      Inactive    1
+0/3                                Down    Auto                                Inactive    50
+0/4                                Down    Auto                                Inactive    50
+0/5                                Down    Auto                                Inactive    50
+0/6                                Down    Auto                                Inactive    50
+0/7                                Down    Auto                                Inactive    50
+0/8                                Down    Auto                                Inactive    50
+0/9                                Down    Auto                                Inactive    50
+0/10                               Down    Auto                                Inactive    50
+0/11                               Down    Auto                                Inactive    50
+0/12                               Down    Auto                                Inactive    50
+0/13                               Down    Auto                                Inactive    50
+0/14                               Down    Auto                                Inactive    50
+0/15                               Down    Auto                                Inactive    50
+0/16                               Down    Auto                                Inactive    50
+0/17                               Down    Auto                                Inactive    50
+0/18                               Down    Auto                                Inactive    50
+0/19                               Down    Auto                                Inactive    50
+0/20                               Down    Auto                                Inactive    50
+0/21                               Down    Auto                                Inactive    50
+0/22                               Down    Auto                                Inactive    50
+0/23                               Down    Auto                                Inactive    50
+0/24                               Down    Auto                                Inactive    50
+0/25                               Down    Auto                                Inactive    50
+0/26                               Down    Auto                                Inactive    50
+0/27                               Down    10G Full                                    Inactive    50
+0/28                               Down    10G Full                                    Inactive    50
+0/29                               Down    10G Full                                    Inactive    50
+0/30                               Up      10G Full    10G Full    10GBase-LR          Inactive    50
 lag 1                              Down                                                             1
 lag 2                              Down                                                             1
 lag 3                              Down                                                             1
