@@ -733,13 +733,18 @@ def parse_lldp_detail(output: str) -> Dict[str, Dict[str, Any]]:
     in_mgmt_addr = False
     mgmt_addr_next = False
     
+    print(f"Parsing LLDP detail output:\n{output}")  # Debug
+    
     for line in output.splitlines():
         line = line.strip()
         if not line:
             continue
             
+        print(f"Processing line: {line}")  # Debug
+            
         if line.startswith("Local Interface:"):
             current_interface = line.split(":", 1)[1].strip()
+            print(f"Found interface: {current_interface}")  # Debug
             if current_interface:
                 neighbors[current_interface] = {
                     "parent_interface": current_interface,
@@ -792,6 +797,8 @@ def parse_lldp_detail(output: str) -> Dict[str, Dict[str, Any]]:
                 neighbors[current_interface]["remote_management_address"] = addr
             mgmt_addr_next = False
             in_mgmt_addr = False
+            
+    print(f"Final parsed neighbors: {neighbors}")  # Debug
             
     # Clean up empty capability lists
     for interface in neighbors:

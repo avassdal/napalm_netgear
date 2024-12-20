@@ -741,6 +741,7 @@ class NetgearDriver(NetworkDriver):
         # Get list of interfaces with LLDP neighbors
         command = "show lldp remote-device all"
         output = self._send_command(command)
+        self.log.debug(f"LLDP all output:\n{output}")  # Debug
         
         # Parse output to get interfaces with neighbors
         lines = output.splitlines()
@@ -762,17 +763,23 @@ class NetgearDriver(NetworkDriver):
                 if parts[1].strip():  # Only add if RemID exists
                     interfaces.append(interface)
         
+        self.log.debug(f"Found interfaces: {interfaces}")  # Debug
+        
         # Get detailed info for each interface with neighbors
         for interface in interfaces:
             command = f"show lldp remote-device detail {interface}"
             output = self._send_command(command)
+            self.log.debug(f"\nLLDP detail for {interface}:\n{output}")  # Debug
             
             # Parse detailed output
             interface_neighbors = parser.parse_lldp_detail(output)
+            self.log.debug(f"Parsed neighbors for {interface}: {interface_neighbors}")  # Debug
+            
             if interface in interface_neighbors:
                 # Convert single neighbor dict to a list of neighbors
                 neighbors[interface] = [interface_neighbors[interface]]
         
+        self.log.debug(f"Final neighbors dict: {neighbors}")  # Debug
         return neighbors
 
     def get_config(
