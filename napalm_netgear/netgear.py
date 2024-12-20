@@ -16,13 +16,13 @@ from napalm.base.netmiko_helpers import netmiko_args
 from .parser import parseFixedLenght, parseList
 
 MAP_INTERFACE_SPEED = {
-    "25G Full": 25*1000,
-    "10G Full": 10*1000,
-    "1000 Full": 1000,
-    "100 Full": 100,
-    "100 Half": 100,
-    "10 Full": 10,
     "10 Half": 10,
+    "10 Full": 10,
+    "100 Half": 100,
+    "100 Full": 100,
+    "1000 Full": 1000,
+    "10G Full": 10000,
+    "25G Full": 25000,  # Add support for 25G interfaces
 }
 
 MAP_SUBNETMASK_PREFIXLENGTH = {
@@ -157,135 +157,191 @@ class NetgearDriver(NetworkDriver):
                         'mac_address': u'a493.4cc1.67a7',
                         'speed': 100}}
         """
-        # default values.
-        last_flapped = -1.0
-
+        interfaces = {}
         command = "show interfaces status all"
         output = self._send_command(command)
-        fields = parseFixedLenght(["name", "label", "state", "mode", "speed", "media", "flow", "vlan"], output.splitlines())
 
-        interface_dict = {}
-        for item in fields:
-            if(item["name"].startswith("lag") or item["name"].startswith("vlan")):
+        # Skip header lines and parse
+        lines = output.splitlines()[3:]  # Skip first 3 lines (headers)
+        
+        for line in lines:
+            if not line.strip():
                 continue
-            try:
-                speed = MAP_INTERFACE_SPEED[item["speed"]]
-            except KeyError:
-                speed = 1000
-            interface_dict[item["name"]] = {
-                "is_enabled": True,
-                "is_up": (item["state"] == "Up"),
-                "description": item["label"],
-                "mac_address": "",
-                "last_flapped": last_flapped,
-                "mtu": 1500,
-                "speed": speed
+
+            # Split line into fields, preserving whitespace for empty fields
+            fields = line.split(None, 6)  # Split into max 7 fields
+            if len(fields) < 2:  # Need at least port and name
+                continue
+
+            port = fields[0].strip()
+            
+            # Skip LAG interfaces as they're handled separately
+            if port.startswith("lag "):
+                continue
+                
+            # Get interface name (may be blank)
+            name = fields[1].strip() if len(fields) > 1 else ""
+            
+            # Get link state
+            state = fields[2].strip().lower() if len(fields) > 2 else ""
+            is_enabled = state != "down"  # Interface is enabled if not "down"
+            is_up = state == "up"
+            
+            # Get speed from Physical Status field
+            speed = 0
+            if len(fields) > 4:
+                phys_status = fields[4].strip()
+                if phys_status in MAP_INTERFACE_SPEED:
+                    speed = MAP_INTERFACE_SPEED[phys_status]
+
+            # Create interface entry
+            interfaces[port] = {
+                "is_up": is_up,
+                "is_enabled": is_enabled,
+                "description": name,
+                "last_flapped": -1.0,  # Not available
+                "speed": speed,
+                "mac_address": "",  # Will be populated from "show interfaces"
             }
 
-        return interface_dict
+        # Get MAC addresses from detailed interface info
+        for interface in interfaces:
+            command = f"show interface {interface}"
+            output = self._send_command(command)
+            
+            for line in output.splitlines():
+                if "Burned In MAC Address:" in line:
+                    mac = line.split(":")[-1].strip()
+                    interfaces[interface]["mac_address"] = mac
+                    break
+
+        return interfaces
 
     def get_interfaces_counters(self):
-        """
-        Return interface counters and errors.
+        """Return interface counters and errors."""
+        interface_counters = {}
 
-        'tx_errors': int,
-        'rx_errors': int,
-        'tx_discards': int,
-        'rx_discards': int,
-        'tx_octets': int,
-        'rx_octets': int,
-        'tx_unicast_packets': int,
-        'rx_unicast_packets': int,
-        'tx_multicast_packets': int,
-        'rx_multicast_packets': int,
-        'tx_broadcast_packets': int,
-        'rx_broadcast_packets': int,
-
-        Currently doesn't determine output broadcasts, multicasts
-        """
-        res = {}
+        # Get list of interfaces first
         command = "show interfaces status all"
         output = self._send_command(command)
-        interfaces = parseFixedLenght(["name"], output.splitlines())
-        for a in interfaces:
-            name = a["name"]
-            if(name.startswith("lag") or name.startswith("vlan")):
+        
+        # Parse interface names from status output
+        lines = output.splitlines()[3:]  # Skip headers
+        interfaces = []
+        for line in lines:
+            if not line.strip():
                 continue
-            command = "show interface %s" % name
+            fields = line.split(None, 1)  # Split into max 2 fields
+            if len(fields) >= 1:
+                port = fields[0].strip()
+                if not port.startswith(("lag ", "vlan ")):  # Skip LAG and VLAN interfaces
+                    interfaces.append(port)
+
+        # Get counters for each interface
+        for interface in interfaces:
+            command = f"show interface {interface}"
             output = self._send_command(command)
-            lines = output.splitlines()
-            stats = {}
-            for line in lines:
-                if ':' in line:
-                    key, value = line.split(':', 1)
-                    stats[key.strip()] = value.strip()
-            
-            res[name] = {
-                'tx_errors': int(stats.get('Transmit Packet Errors', 0)),
-                'rx_errors': int(stats.get('Packets Received With Error', 0)),
-                'tx_discards': int(stats.get('Transmit Packets Discarded', 0)),
-                'rx_discards': int(stats.get('Receive Packets Discarded', 0)),
-                'tx_octets': -1,  # Not available in output
-                'rx_octets': -1,  # Not available in output
-                'tx_unicast_packets': int(stats.get('Packets Transmitted Without Errors', 0)),
-                'rx_unicast_packets': int(stats.get('Packets Received Without Error', 0)),
-                'tx_multicast_packets': -1,  # Not available in output
-                'rx_multicast_packets': -1,  # Not available in output
-                'tx_broadcast_packets': -1,  # Not available in output
-                'rx_broadcast_packets': int(stats.get('Broadcast Packets Received', 0)),
+
+            # Initialize counters
+            counters = {
+                'tx_errors': 0,
+                'rx_errors': 0,
+                'tx_discards': 0,
+                'rx_discards': 0,
+                'tx_octets': 0,  # Not available in M4350
+                'rx_octets': 0,  # Not available in M4350
+                'tx_unicast_packets': 0,
+                'rx_unicast_packets': 0,
+                'tx_multicast_packets': 0,  # Not available in M4350
+                'rx_multicast_packets': 0,  # Not available in M4350
+                'tx_broadcast_packets': 0,  # Not available in M4350
+                'rx_broadcast_packets': 0
             }
-        return res
+
+            # Parse counter values
+            for line in output.splitlines():
+                line = line.strip()
+                
+                # Map M4350 counter names to NAPALM counter names
+                if "Packets Received Without Error" in line:
+                    counters['rx_unicast_packets'] = int(line.split('.')[-1].strip())
+                elif "Packets Received With Error" in line:
+                    counters['rx_errors'] = int(line.split('.')[-1].strip())
+                elif "Broadcast Packets Received" in line:
+                    counters['rx_broadcast_packets'] = int(line.split('.')[-1].strip())
+                elif "Receive Packets Discarded" in line:
+                    counters['rx_discards'] = int(line.split('.')[-1].strip())
+                elif "Packets Transmitted Without Errors" in line:
+                    counters['tx_unicast_packets'] = int(line.split('.')[-1].strip())
+                elif "Transmit Packets Discarded" in line:
+                    counters['tx_discards'] = int(line.split('.')[-1].strip())
+                elif "Transmit Packet Errors" in line:
+                    counters['tx_errors'] = int(line.split('.')[-1].strip())
+
+            interface_counters[interface] = counters
+
+        return interface_counters
 
     def get_mac_address_table(self):
-        """
-        Returns a lists of dictionaries. Each dictionary represents an entry in the MAC Address
-        Table, having the following keys
-            * mac (string)
-            * interface (string)
-            * vlan (int)
-            * active (boolean)
-            * static (boolean)
-            * moves (int)
-            * last_move (float)
-        """
-        res = []
+        """Return the MAC address table."""
+        mac_table = []
+
         command = "show mac-addr-table"
         output = self._send_command(command)
-        
-        # Skip header lines until we find the column headers
+
+        # Skip header lines and parse
         lines = output.splitlines()
-        header_line = None
-        for i, line in enumerate(lines):
-            if "VLAN ID" in line and "MAC Address" in line:
-                header_line = i
-                break
-                
-        if header_line is None:
-            return res
+        header_found = False
+        for line in lines:
+            line = line.strip()
             
-        # Parse the table using fixed length fields
-        fields = parseFixedLenght(
-            ["vlan", "mac", "interface", "ifindex", "status"],
-            lines[header_line:]
-        )
-        
-        for item in fields:
-            if not item["mac"] or not item["vlan"]:
+            # Skip empty lines and the "Address Entries" line
+            if not line or "Address Entries Currently in Use" in line:
                 continue
                 
-            # Handle both "Management" and "Learned" status
-            is_static = item["status"].strip() == "Management"
+            # Look for the header line
+            if "VLAN ID  MAC Address" in line:
+                header_found = True
+                continue
                 
-            res.append({
-                "mac": item["mac"].strip(),
-                "interface": item["interface"].strip(),
-                "vlan": int(item["vlan"]),
-                "active": True,
-                "static": is_static,
-                "moves": -1,
-                "last_move": -1.0
-            })
-        return res
+            # Skip the separator line after header
+            if header_found and "-------" in line:
+                continue
+                
+            if header_found:
+                # Split the line into fields
+                fields = line.split()
+                if len(fields) >= 5:  # Must have VLAN, MAC, Interface, IfIndex, Status
+                    vlan_id = fields[0]
+                    mac_address = fields[1].replace(':', '')  # Remove colons
+                    interface = fields[2]
+                    
+                    # Map status to NAPALM format
+                    status = fields[4].lower()
+                    if status == "learned":
+                        status = "dynamic"
+                    elif status == "management":
+                        status = "static"
+                    else:
+                        status = "other"
+                        
+                    # Skip CPU interfaces as they're internal
+                    if "CPU Interface" in interface:
+                        continue
+                        
+                    mac_entry = {
+                        'mac': mac_address,
+                        'interface': interface,
+                        'vlan': int(vlan_id),
+                        'static': status == "static",
+                        'active': True,  # Always active on Netgear
+                        'moves': -1,  # Not available
+                        'last_move': -1.0  # Not available
+                    }
+                    
+                    mac_table.append(mac_entry)
+
+        return mac_table
 
     def get_config(
         self,
@@ -560,208 +616,167 @@ class NetgearDriver(NetworkDriver):
             }
         return interfaces
 
+    def _normalize_interface_name(self, interface):
+        """Normalize interface names between M4250 and M4350."""
+        if interface is None:
+            return None
+            
+        # Handle different interface naming schemes
+        # M4250: 0/1
+        # M4350: 1/0/1
+        if interface.startswith('0/'):
+            return interface  # M4250 format
+        elif '/' in interface and not interface.startswith(('lag ', 'vlan ')):
+            parts = interface.split('/')
+            if len(parts) == 3:  # M4350 format (1/0/1)
+                return interface
+            elif len(parts) == 2:  # M4250 format (0/1)
+                return interface
+                
+        return interface  # Return as-is for LAG/VLAN interfaces
+
+    def _is_supported_command(self, command_output):
+        """Check if a command is supported on this model."""
+        error_messages = [
+            "Command not found",
+            "Invalid input",
+            "Unavailable command",
+            "Unknown command",
+            "Error: Command not found"
+        ]
+        return not any(msg.lower() in command_output.lower() for msg in error_messages)
+
     def get_environment(self):
         """
-        Returns a dictionary with the environment information of the device.
-        
-        Example:
-            {
-                "fans": {
-                    "Fan1": {
-                        "status": True
-                    }
-                },
-                "temperature": {
-                    "CPU": {
-                        "is_alert": False,
-                        "is_critical": False,
-                        "temperature": 45.0
-                    }
-                },
-                "power": {
-                    "PSU1": {
-                        "capacity": 50.0,
-                        "output": 8.3,
-                        "status": True
-                    }
-                },
-                "cpu": {
-                    "0": {
-                        "%usage": 25.32
-                    }
-                },
-                "memory": {
-                    "available_ram": 1437136,
-                    "used_ram": 613596
-                }
-            }
+        Get environment information from device.
         """
         environment = {
             "fans": {},
             "temperature": {},
             "power": {},
             "cpu": {},
-            "memory": {
-                "available_ram": 0,
-                "used_ram": 0
-            }
+            "memory": {}
         }
 
-        # Get memory information
-        command = "show process memory"
-        output = self._send_command(command)
-        
-        # Parse memory information from the detailed output
-        for line in output.splitlines():
-            line = line.strip()
-            if line.startswith("Total:"):
-                # Skip this as we want free/allocated
-                continue
-            elif line.startswith("Allocated:"):
-                try:
-                    used_mem = int(line.split()[1])
-                    environment["memory"]["used_ram"] = used_mem
-                except (ValueError, IndexError):
-                    pass
-            elif line.startswith("Free:"):
-                try:
-                    free_mem = int(line.split()[1])
-                    environment["memory"]["available_ram"] = free_mem
-                except (ValueError, IndexError):
-                    pass
-
-        # Get CPU information
-        command = "show process cpu"
-        output = self._send_command(command)
-        
-        # Parse CPU information
-        for line in output.splitlines():
-            if "Total CPU Utilization" in line:
-                try:
-                    parts = line.split()
-                    # Use 5 seconds CPU utilization
-                    cpu_usage = float(parts[-3].strip("%"))
-                    environment["cpu"]["0"] = {
-                        "%usage": cpu_usage
-                    }
-                except (ValueError, IndexError):
-                    environment["cpu"]["0"] = {
-                        "%usage": -1.0
-                    }
-
-        # Get environment information
+        # Try unified environment command first (M4350)
         command = "show environment"
         output = self._send_command(command)
         
-        # Parse the output sections
-        sections = {}
-        current_section = None
-        current_lines = []
-        
-        for line in output.splitlines():
-            line = line.strip()
-            
-            # Check for main temperature
-            if line.startswith("Temp (C)"):
-                try:
-                    temp = float(line.split(".")[-1].strip())
-                    environment["temperature"]["System"] = {
-                        "temperature": temp,
-                        "is_alert": False,
-                        "is_critical": False
-                    }
-                except (ValueError, IndexError):
-                    pass
-                continue
+        if self._is_supported_command(output):
+            # Parse temperature sensors
+            in_temp_section = False
+            for line in output.splitlines():
+                line = line.strip()
                 
-            # Identify sections
-            if "Temperature Sensors:" in line:
-                if current_section and current_lines:
-                    sections[current_section] = current_lines
-                current_section = "temperature_sensors"
-                current_lines = []
-            elif "Fans:" in line:
-                if current_section and current_lines:
-                    sections[current_section] = current_lines
-                current_section = "fans"
-                current_lines = []
-            elif "Power Modules:" in line:
-                if current_section and current_lines:
-                    sections[current_section] = current_lines
-                current_section = "power"
-                current_lines = []
-            elif current_section:
-                current_lines.append(line)
-        
-        # Add the last section
-        if current_section and current_lines:
-            sections[current_section] = current_lines
-            
-        # Parse temperature sensors
-        if "temperature_sensors" in sections:
-            headers = None
-            for line in sections["temperature_sensors"]:
-                if "----" in line:
+                if "Temperature Sensors:" in line:
+                    in_temp_section = True
                     continue
-                if headers is None:
-                    headers = [h.lower() for h in line.split()]
+                elif "Fans:" in line:
+                    in_temp_section = False
                     continue
                     
-                parts = line.split()
-                if len(parts) >= 6:  # Ensure we have enough parts
-                    sensor_name = parts[2]  # sensor-System1, sensor-MAC, etc.
+                if in_temp_section and line and not "Unit" in line and not "----" in line:
+                    # Parse temperature sensor line
+                    fields = line.split()
+                    if len(fields) >= 4:
+                        try:
+                            sensor_name = fields[2].lower()
+                            temp = float(fields[3])
+                            state = fields[4].lower()
+                            environment["temperature"][sensor_name] = {
+                                "temperature": temp,
+                                "is_alert": state != "normal",
+                                "is_critical": state == "critical"
+                            }
+                        except (ValueError, IndexError):
+                            continue
+
+            # Parse fans
+            in_fan_section = False
+            for line in output.splitlines():
+                line = line.strip()
+                
+                if "Fans:" in line:
+                    in_fan_section = True
+                    continue
+                elif "Power Modules:" in line:
+                    in_fan_section = False
+                    continue
+                    
+                if in_fan_section and line and not "Unit Fan" in line and not "----" in line:
+                    # Parse fan line
+                    fields = line.split()
+                    if len(fields) >= 7:
+                        try:
+                            fan_name = fields[2].lower()
+                            status = fields[6].lower()
+                            environment["fans"][fan_name] = {
+                                "status": status == "operational"
+                            }
+                        except (ValueError, IndexError):
+                            continue
+
+            # Parse power supplies
+            in_power_section = False
+            for line in output.splitlines():
+                line = line.strip()
+                
+                if "Power Modules:" in line:
+                    in_power_section = True
+                    continue
+                elif line == "":  # End of section
+                    in_power_section = False
+                    continue
+                    
+                if in_power_section and line and not "Unit" in line and not "----" in line:
+                    # Parse power supply line
+                    fields = line.split()
+                    if len(fields) >= 5:
+                        try:
+                            psu_num = fields[1]
+                            status = fields[4].lower()
+                            environment["power"][f"PSU{psu_num}"] = {
+                                "status": status == "operational",
+                                "capacity": -1.0,  # Not available
+                                "output": -1.0     # Not available
+                            }
+                        except (ValueError, IndexError):
+                            continue
+
+        # Get CPU utilization (common to both models)
+        command = "show process cpu"
+        output = self._send_command(command)
+        
+        if self._is_supported_command(output):
+            for line in output.splitlines():
+                if "CPU Utilization" in line:
                     try:
-                        temp = float(parts[3])
-                        state = parts[4].lower()
-                        max_temp = float(parts[5])
-                        
-                        environment["temperature"][sensor_name] = {
-                            "temperature": temp,
-                            "is_alert": state != "normal",
-                            "is_critical": state == "critical",
+                        cpu_util = float(line.split(':')[1].strip().rstrip('%'))
+                        environment["cpu"][0] = {
+                            "%usage": cpu_util
                         }
                     except (ValueError, IndexError):
-                        continue
+                        environment["cpu"][0] = {
+                            "%usage": 0.0
+                        }
+                    break
 
-        # Parse fans
-        if "fans" in sections:
-            headers = None
-            for line in sections["fans"]:
-                if "----" in line:
-                    continue
-                if headers is None:
-                    headers = [h.lower() for h in line.split()]
-                    continue
-                    
-                parts = line.split()
-                if len(parts) >= 7:  # Ensure we have enough parts
-                    fan_name = f"Fan{parts[1]}"  # FAN-1 becomes Fan1
-                    state = parts[6].lower()
-                    
-                    environment["fans"][fan_name] = {
-                        "status": state != "failed"
-                    }
-
-        # Parse power supplies
-        if "power" in sections:
-            headers = None
-            for line in sections["power"]:
-                if "----" in line:
-                    continue
-                if headers is None:
-                    headers = [h.lower() for h in line.split()]
-                    continue
-                    
-                parts = line.split()
-                if len(parts) >= 5:  # Ensure we have enough parts
-                    psu_name = f"PSU{parts[1]}"  # PS-1 becomes PSU1
-                    state = parts[4].lower()
-                    
-                    environment["power"][psu_name] = {
-                        "status": state == "operational",
-                        "capacity": -1.0,  # Power capacity not available
-                        "output": -1.0     # Power output not available
-                    }
+        # Get memory stats (common to both models)
+        command = "show memory stats"
+        output = self._send_command(command)
+        
+        if self._is_supported_command(output):
+            for line in output.splitlines():
+                if "Memory Utilization" in line:
+                    try:
+                        mem_util = float(line.split(':')[1].strip().rstrip('%'))
+                        environment["memory"] = {
+                            "available_ram": -1,  # Not available
+                            "used_ram": -1,      # Not available
+                            "free_ram": -1       # Not available
+                        }
+                    except (ValueError, IndexError):
+                        pass
 
         return environment
 
@@ -891,94 +906,65 @@ class NetgearDriver(NetworkDriver):
                 ]
             }
         """
-        lldp: models.LLDPNeighborsDetailDict = {}
+        lldp = {}
+
+        # First get list of interfaces with LLDP neighbors
+        command = "show lldp remote-device all"
+        output = self._send_command(command)
         
-        # Get list of ports with LLDP neighbors
-        neighbors = self.get_lldp_neighbors()
+        # Skip header lines and parse
+        lines = output.splitlines()[4:]
+        interfaces_with_neighbors = []
         
-        # If interface is specified, only get details for that interface
-        if interface:
-            if interface in neighbors:
-                ports_to_query = [interface]
-            else:
-                return {}
-        else:
-            ports_to_query = list(neighbors.keys())
-        
-        # For each port with a neighbor, get the details
-        for local_port in ports_to_query:
-            command = f"show lldp remote-device detail {local_port}"
+        for line in lines:
+            if not line.strip():
+                continue
+
+            # Split line into fields, preserving whitespace for empty fields
+            fields = line.split(None, 6)  # Split into max 7 fields
+            if len(fields) < 2:  # Need at least port and name
+                continue
+
+            port = fields[0].strip()
+            
+            # Skip LAG interfaces as they're handled separately
+            if port.startswith("lag "):
+                continue
+                
+            # Get interface name (may be blank)
+            name = fields[1].strip() if len(fields) > 1 else ""
+            
+            # Get link state
+            state = fields[2].strip().lower() if len(fields) > 2 else ""
+            is_enabled = state != "down"  # Interface is enabled if not "down"
+            is_up = state == "up"
+            
+            # Get speed from Physical Status field
+            speed = 0
+            if len(fields) > 4:
+                phys_status = fields[4].strip()
+                if phys_status in MAP_INTERFACE_SPEED:
+                    speed = MAP_INTERFACE_SPEED[phys_status]
+
+            # Create interface entry
+            interfaces[port] = {
+                "is_up": is_up,
+                "is_enabled": is_enabled,
+                "description": name,
+                "last_flapped": -1.0,  # Not available
+                "speed": speed,
+                "mac_address": "",  # Will be populated from "show interfaces"
+            }
+
+        # Get MAC addresses from detailed interface info
+        for interface in interfaces:
+            command = f"show interface {interface}"
             output = self._send_command(command)
             
-            # Initialize the port entry with an empty list
-            lldp[local_port] = []
-            
-            # Skip if no LLDP data
-            if "No LLDP data has been received" in output:
-                continue
-            
-            # Create a neighbor entry
-            neighbor = {
-                'parent_interface': local_port,
-                'remote_port': '',
-                'remote_port_description': '',
-                'remote_chassis_id': '',
-                'remote_system_name': '',
-                'remote_system_description': '',
-                'remote_system_capab': [],
-                'remote_system_enable_capab': []
-            }
-            
-            # Parse the detailed output
-            capabilities_map = {
-                'Other': 'other',
-                'Repeater': 'repeater',
-                'Bridge': 'bridge',
-                'WLAN Access Point': 'wlan-access-point',
-                'Router': 'router',
-                'Telephone': 'telephone',
-                'DOCSIS Cable Device': 'docsis-cable-device',
-                'Station Only': 'station'
-            }
-            
             for line in output.splitlines():
-                line = line.strip()
-                
-                # Skip empty lines and headers
-                if not line or line.startswith("LLDP Remote Device Detail") or line == "Local Interface: " + local_port:
-                    continue
-                
-                # Parse each field
-                if line.startswith("Remote Identifier:"):
-                    remote_id = line.split(":")[1].strip()
-                elif line.startswith("Chassis ID:"):
-                    neighbor['remote_chassis_id'] = line.split(":")[1].strip()
-                elif line.startswith("Port ID:"):
-                    neighbor['remote_port'] = line.split(":")[1].strip()
-                elif line.startswith("System Name:"):
-                    neighbor['remote_system_name'] = line.split(":")[1].strip()
-                elif line.startswith("System Description:"):
-                    neighbor['remote_system_description'] = line.split(":")[1].strip()
-                elif line.startswith("Port Description:"):
-                    neighbor['remote_port_description'] = line.split(":")[1].strip()
-                elif line.startswith("System Capabilities Supported:"):
-                    caps = line.split(":")[1].strip()
-                    if caps:
-                        raw_caps = [cap.strip() for cap in caps.split(",")]
-                        neighbor['remote_system_capab'] = [
-                            capabilities_map[cap] for cap in raw_caps 
-                            if cap in capabilities_map
-                        ]
-                elif line.startswith("System Capabilities Enabled:"):
-                    caps = line.split(":")[1].strip()
-                    if caps:
-                        raw_caps = [cap.strip() for cap in caps.split(",")]
-                        neighbor['remote_system_enable_capab'] = [
-                            capabilities_map[cap] for cap in raw_caps 
-                            if cap in capabilities_map
-                        ]
-            
-            # Add the neighbor to the port's list
-            lldp[local_port].append(neighbor)
-            
-        return lldp
+                if "Burned In MAC Address:" in line:
+                    mac = line.split(":")[-1].strip()
+                    interfaces[interface]["mac_address"] = mac
+                    break
+
+        return interfaces
