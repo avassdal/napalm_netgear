@@ -103,10 +103,7 @@ class NetgearDriver(NetworkDriver):
         print(output)
 
         # Parse interface status table
-        interface_status = parser.parse_fixed_width_table(
-            ["port", "name", "link", "state", "mode", "speed", "type", "vlan"],
-            output.splitlines()
-        )
+        interface_status = parser.parse_interface_status(output)
         print(f"DEBUG: Parsed interface status: {interface_status}")
 
         # Process each interface
@@ -135,17 +132,11 @@ class NetgearDriver(NetworkDriver):
             if status.get("link", "").lower() == "up":
                 interface_info["is_up"] = True
                 
-            # Get speed from Physical Status for M4250
-            # First try physical_status/mode column
-            speed_str = status.get("mode", "")  # Try Physical Status first
-            if not speed_str and "physical_status" in status:
-                speed_str = status.get("physical_status", "")  # Try Physical Status field
-            if not speed_str:
-                speed_str = status.get("speed", "")  # Fall back to speed field
-            
+            # Get speed from mode field first (contains actual speed)
+            speed_str = status.get("mode", "")
             if speed_str:
-                interface_info["speed"] = parser.MAP_INTERFACE_SPEED.get(speed_str, 0.0)
-
+                interface_info["speed"] = parser.MAP_INTERFACE_SPEED.get(speed_str, 0)
+            
             interfaces[iface] = interface_info
 
         print(f"DEBUG: Final interfaces dict: {interfaces}")

@@ -399,6 +399,67 @@ def parse_gs108tv3_system_info(output: str) -> Dict[str, str]:
             
     return info
 
+def parse_interface_status(output: str) -> List[Dict[str, str]]:
+    """Parse the output of 'show interfaces status all'.
+    
+    Args:
+        output: Command output to parse
+        
+    Returns:
+        List of dictionaries containing interface status:
+            - port: Interface name
+            - name: Interface description
+            - link: Link state (Up/Down)
+            - state: Interface state
+            - mode: Interface mode/speed
+            - speed: Physical media type
+            - type: Port type
+            - vlan: VLAN membership
+            
+    Example:
+        >>> output = '''
+        ... Port      Name       Link  State  Mode      Speed     Type      VLAN
+        ... --------- ---------- ----- ------ --------- --------- --------- ----
+        ... 0/1                  Down  Auto             Copper              1
+        ... 0/2                  Up    Auto   1000 Full Copper             1
+        ... '''
+        >>> parse_interface_status(output)
+        [
+            {'port': '0/1', 'name': '', 'link': 'Down', 'state': 'Auto',
+             'mode': '', 'speed': 'Copper', 'type': '', 'vlan': '1'},
+            {'port': '0/2', 'name': '', 'link': 'Up', 'state': 'Auto',
+             'mode': '1000 Full', 'speed': 'Copper', 'type': '', 'vlan': '1'}
+        ]
+    """
+    # Skip header lines and empty lines
+    lines = [line.strip() for line in output.splitlines() if line.strip()]
+    if len(lines) < 3:
+        return []
+        
+    # Find the header line with field names
+    header_line = None
+    for line in lines:
+        if "Link" in line and "Physical" in line:
+            header_line = line
+            break
+    if not header_line:
+        return []
+            
+    # Define field names based on M4250 format
+    fields = ["port", "name", "link", "state", "mode", "speed", "type", "vlan"]
+    
+    # Parse table using fixed width parser
+    data_lines = []
+    parsing = False
+    for line in lines:
+        if "---" in line:  # Start parsing after separator line
+            parsing = True
+            continue
+        if parsing and line and not line.startswith("("):
+            data_lines.append(line)
+            
+    return parse_fixed_width_table(fields, data_lines)
+
 if __name__ == '__main__':
     data="""(M4250-26G4XF-PoE+)#show interfaces status all
 
