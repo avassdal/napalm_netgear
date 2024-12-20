@@ -740,52 +740,53 @@ def parse_lldp_detail(output: str) -> Dict[str, Dict[str, Any]]:
             
         if line.startswith("Local Interface:"):
             current_interface = line.split(":", 1)[1].strip()
-            neighbors[current_interface] = {
-                "parent_interface": current_interface,
-                "remote_chassis_id": "",
-                "remote_port": "",
-                "remote_port_description": "",
-                "remote_system_name": "",
-                "remote_system_description": "",
-                "remote_system_capab": [],
-                "remote_system_enable_capab": [],
-                "remote_management_address": ""
-            }
+            if current_interface:
+                neighbors[current_interface] = {
+                    "parent_interface": current_interface,
+                    "remote_chassis_id": "",
+                    "remote_port": "",
+                    "remote_port_description": "",
+                    "remote_system_name": "",
+                    "remote_system_description": "",
+                    "remote_system_capab": [],
+                    "remote_system_enable_capab": [],
+                    "remote_management_address": ""
+                }
             
-        elif line.startswith("Chassis ID:"):
+        elif current_interface and line.startswith("Remote Chassis ID:"):
             neighbors[current_interface]["remote_chassis_id"] = line.split(":", 1)[1].strip()
             
-        elif line.startswith("Port ID:"):
+        elif current_interface and line.startswith("Remote Port ID:"):
             neighbors[current_interface]["remote_port"] = line.split(":", 1)[1].strip()
             
-        elif line.startswith("System Name:"):
+        elif current_interface and line.startswith("Remote System Name:"):
             neighbors[current_interface]["remote_system_name"] = line.split(":", 1)[1].strip()
             
-        elif line.startswith("System Description:"):
+        elif current_interface and line.startswith("Remote System Description:"):
             neighbors[current_interface]["remote_system_description"] = line.split(":", 1)[1].strip()
             
-        elif line.startswith("Port Description:"):
+        elif current_interface and line.startswith("Remote Port Description:"):
             neighbors[current_interface]["remote_port_description"] = line.split(":", 1)[1].strip()
             
-        elif line.startswith("System Capabilities Supported:"):
+        elif current_interface and line.startswith("Remote System Capabilities Supported:"):
             capab = line.split(":", 1)[1].strip()
             if capab:  # Only add capabilities if not empty
                 neighbors[current_interface]["remote_system_capab"] = [
                     c.strip() for c in capab.split(",") if c.strip()
                 ]
             
-        elif line.startswith("System Capabilities Enabled:"):
+        elif current_interface and line.startswith("Remote System Capabilities Enabled:"):
             capab = line.split(":", 1)[1].strip()
             if capab:  # Only add capabilities if not empty
                 neighbors[current_interface]["remote_system_enable_capab"] = [
                     c.strip() for c in capab.split(",") if c.strip()
                 ]
             
-        elif line == "Management Address:":
+        elif current_interface and line == "Remote Management Address:":
             in_mgmt_addr = True
-        elif in_mgmt_addr and line.startswith("Type:"):
+        elif current_interface and in_mgmt_addr and line.startswith("Type:"):
             mgmt_addr_next = True
-        elif mgmt_addr_next and line.startswith("Address:"):
+        elif current_interface and mgmt_addr_next and line.startswith("Address:"):
             addr = line.split(":", 1)[1].strip()
             if addr:  # Only set management address if not empty
                 neighbors[current_interface]["remote_management_address"] = addr

@@ -719,7 +719,22 @@ class NetgearDriver(NetworkDriver):
         """Return detailed view of the LLDP neighbors.
         
         Returns:
-            dict: Detailed LLDP neighbors keyed by interface
+            dict: Detailed LLDP neighbors keyed by interface, where each interface maps to a list of neighbors
+                 {
+                     "interface": [
+                         {
+                             "parent_interface": str,
+                             "remote_chassis_id": str,
+                             "remote_port": str,
+                             "remote_port_description": str,
+                             "remote_system_name": str,
+                             "remote_system_description": str,
+                             "remote_system_capab": List[str],
+                             "remote_system_enable_capab": List[str],
+                             "remote_management_address": str
+                         }
+                     ]
+                 }
         """
         neighbors = {}
         
@@ -754,7 +769,9 @@ class NetgearDriver(NetworkDriver):
             
             # Parse detailed output
             interface_neighbors = parser.parse_lldp_detail(output)
-            neighbors.update(interface_neighbors)
+            if interface in interface_neighbors:
+                # Convert single neighbor dict to a list of neighbors
+                neighbors[interface] = [interface_neighbors[interface]]
         
         return neighbors
 
