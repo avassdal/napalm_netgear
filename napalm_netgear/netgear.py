@@ -1003,8 +1003,9 @@ class NetgearDriver(NetworkDriver):
                         try:
                             fan_name = fields[2].lower()
                             status = fields[6].lower()
+                            # Consider fan operational unless explicitly marked as failed
                             environment["fans"][fan_name] = {
-                                "status": status == "operational"
+                                "status": status != "failed"
                             }
                         except (ValueError, IndexError):
                             continue
