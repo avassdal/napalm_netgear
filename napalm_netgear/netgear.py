@@ -902,3 +902,173 @@ class NetgearDriver(NetworkDriver):
     def close(self) -> None:
         """Close the connection to the device."""
         self.device.disconnect()
+
+    def get_environment(self) -> Dict[str, Dict]:
+        """Get environment information from device.
+        
+        Returns:
+            dict: Environment information including fans, temperature, power, CPU, and memory.
+            
+            Example::
+            
+                {
+                    "fans": {
+                        "fan1": {
+                            "status": true
+                        }
+                    },
+                    "temperature": {
+                        "sensor1": {
+                            "temperature": 43.0,
+                            "is_alert": false,
+                            "is_critical": false
+                        }
+                    },
+                    "power": {
+                        "PSU1": {
+                            "status": true,
+                            "capacity": -1.0,
+                            "output": -1.0
+                        }
+                    },
+                    "cpu": {
+                        0: {
+                            "%usage": 5.0
+                        }
+                    },
+                    "memory": {
+                        "available_ram": -1,
+                        "used_ram": -1,
+                        "free_ram": -1
+                    }
+                }
+        """
+        environment = {
+            "fans": {},
+            "temperature": {},
+            "power": {},
+            "cpu": {},
+            "memory": {}
+        }
+
+        # Try unified environment command first (M4350)
+        command = "show environment"
+        output = self._send_command(command)
+        
+        if not "Command not found" in output and not "Invalid input" in output:
+            # Parse temperature sensors
+            in_temp_section = False
+            for line in output.splitlines():
+                line = line.strip()
+                
+                if "Temperature Sensors:" in line:
+                    in_temp_section = True
+                    continue
+                elif "Fans:" in line:
+                    in_temp_section = False
+                    continue
+                    
+                if in_temp_section and line and not "Unit" in line and not "----" in line:
+                    # Parse temperature sensor line
+                    fields = line.split()
+                    if len(fields) >= 4:
+                        try:
+                            sensor_name = fields[2].lower()
+                            temp = float(fields[3])
+                            state = fields[4].lower()
+                            environment["temperature"][sensor_name] = {
+                                "temperature": temp,
+                                "is_alert": state != "normal",
+                                "is_critical": state == "critical"
+                            }
+                        except (ValueError, IndexError):
+                            continue
+
+            # Parse fans
+            in_fan_section = False
+            for line in output.splitlines():
+                line = line.strip()
+                
+                if "Fans:" in line:
+                    in_fan_section = True
+                    continue
+                elif "Power Modules:" in line:
+                    in_fan_section = False
+                    continue
+                    
+                if in_fan_section and line and not "Unit Fan" in line and not "----" in line:
+                    # Parse fan line
+                    fields = line.split()
+                    if len(fields) >= 7:
+                        try:
+                            fan_name = fields[2].lower()
+                            status = fields[6].lower()
+                            environment["fans"][fan_name] = {
+                                "status": status == "operational"
+                            }
+                        except (ValueError, IndexError):
+                            continue
+
+            # Parse power supplies
+            in_power_section = False
+            for line in output.splitlines():
+                line = line.strip()
+                
+                if "Power Modules:" in line:
+                    in_power_section = True
+                    continue
+                elif line == "":  # End of section
+                    in_power_section = False
+                    continue
+                    
+                if in_power_section and line and not "Unit" in line and not "----" in line:
+                    # Parse power supply line
+                    fields = line.split()
+                    if len(fields) >= 5:
+                        try:
+                            psu_num = fields[1]
+                            status = fields[4].lower()
+                            environment["power"][f"PSU{psu_num}"] = {
+                                "status": status == "operational",
+                                "capacity": -1.0,  # Not available
+                                "output": -1.0     # Not available
+                            }
+                        except (ValueError, IndexError):
+                            continue
+
+        # Get CPU utilization (common to both models)
+        command = "show process cpu"
+        output = self._send_command(command)
+        
+        if not "Command not found" in output and not "Invalid input" in output:
+            for line in output.splitlines():
+                if "CPU Utilization" in line:
+                    try:
+                        cpu_util = float(line.split(':')[1].strip().rstrip('%'))
+                        environment["cpu"][0] = {
+                            "%usage": cpu_util
+                        }
+                    except (ValueError, IndexError):
+                        environment["cpu"][0] = {
+                            "%usage": 0.0
+                        }
+                    break
+
+        # Get memory stats (common to both models)
+        command = "show memory stats"
+        output = self._send_command(command)
+        
+        if not "Command not found" in output and not "Invalid input" in output:
+            for line in output.splitlines():
+                if "Memory Utilization" in line:
+                    try:
+                        mem_util = float(line.split(':')[1].strip().rstrip('%'))
+                        environment["memory"] = {
+                            "available_ram": -1,  # Not available
+                            "used_ram": -1,      # Not available
+                            "free_ram": -1       # Not available
+                        }
+                    except (ValueError, IndexError):
+                        pass
+
+        return environment
