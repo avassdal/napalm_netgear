@@ -113,9 +113,14 @@ class NetgearDriver(NetworkDriver):
         print(f"DEBUG: Raw interface status output:")
         print(output)
 
-        # Parse interface status table
+        # Skip header lines and get to the separator line
+        lines = output.splitlines()
+        while lines and not lines[0].strip().startswith("-"):
+            lines.pop(0)
+            
+        # Parse interface status table starting from separator line
         fields = ["port", "name", "link", "admin", "speed", "duplex", "media", "flow_control", "vlan"]
-        interface_status = parser.parse_fixed_width_table(fields, output.splitlines())
+        interface_status = parser.parse_fixed_width_table(fields, lines)
         print(f"DEBUG: Parsed interface status: {interface_status}")
 
         # Process each interface
