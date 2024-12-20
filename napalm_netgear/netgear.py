@@ -228,9 +228,27 @@ class NetgearDriver(NetworkDriver):
                     }
                 }
                 
-        Example:
+        Example M4250:
             >>> {
             ...     "0/1": {
+            ...         "tx_errors": 0,
+            ...         "rx_errors": 0,
+            ...         "tx_discards": 0,
+            ...         "rx_discards": 0,
+            ...         "tx_octets": 0,
+            ...         "rx_octets": 1234567,
+            ...         "tx_unicast_packets": 0,
+            ...         "rx_unicast_packets": 1234,
+            ...         "tx_multicast_packets": 0,
+            ...         "rx_multicast_packets": 12,
+            ...         "tx_broadcast_packets": 0,
+            ...         "rx_broadcast_packets": 7
+            ...     }
+            ... }
+            
+        Example M4350:
+            >>> {
+            ...     "1/0/1": {
             ...         "tx_errors": 0,
             ...         "rx_errors": 0,
             ...         "tx_discards": 0,
