@@ -723,43 +723,14 @@ def parse_lldp_detail(output: str) -> Dict[str, Dict[str, Any]]:
                 "remote_system_name": str,
                 "remote_system_description": str,
                 "remote_system_capab": List[str],
-                "remote_system_enable_capab": List[str]
-            }
-        }
-        
-    Example:
-        >>> output = '''
-        ... LLDP Remote Device Detail
-        ... 
-        ... Local Interface: 0/3
-        ... 
-        ... Remote Identifier: 3
-        ... Chassis ID Subtype: MAC Address
-        ... Chassis ID: D2:21:F9:2B:2E:6F
-        ... Port ID Subtype: MAC Address
-        ... Port ID: D0:21:F9:6B:2E:6D
-        ... System Name: AP01
-        ... System Description: U6-LR, 6.6.78.15404
-        ... Port Description: eth0
-        ... System Capabilities Supported: bridge, WLAN access point, router, station only
-        ... System Capabilities Enabled: bridge, WLAN access point, router
-        ... '''
-        >>> parse_lldp_detail(output)
-        {
-            "0/3": {
-                "parent_interface": "0/3",
-                "remote_chassis_id": "D2:21:F9:2B:2E:6F",
-                "remote_port": "D0:21:F9:6B:2E:6D",
-                "remote_port_description": "eth0",
-                "remote_system_name": "AP01",
-                "remote_system_description": "U6-LR, 6.6.78.15404",
-                "remote_system_capab": ["bridge", "WLAN access point", "router", "station only"],
-                "remote_system_enable_capab": ["bridge", "WLAN access point", "router"]
+                "remote_system_enable_capab": List[str],
+                "remote_management_address": str
             }
         }
     """
     neighbors = {}
     current_interface = None
+    in_mgmt_addr = False
     
     for line in output.splitlines():
         line = line.strip()
@@ -776,7 +747,8 @@ def parse_lldp_detail(output: str) -> Dict[str, Dict[str, Any]]:
                 "remote_system_name": "",
                 "remote_system_description": "",
                 "remote_system_capab": [],
-                "remote_system_enable_capab": []
+                "remote_system_enable_capab": [],
+                "remote_management_address": ""
             }
             
         elif line.startswith("Chassis ID:"):
@@ -801,6 +773,12 @@ def parse_lldp_detail(output: str) -> Dict[str, Dict[str, Any]]:
         elif line.startswith("System Capabilities Enabled:"):
             capab = line.split(":", 1)[1].strip()
             neighbors[current_interface]["remote_system_enable_capab"] = [c.strip() for c in capab.split(",")]
+            
+        elif line == "Management Address:":
+            in_mgmt_addr = True
+        elif in_mgmt_addr and line.startswith("    Address:"):
+            neighbors[current_interface]["remote_management_address"] = line.split(":", 1)[1].strip()
+            in_mgmt_addr = False
             
     return neighbors
 

@@ -710,21 +710,27 @@ class NetgearDriver(NetworkDriver):
         neighbors = {}
         
         # Get list of interfaces with LLDP neighbors
-        command = "show lldp remote-device"
+        command = "show lldp remote-device all"
         output = self._send_command(command)
         
         # Parse output to get interfaces with neighbors
         lines = output.splitlines()
         interfaces = []
         
-        # Skip header lines
-        for line in lines[2:]:  # Skip header lines
-            if not line.strip():
+        # Skip header lines until we find the interface listing
+        header_found = False
+        for line in lines:
+            if "Interface  RemID   Chassis ID" in line:
+                header_found = True
                 continue
+            if not header_found or not line.strip():
+                continue
+                
+            # Split line and get interface if it has a RemID
             parts = line.split()
-            if len(parts) >= 1:
+            if len(parts) >= 2 and parts[0].startswith(("0/", "1/0/")):
                 interface = parts[0]
-                if interface.startswith(("0/", "1/0/")):  # Valid interface names
+                if parts[1].strip():  # Only add if RemID exists
                     interfaces.append(interface)
         
         # Get detailed info for each interface with neighbors
