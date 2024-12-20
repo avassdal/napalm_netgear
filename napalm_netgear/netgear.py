@@ -346,9 +346,12 @@ class NetgearDriver(NetworkDriver):
         domain = ""
         for line in hostname_output.splitlines():
             if "Host name" in line:
-                hostname = line.split(".", 1)[1].strip()
-            elif "Default domain" in line:
-                domain = line.split(".", 1)[1].strip() if "." in line else ""
+                # Split on dots and get the last part, then clean up any dots
+                hostname = line.split(".", 1)[1].strip().strip('.')
+                hostname = hostname.split()[0] if hostname else ""
+            elif "Default domain" in line and "not configured" not in line.lower():
+                domain = line.split(".", 1)[1].strip().strip('.')
+                domain = domain.split()[0] if domain else ""
         
         # Parse version info
         model = ""
@@ -358,11 +361,15 @@ class NetgearDriver(NetworkDriver):
         for line in version_output.splitlines():
             line = line.strip()
             if "System Description" in line:
-                model = line.split(".", 1)[1].strip()
+                # Split on dots and get the last part, then clean up any dots
+                model = line.split(".", 1)[1].strip().strip('.')
+                model = model.split()[0] if model else ""
             elif "Software Version" in line:
-                os_version = line.split(".", 1)[1].strip()
+                os_version = line.split(".", 1)[1].strip().strip('.')
+                os_version = os_version.split()[0] if os_version else ""
             elif "Serial Number" in line:
-                serial_number = line.split(".", 1)[1].strip()
+                serial_number = line.split(".", 1)[1].strip().strip('.')
+                serial_number = serial_number.split()[0] if serial_number else ""
         
         # Get interfaces
         interfaces = self.get_interfaces()
