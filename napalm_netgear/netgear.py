@@ -2,6 +2,8 @@
 
 import socket
 from typing import Dict, List, Optional, Union
+import time
+import re
 
 from napalm.base.base import NetworkDriver
 from napalm.base.exceptions import ConnectionClosedException, ConnectionException
@@ -29,13 +31,32 @@ class NetgearDriver(NetworkDriver):
         self.timeout = timeout
         self.optional_args = optional_args if optional_args else {}
 
-    def _send_command(self, command: str) -> str:
-        """Send command to device."""
+    def _send_command(self, command, read_timeout=None):
+        """Send command with optional timeout."""
         try:
-            output = self.device.send_command(command)
+            print(f"Sending command: {command}")  # Debug output
+            if read_timeout:
+                print(f"Using read_timeout: {read_timeout}")  # Debug output
+                output = self.device.send_command_timing(
+                    command,
+                    strip_prompt=False,
+                    strip_command=False,
+                    read_timeout=read_timeout,
+                    cmd_verify=False  # Don't verify command echo
+                )
+            else:
+                print("No read_timeout specified")  # Debug output
+                output = self.device.send_command_timing(
+                    command,
+                    strip_prompt=False,
+                    strip_command=False,
+                    cmd_verify=False  # Don't verify command echo
+                )
+            print(f"Command output: {output[:100]}...")  # Debug output (first 100 chars)
             return output
-        except (socket.error, EOFError) as e:
-            raise ConnectionException(str(e))
+        except Exception as e:
+            print(f"Error sending command: {str(e)}")  # Debug output
+            raise CommandErrorException(f"Failed to send command {command}: {str(e)}")
 
     def get_interfaces(self) -> dict:
         """Get interface details.
@@ -63,6 +84,20 @@ class NetgearDriver(NetworkDriver):
             current_interface = None
             current_data = {}
             
+            # Get interface config for MTU
+            config_output = self._send_command("show running-config")
+            mtu_map = {}  # Map of interface to MTU
+            current_if = None
+            for line in config_output.splitlines():
+                line = line.strip()
+                if line.startswith("interface g"):
+                    current_if = line.split()[1]
+                elif current_if and line.startswith("mtu "):
+                    try:
+                        mtu_map[current_if] = int(line.split()[1])
+                    except (IndexError, ValueError):
+                        pass
+            
             for line in output.splitlines():
                 line = line.strip()
                 
@@ -82,7 +117,7 @@ class NetgearDriver(NetworkDriver):
                             "description": "",
                             "last_flapped": -1.0,
                             "speed": -1,  # Will be updated from Auto-speed line
-                            "mtu": 1500,  # Standard MTU
+                            "mtu": mtu_map.get(current_interface, 1500),  # Get MTU from config
                             "mac_address": "",
                         }
                         
@@ -91,6 +126,9 @@ class NetgearDriver(NetworkDriver):
                         current_data["speed"] = -1  # Auto-negotiation
                     elif "media type" in line.lower():
                         current_data["description"] = line.split(",")[-1].strip()
+                    elif "MAC address is" in line:
+                        mac = line.split("is", 1)[1].strip()
+                        current_data["mac_address"] = mac
                         
             # Save last interface
             if current_interface and current_data:
@@ -110,10 +148,17 @@ class NetgearDriver(NetworkDriver):
                         "description": entry.get("name", ""),
                         "last_flapped": -1.0,
                         "speed": MAP_INTERFACE_SPEED.get(speed_str, 0),
-                        "mtu": 1500,  # Standard MTU
-                        "mac_address": "",  # Not available in status output
+                        "mtu": 1500,  # Will be updated from interface details
+                        "mac_address": "",  # Will be updated from interface details
                     }
                     
+                    # Get interface details for MTU and MAC
+                    command = f"show interface {interface}"
+                    detail_output = self._send_command(command)
+                    if is_supported_command(detail_output):
+                        details = parse_interface_detail(interface, detail_output)
+                        interfaces[interface].update(details)
+                        
         # Get interface counters for GS108Tv3
         if "GigabitEthernet" in output:
             for interface in interfaces:
@@ -161,18 +206,27 @@ class NetgearDriver(NetworkDriver):
             
             # Map parsed values to counter keys
             key_map = {
-                'Total Transmit Errors': 'tx_errors',
-                'Total Receive Errors': 'rx_errors',
-                'Total Transmit Drops': 'tx_discards',
-                'Total Receive Drops': 'rx_discards',
+                'Transmit Packet Errors': 'tx_errors',
+                'Packets Received With Error': 'rx_errors',
+                'Transmit Packets Discarded': 'tx_discards',
+                'Receive Packets Discarded': 'rx_discards',
                 'Bytes Transmitted': 'tx_octets',
                 'Bytes Received': 'rx_octets',
-                'Unicast Packets Transmitted': 'tx_unicast_packets',
-                'Unicast Packets Received': 'rx_unicast_packets',
+                'Packets Transmitted Without Errors': 'tx_unicast_packets',
+                'Packets Received Without Error': 'rx_unicast_packets',
                 'Multicast Packets Transmitted': 'tx_multicast_packets',
                 'Multicast Packets Received': 'rx_multicast_packets',
                 'Broadcast Packets Transmitted': 'tx_broadcast_packets',
                 'Broadcast Packets Received': 'rx_broadcast_packets',
+                # GS108Tv3 format
+                'Total Transmit Errors': 'tx_errors',
+                'Total Receive Errors': 'rx_errors', 
+                'Total Transmit Drops': 'tx_discards',
+                'Total Receive Drops': 'rx_discards',
+                'Total Bytes Transmitted': 'tx_octets',
+                'Total Bytes Received': 'rx_octets',
+                'Unicast Packets Transmitted': 'tx_unicast_packets',
+                'Unicast Packets Received': 'rx_unicast_packets'
             }
             
             for key, counter_key in key_map.items():
@@ -532,42 +586,142 @@ class NetgearDriver(NetworkDriver):
             raise ConnectionException("password is required")
             
         try:
-            self.device = self._netmiko_open(
-                device_type, netmiko_optional_args=self.netmiko_optional_args
+            netmiko_optional_args = {
+                "port": self.optional_args.get("port", 22),
+                "global_delay_factor": 0.5,  # Even shorter delay
+                "secret": self.password,  # Use login password as enable secret
+                "verbose": True,  # Enable verbose logging
+                "session_log": "netmiko_session.log",  # Log all session output
+                "fast_cli": True,  # Enable fast CLI mode
+                "session_timeout": 5,  # Very short timeout
+                "auth_timeout": 5,  # Very short auth timeout
+                "banner_timeout": 2,  # Very short banner timeout
+                "conn_timeout": 5,  # Very short connection timeout
+                "allow_auto_change": True,  # Allow automatic handling of password prompts
+                "ssh_strict": False,  # Don't be strict about SSH key checking
+                "use_keys": False,  # Don't use SSH keys
+                "disabled_algorithms": {
+                    "pubkeys": ["rsa-sha2-256", "rsa-sha2-512"]  # Disable newer algorithms
+                },
+            }
+            
+            print(f"Attempting connection with args: {netmiko_optional_args}")  # Debug output
+            
+            try:
+                print("Starting _netmiko_open...")  # Debug output
+                self.device = self._netmiko_open(
+                    device_type, netmiko_optional_args=netmiko_optional_args
+                )
+                print("_netmiko_open completed successfully")  # Debug output
+            except Exception as e:
+                print(f"Connection attempt failed: {str(e)}")  # Debug output
+                raise ConnectionException(f"Failed to connect: {str(e)}")
+            
+            print("Connection established, checking device type")  # Debug output
+            
+            # Give device time to settle
+            time.sleep(1)
+            
+            # Clear any pending output
+            self.device.clear_buffer()
+            
+            # Disable paging
+            print("Disabling paging...")  # Debug output
+            self.device.send_command_timing(
+                "no pager",
+                strip_prompt=False,
+                strip_command=False,
+                read_timeout=2,
+                cmd_verify=False
             )
             
-            # Check if this is a GS108Tv3 by trying to get version info
+            # Check device type and handle enable mode accordingly
             try:
-                output = self._send_command("show running-config", expect_string=r"#|>")
-                if "SYSTEM CONFIG FILE" in output and "GS108Tv3" in output:
-                    # Enable mode for GS108Tv3 using the same password as login
-                    self._enable_gs108tv3()
-            except Exception:
+                print("Sending show running-config command...")  # Debug output
+                # Use send_command_timing instead of send_command
+                output = self.device.send_command_timing(
+                    "show running-config",
+                    strip_prompt=False,
+                    strip_command=False,
+                    read_timeout=5,
+                    cmd_verify=False
+                )
+                print(f"Running config output: {output[:100]}...")  # Debug output (first 100 chars)
+                
+                # Check if we're already in privileged mode
+                if "#" in self.device.find_prompt():
+                    print("Already in privileged mode, skipping enable")  # Debug output
+                else:
+                    # Determine device type and enable mode requirements
+                    if "SYSTEM CONFIG FILE" in output and "GS108Tv3" in output:
+                        print("Detected GS108Tv3, enabling privileged mode")  # Debug output
+                        self._enable_mode()
+                    elif any(model in output for model in ["M4250", "M4350"]):
+                        print("Detected M4250/M4350, enabling privileged mode")  # Debug output
+                        self._enable_mode()
+                    elif "M4500" in output:
+                        print("Detected M4500, already in privileged mode")  # Debug output
+                    else:
+                        print("Unknown device type, attempting enable mode")  # Debug output
+                        self._enable_mode()
+                    
+            except Exception as e:
+                print(f"Error checking device type: {str(e)}")  # Debug output
+                # Don't raise here, try to proceed without enable mode
                 pass
                 
         except ConnectionException as e:
+            print(f"Connection failed: {str(e)}")  # Debug output
             raise ConnectionException(f"Cannot connect to {self.hostname}: {str(e)}")
-            
-    def _enable_gs108tv3(self):
-        """Enable privileged mode on GS108Tv3 using the same password as login."""
+
+    def _enable_mode(self):
+        """Enter privileged mode on supported devices."""
         try:
+            print("Attempting to enter enable mode...")  # Debug output
+            
+            # First check if we're already in enable mode
+            output = self.device.find_prompt()
+            print(f"Current prompt: {output}")  # Debug output
+            
+            if "#" in output:
+                print("Already in enable mode")  # Debug output
+                return
+                
             # Send enable command and wait for password prompt
             output = self.device.send_command_timing(
                 "enable",
                 strip_prompt=False,
-                strip_command=False
+                strip_command=False,
+                read_timeout=5
             )
+            print(f"Enable command output: {output}")  # Debug output
             
-            if "Password:" in output:
+            # Look for various password prompts
+            password_prompts = [
+                "Password:",
+                "password:",
+                "Enter password:",
+                "Enter enable password:",
+                "Password: "
+            ]
+            
+            if any(prompt in output for prompt in password_prompts):
+                print("Password prompt detected, sending password...")  # Debug output
                 # Send the same password used for login
                 output = self.device.send_command_timing(
                     self.password,
                     strip_prompt=False,
-                    strip_command=False
+                    strip_command=False,
+                    read_timeout=5
                 )
+                print(f"Password response: {output}")  # Debug output
                 
                 if "#" not in output:
-                    raise ConnectionException("Failed to enter enable mode")
+                    raise ConnectionException("Failed to enter enable mode - incorrect password or unexpected response")
+            else:
+                print(f"No password prompt found in output: {output}")  # Debug output
+                raise ConnectionException("Failed to enter enable mode - no password prompt")
                     
         except Exception as e:
+            print(f"Error in enable mode: {str(e)}")  # Debug output
             raise ConnectionException(f"Error entering enable mode: {str(e)}")

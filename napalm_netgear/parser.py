@@ -133,26 +133,25 @@ def parse_interface_detail(interface: str, output: str) -> Dict[str, Union[str, 
         if line.startswith("GigabitEthernet"):
             details["is_up"] = "is up" in line.lower()
         elif "Hardware is" in line:
+            if "MAC address is" in line:
+                mac = line.split("MAC address is")[-1].strip()
+                details["mac_address"] = mac
             details["description"] = line
         elif "Auto-speed" in line:
             details["speed"] = -1  # Auto-negotiation
         elif "media type" in line:
             if not details["description"]:
                 details["description"] = line
-                
-        # Counters for both formats
-        elif "input errors" in line:
+        elif line.startswith("MTU "):
             try:
-                details["rx_errors"] = int(line.split(",")[0].split()[0])
-            except (ValueError, IndexError):
-                pass
-        elif "output errors" in line:
-            try:
-                details["tx_errors"] = int(line.split(",")[0].split()[0])
-            except (ValueError, IndexError):
+                details["mtu"] = int(line.split()[1])
+            except (IndexError, ValueError):
                 pass
                 
         # M4250/M4350/M4500 format
+        elif "Hardware Address" in line:
+            mac = line.split(".")[-1].strip()
+            details["mac_address"] = mac
         elif "Link Status" in line:
             details["is_up"] = "Up" in line
         elif "Physical Status" in line:
@@ -160,6 +159,13 @@ def parse_interface_detail(interface: str, output: str) -> Dict[str, Union[str, 
             details["speed"] = MAP_INTERFACE_SPEED.get(mode, 0)
         elif "Description" in line:
             details["description"] = line.split(".")[-1].strip()
+        elif "Maximum Frame Size" in line or "MTU Size" in line:
+            try:
+                mtu = int(line.split(".")[-1].strip())
+                if mtu > 0:
+                    details["mtu"] = mtu
+            except (IndexError, ValueError):
+                pass
             
     return details
 

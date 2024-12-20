@@ -29,11 +29,8 @@ NAPALM driver for Netgear ProSafe switches. Uses Netmiko's netgear_prosafe drive
 
 ### Network Information
 - `get_interfaces` - Get interface details (status, speed, description)
-  - Note: MAC addresses not yet supported
-  - Note: MTU hardcoded to 1500
 - `get_interfaces_ip` - Get interface IP addresses and prefixes
 - `get_interfaces_counters` - Get interface traffic statistics
-  - Note: Some counters not yet supported (octets, tx_multicast, tx_broadcast)
 - `get_lldp_neighbors` - Get basic LLDP neighbor information
 - `get_lldp_neighbors_detail` - Get detailed LLDP neighbor information
 - `get_mac_address_table` - Get MAC address table entries
@@ -103,14 +100,14 @@ Other Netgear ProSafe switches may work but have not been tested.
 ### High Priority
 - [ ] Implement proper configuration comparison in `compare_config`
 - [ ] Fix static flag logic in `get_mac_address_table` (currently inverted)
-- [ ] Add MAC address support to `get_interfaces` using "show interfaces"
+- [x] Add MAC address support to `get_interfaces` using "show interfaces"
+- [x] Add proper MTU detection in `get_interfaces` (no longer hardcoded)
 
 ### Medium Priority
 - [ ] Add missing counters to `get_interfaces_counters`:
   - [ ] tx_octets and rx_octets
   - [ ] tx_multicast_packets
   - [ ] tx_broadcast_packets
-- [ ] Add proper MTU detection in `get_interfaces` (currently hardcoded to 1500)
 - [ ] Add move tracking to `get_mac_address_table` (moves, last_move)
 
 ### Nice to Have
