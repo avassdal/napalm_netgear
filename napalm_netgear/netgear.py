@@ -1094,14 +1094,28 @@ class NetgearDriver(NetworkDriver):
                 free_kb = None
                 alloc_kb = None
                 for line in output.splitlines():
-                    if "free" in line and "KBytes" not in line:
+                    # More robust parsing for free memory
+                    if any(x in line.lower() for x in ["free", "available"]):
                         try:
-                            free_kb = int(line.split()[1])
+                            # Split and take first number found
+                            for word in line.split():
+                                try:
+                                    free_kb = int(word)
+                                    break
+                                except ValueError:
+                                    continue
                         except (ValueError, IndexError):
                             pass
-                    elif "alloc" in line:
+                    # More robust parsing for allocated memory
+                    elif any(x in line.lower() for x in ["alloc", "used"]):
                         try:
-                            alloc_kb = int(line.split()[1])
+                            # Split and take first number found
+                            for word in line.split():
+                                try:
+                                    alloc_kb = int(word)
+                                    break
+                                except ValueError:
+                                    continue
                         except (ValueError, IndexError):
                             pass
                 
