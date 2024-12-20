@@ -322,10 +322,20 @@ class NetgearDriver(NetworkDriver):
 
     def _clean_output_line(self, line: str) -> str:
         """Clean up output line by removing dots and extra whitespace."""
-        # Split on dots, take last part, and clean up whitespace
-        if "." in line:
-            line = line.split(":", 1)[1] if ":" in line else line.split(".", 1)[1]
-        return line.strip()
+        # First split on the field name
+        if ":" in line:
+            _, value = line.split(":", 1)
+        else:
+            for field in ["System Description", "System Name", "System Up Time", "Serial Number", "Default domain"]:
+                if field in line:
+                    _, value = line.split(field, 1)
+                    break
+            else:
+                value = line
+        
+        # Remove all dots and clean whitespace
+        value = value.replace(".", "").strip()
+        return value
 
     def get_facts(self) -> Dict[str, Any]:
         """Return a set of facts from the devices."""
