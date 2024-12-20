@@ -342,64 +342,86 @@ class NetgearDriver(NetworkDriver):
         return " ".join(parts)
 
     def get_facts(self) -> Dict[str, Any]:
-        """Return a set of facts from the devices."""
-        # Get system info
-        cmd = "show sysinfo"
-        output = self._send_command(cmd)
-        print(f"Debug sysinfo output:\n{cmd}\n\n{output}")
-
-        # Parse system description
-        desc = ""
-        uptime = ""
+        """Return a set of facts from the devices.
+        
+        Returns:
+            dict: Facts about the device:
+                - uptime (str): System uptime
+                - vendor (str): Always "Netgear"
+                - model (str): Switch model
+                - hostname (str): Device hostname
+                - fqdn (str): Fully qualified domain name
+                - os_version (str): Operating system version
+                - serial_number (str): Device serial number
+                - interface_list (list): List of interface names
+        """
+        # Get all info from sysinfo command
+        sysinfo_output = self._send_command("show sysinfo")
+        
+        # Initialize variables
+        uptime = "0 secs"
+        model = ""
         hostname = ""
-        for line in output.splitlines():
+        os_version = ""
+        serial_number = ""
+        
+        # Parse sysinfo output
+        for line in sysinfo_output.splitlines():
+            line = line.strip()
+            
             if "System Description" in line:
-                desc = line.split(".")[-1].strip()
-            elif "System Up Time" in line:
-                uptime = line.split(".")[-1].strip()
+                # Format: "System Description............................. M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.4.26, 1.0.0.11"
+                desc = self._clean_output_line(line)
+                if desc:
+                    parts = desc.split(",")
+                    if len(parts) >= 2:
+                        model = parts[0].split()[0]  # First word of first part
+                        os_version = parts[1].strip()  # Second part is version
+                        
             elif "System Name" in line:
-                hostname = line.split(".")[-1].strip()
+                hostname = self._clean_output_line(line)
+                
+            elif "System Up Time" in line:
+                # Already formatted as "X days Y hrs Z mins W secs"
+                uptime = self._clean_output_line(line)
+                
+            elif "Serial Number" in line:
+                serial_number = self._clean_output_line(line)
+                if serial_number:
+                    serial_number = serial_number.split()[0]
 
-        # Parse model and version from description
-        model, version = self._parse_version(desc)
-
-        # Get interface list from status command
-        interfaces = []
-        cmd = "show interfaces status all"
-        output = self._send_command(cmd)
-        print(f"Sending command: {cmd}")
-        print(f"No read_timeout specified")
-        print(f"Command output: {cmd}\n\n{output[:50]}...")
-
+        # Get interfaces from status command
+        output = self._send_command("show interfaces status all")
+        interface_list = []
+        
         # Parse interface list from status output
         for line in output.splitlines():
-            if not line.strip():
+            # Skip headers and empty lines
+            if not line.strip() or "Link" in line or "-" * 5 in line:
                 continue
-            # Skip header lines
-            if any(x in line for x in ["Link", "Port", "------"]):
-                continue
-            # Extract interface name
-            parts = line.split()
-            if not parts:
-                continue
-            iface = parts[0]
-            # Skip LAG/VLAN interfaces
-            if iface.startswith(("lag ", "vlan ", "(")):
-                continue
-            # Only add physical interfaces
-            if re.match(r'\d+/\d+', iface):
-                interfaces.append(iface)
+                
+            # Split line and get first field (port)
+            fields = line.split()
+            if fields and "/" in fields[0]:  # Only physical interfaces
+                if not fields[0].startswith(("lag", "vlan")):
+                    interface_list.append(fields[0])
+        
+        # Sort interfaces naturally
+        interface_list.sort(key=lambda x: (int(x.split('/')[0]), int(x.split('/')[1])))
 
-        return {
+        # Build facts dictionary
+        facts = {
             "uptime": uptime,
             "vendor": "Netgear",
             "model": model,
             "hostname": hostname,
-            "fqdn": hostname,  # FQDN not available, use hostname
-            "os_version": version,
-            "serial_number": "",  # Serial number not available in sysinfo
-            "interface_list": sorted(interfaces)
+            "fqdn": hostname,  # No domain support needed
+            "os_version": os_version,
+            "serial_number": serial_number,
+            "interface_list": interface_list
         }
+        
+        return facts
 
     def get_mac_address_table(self) -> list:
         """Return LLDP neighbors details."""
