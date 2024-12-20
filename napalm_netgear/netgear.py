@@ -606,7 +606,6 @@ class NetgearDriver(NetworkDriver):
             return neighbors
             
         except Exception as e:
-            print(f"Error getting LLDP neighbors: {str(e)}")
             return {}
 
     def get_lldp_neighbors_detail(self) -> dict:
