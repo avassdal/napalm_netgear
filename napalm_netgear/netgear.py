@@ -620,6 +620,111 @@ class NetgearDriver(NetworkDriver):
                 
         return neighbors
 
+    def get_interfaces_ip(self) -> Dict[str, Dict[str, Dict[str, Dict[str, Any]]]]:
+        """Get interface IP addresses.
+        
+        Returns:
+            dict: Interfaces and their IP addresses, formatted as:
+                {
+                    "interface": {
+                        "ipv4": {
+                            "address": {
+                                "prefix_length": int
+                            }
+                        },
+                        "ipv6": {
+                            "address": {
+                                "prefix_length": int
+                            }
+                        }
+                    }
+                }
+        """
+        interfaces_ip = {}
+
+        # Get IPv4 addresses from show ip interface
+        output = self._send_command("show ip interface")
+        
+        # Skip if command not supported
+        if not self._is_supported_command(output):
+            return interfaces_ip
+            
+        # Parse output
+        current_interface = ""
+        for line in output.splitlines():
+            line = line.strip()
+            
+            # Skip empty lines and headers
+            if not line or "Interface" in line or "-" * 5 in line:
+                continue
+                
+            # Split line into fields
+            fields = line.split()
+            if not fields:
+                continue
+                
+            # First field is interface name
+            if "/" in fields[0]:  # Physical interface
+                current_interface = fields[0]
+                # Initialize interface dict if needed
+                if current_interface not in interfaces_ip:
+                    interfaces_ip[current_interface] = {"ipv4": {}, "ipv6": {}}
+                    
+                # Get IP and prefix length
+                if len(fields) >= 2:
+                    ip = fields[1]
+                    if ip != "unassigned":
+                        # Convert netmask to prefix length
+                        if len(fields) >= 3:
+                            netmask = fields[2]
+                            prefix_length = sum(bin(int(x)).count('1') for x in netmask.split('.'))
+                            interfaces_ip[current_interface]["ipv4"][ip] = {
+                                "prefix_length": prefix_length
+                            }
+        
+        # Get IPv6 addresses from show ipv6 interface
+        output = self._send_command("show ipv6 interface")
+        
+        # Skip if command not supported
+        if not self._is_supported_command(output):
+            return interfaces_ip
+            
+        # Parse output
+        current_interface = ""
+        for line in output.splitlines():
+            line = line.strip()
+            
+            # Skip empty lines and headers
+            if not line:
+                continue
+                
+            # Check if line starts with interface name
+            if line[0].isdigit():  # Interface names start with numbers
+                current_interface = line.split()[0]
+                # Initialize interface dict if needed
+                if current_interface not in interfaces_ip:
+                    interfaces_ip[current_interface] = {"ipv4": {}, "ipv6": {}}
+            elif "IPv6 is enabled" in line:
+                continue
+            elif "link-local" in line.lower():
+                continue
+            elif "::" in line:  # IPv6 address line
+                # Extract address and prefix length
+                addr_parts = line.split()
+                if addr_parts:
+                    ipv6_addr = addr_parts[0]
+                    if "/" in ipv6_addr:
+                        addr, prefix = ipv6_addr.split("/")
+                        try:
+                            prefix_length = int(prefix)
+                            interfaces_ip[current_interface]["ipv6"][addr] = {
+                                "prefix_length": prefix_length
+                            }
+                        except (ValueError, KeyError):
+                            continue
+        
+        return interfaces_ip
+
     def get_config(
         self,
         retrieve: str = "all",
