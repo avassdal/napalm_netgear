@@ -67,6 +67,20 @@ class NetgearDriver(NetworkDriver):
             "Invalid command"
         ])
 
+    def _parse_speed(self, speed_str: str) -> float:
+        """Parse speed string to float value in Mbps."""
+        if not speed_str or speed_str.lower() == 'auto':
+            return 0.0
+            
+        # Remove 'Full', 'Half', etc.
+        speed_str = speed_str.split()[0].strip()
+        
+        # Handle 10G format
+        if speed_str.endswith('G'):
+            return float(speed_str.rstrip('G')) * 1000  # Convert to Mbps
+            
+        return float(speed_str)
+
     def get_interfaces(self) -> Dict[str, Dict[str, Any]]:
         """
         Get interface details.
@@ -191,21 +205,21 @@ class NetgearDriver(NetworkDriver):
                 details.update({
                     'is_enabled': status.get('physical_mode', '').lower() != 'disabled',
                     'is_up': status.get('link_state', '').lower() == 'up',
-                    'speed': float(status.get('physical_status', '0').replace('Full', '').replace('Auto', '0').strip()) if status.get('physical_status') else 0.0,
+                    'speed': self._parse_speed(status.get('physical_status', '0')),
                 })
             elif "state" in status:
                 # M4500 format
                 details.update({
                     'is_enabled': status.get('state', '').lower() != 'disabled',
                     'is_up': status.get('link', '').lower() == 'up',
-                    'speed': float(status.get('speed', '0').replace('Full', '').replace('Auto', '0').strip()) if status.get('speed') else 0.0,
+                    'speed': self._parse_speed(status.get('speed', '0')),
                 })
             else:
                 # Default format
                 details.update({
                     'is_enabled': status.get('admin', '').lower() != 'disabled',
                     'is_up': status.get('link', '').lower() == 'up',
-                    'speed': float(status.get('speed', '0').replace('Full', '').replace('Auto', '0').strip()) if status.get('speed') else 0.0,
+                    'speed': self._parse_speed(status.get('speed', '0')),
                 })
 
             print(f"DEBUG: Parsed details for {iface}: {details}")
