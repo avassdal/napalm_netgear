@@ -6,6 +6,12 @@ import time
 import re
 from . import parser  # Use relative import
 
+from netmiko import ConnectHandler
+from netmiko.exceptions import (
+    NetMikoTimeoutException,
+    NetMikoAuthenticationException,
+)
+
 from napalm.base.base import NetworkDriver
 from napalm.base.exceptions import ConnectionClosedException, ConnectionException, CommandErrorException
 from napalm.base.helpers import mac
@@ -749,7 +755,7 @@ class NetgearDriver(NetworkDriver):
         device_args.update(self.optional_args)
 
         try:
-            self.device = netmiko.ConnectHandler(**device_args)
+            self.device = ConnectHandler(**device_args)
             self._enable_mode()
         except (NetMikoTimeoutException, NetMikoAuthenticationException) as e:
             raise ConnectionException(str(e))
