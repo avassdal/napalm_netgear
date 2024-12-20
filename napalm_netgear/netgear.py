@@ -461,9 +461,18 @@ class NetgearDriver(NetworkDriver):
                 hostname = self._clean_output_line(line)
                 
             elif "System Up Time" in line:
-                # Already formatted as "X days Y hrs Z mins W secs"
-                uptime = self._clean_output_line(line)
-                
+                try:
+                    uptime_str = line.split(":", 1)[1].strip()
+                    parts = uptime_str.replace(",", "").split()
+                    days = int(parts[0]) if "days" in parts else 0
+                    hours = int(parts[parts.index("hrs")-1]) if "hrs" in parts else 0
+                    mins = int(parts[parts.index("mins")-1]) if "mins" in parts else 0
+                    secs = int(parts[parts.index("secs")-1]) if "secs" in parts else 0
+                    uptime_secs = ((days * 24 + hours) * 60 + mins) * 60 + secs
+                    uptime = self._format_uptime(uptime_secs)
+                except (ValueError, IndexError):
+                    uptime = "0 secs"
+                    
             elif "Serial Number" in line:
                 serial_number = self._clean_output_line(line)
                 if serial_number:
