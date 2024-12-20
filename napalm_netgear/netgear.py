@@ -387,8 +387,8 @@ class NetgearDriver(NetworkDriver):
         
         # Get interfaces
         interfaces = self.get_interfaces()
-        interface_list = list(interfaces.keys())
-        
+        interface_list = sorted(interfaces.keys(), key=lambda x: (int(x.split('/')[0]), int(x.split('/')[1])))
+
         # Build facts dictionary
         facts = {
             "uptime": self._format_uptime(int(uptime)),  # Format uptime as string
@@ -398,7 +398,7 @@ class NetgearDriver(NetworkDriver):
             "fqdn": f"{hostname}.{domain}" if domain else hostname,
             "os_version": os_version,
             "serial_number": serial_number,
-            "interface_list": sorted(interface_list)
+            "interface_list": interface_list
         }
         
         return facts
