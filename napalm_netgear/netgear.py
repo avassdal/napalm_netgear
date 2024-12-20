@@ -1075,8 +1075,9 @@ class NetgearDriver(NetworkDriver):
         output = self._send_command(command)
         
         if not "Command not found" in output and not "Invalid input" in output:
+            # Try M4350 format first
             for line in output.splitlines():
-                if "Memory Utilization" in line:
+                if "Memory Utilization" in line and ":" in line:
                     try:
                         mem_util = float(line.split(':')[1].strip().rstrip('%'))
                         environment["memory"] = {
@@ -1086,5 +1087,30 @@ class NetgearDriver(NetworkDriver):
                         }
                     except (ValueError, IndexError):
                         pass
+                    break
+
+            # Try M4250 format if memory is still empty
+            if not environment["memory"]:
+                free_kb = None
+                alloc_kb = None
+                for line in output.splitlines():
+                    if "free" in line and "KBytes" not in line:
+                        try:
+                            free_kb = int(line.split()[1])
+                        except (ValueError, IndexError):
+                            pass
+                    elif "alloc" in line:
+                        try:
+                            alloc_kb = int(line.split()[1])
+                        except (ValueError, IndexError):
+                            pass
+                
+                if free_kb is not None and alloc_kb is not None:
+                    total_kb = free_kb + alloc_kb
+                    environment["memory"] = {
+                        "available_ram": total_kb * 1024,  # Convert to bytes
+                        "used_ram": alloc_kb * 1024,      # Convert to bytes
+                        "free_ram": free_kb * 1024        # Convert to bytes
+                    }
 
         return environment
