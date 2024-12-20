@@ -476,22 +476,15 @@ class NetgearDriver(NetworkDriver):
         """
         # Get IPv4 addresses
         output = self._send_command("show ip interface brief")
-        print(f"\nIPv4 command output:\n{output}")
-        
         if not self._is_supported_command(output):
-            print("IPv4 command not supported")
             return {}
             
         interfaces_ip = parser.parse_interfaces_ip(output)
-        print(f"\nParsed IPv4 interfaces: {interfaces_ip}")
         
         # Get IPv6 addresses
         output = self._send_command("show ipv6 interface brief")
-        print(f"\nIPv6 command output:\n{output}")
-        
         if self._is_supported_command(output):
             ipv6_interfaces = parser.parse_ipv6_interfaces(output)
-            print(f"\nParsed IPv6 interfaces: {ipv6_interfaces}")
             
             # Merge IPv6 addresses into result
             for interface, data in ipv6_interfaces.items():
@@ -499,7 +492,6 @@ class NetgearDriver(NetworkDriver):
                     interfaces_ip[interface] = {"ipv4": {}, "ipv6": {}}
                 interfaces_ip[interface]["ipv6"].update(data["ipv6"])
         
-        print(f"\nFinal result: {interfaces_ip}")
         return interfaces_ip
 
     def get_mac_address_table(self) -> list:
