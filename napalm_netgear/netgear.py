@@ -67,19 +67,22 @@ class NetgearDriver(NetworkDriver):
             "Invalid command"
         ])
 
-    def _parse_speed(self, speed_str: str) -> float:
-        """Parse speed string to float value in Mbps."""
-        if not speed_str or speed_str.lower() == 'auto':
+    def _parse_speed(self, speed_str):
+        """Parse speed string into float (Mbps)."""
+        if not speed_str or speed_str.lower() == 'auto' or speed_str.lower() == 'unknown':
             return 0.0
             
-        # Remove 'Full', 'Half', etc.
-        speed_str = speed_str.split()[0].strip()
+        # Handle special cases like "10G Full", "1000 Full"
+        speed_str = speed_str.lower().replace('full', '').replace('half', '').strip()
         
-        # Handle 10G format
-        if speed_str.endswith('G'):
-            return float(speed_str.rstrip('G')) * 1000  # Convert to Mbps
+        # Convert 10G to 10000
+        if 'g' in speed_str:
+            speed_str = str(float(speed_str.replace('g', '')) * 1000)
             
-        return float(speed_str)
+        try:
+            return float(speed_str)
+        except ValueError:
+            return 0.0  # Return 0 for non-numeric speeds (e.g. "Copper", "10GBase-SR")
 
     def get_interfaces(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -159,6 +162,21 @@ class NetgearDriver(NetworkDriver):
             # Link    Physical    Physical    Media       Flow
             # Port       Name     State      Mode        Status      Type        Control     VLAN
             fields = ["port", "name", "link_state", "physical_mode", "physical_status", "media_type", "flow_control", "vlan"]
+            
+            # Parse each line into a dict with correct field mapping
+            interfaces_status = []
+            for line in output.splitlines():
+                if line and not line.startswith('-') and not line.startswith('Port') and not "Link" in line:
+                    parts = line.split()
+                    if len(parts) >= 8:  # Ensure we have enough fields
+                        interface = {}
+                        interface['port'] = parts[0]
+                        interface['name'] = parts[1] if len(parts[1].strip()) > 0 else ''
+                        interface['link'] = parts[2]  # Link State
+                        interface['admin'] = 'up' if parts[2].lower() == 'up' else 'down'
+                        interface['speed'] = parts[4] if len(parts) > 4 else ''  # Physical Status
+                        interface['type'] = parts[5] if len(parts) > 5 else ''  # Media Type
+                        interfaces_status.append(interface)
         elif "Link" in header and "State" in header:
             # M4500 format:
             # Port    Name      Link    State    Mode      Speed    Type     VLAN
