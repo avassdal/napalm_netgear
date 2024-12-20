@@ -136,22 +136,28 @@ class NetgearDriver(NetworkDriver):
 
         # Get header line from output
         header = None
+        header_lines = []
         for line in output.splitlines():
             if "Port" in line:
-                header = line
+                header_lines.append(line)
+                # Look for second header line in M4250 format
+                if len(header_lines) == 1 and "Physical" in output.splitlines()[output.splitlines().index(line) - 1]:
+                    header_lines.insert(0, output.splitlines()[output.splitlines().index(line) - 1])
                 break
 
-        if not header:
+        if not header_lines:
             print("DEBUG: Could not find header line")
             return interfaces
 
+        # Combine multi-line headers
+        header = " ".join(header_lines)
         print(f"DEBUG: Found header line: {header}")
             
         # Determine model and field layout based on header
         if "Physical Mode" in header:
             # M4250 format:
-            # Port       Name                    Link    Physical    Physical    Media       Flow
-            #                                    State   Mode        Status      Type        Control     VLAN
+            # Link    Physical    Physical    Media       Flow
+            # Port       Name     State      Mode        Status      Type        Control     VLAN
             fields = ["port", "name", "link_state", "physical_mode", "physical_status", "media_type", "flow_control", "vlan"]
         elif "Link" in header and "State" in header:
             # M4500 format:
