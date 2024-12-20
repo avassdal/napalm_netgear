@@ -632,7 +632,7 @@ class NetgearDriver(NetworkDriver):
                         continue
                         
                     # Split line into fixed-width columns
-                    # Local Interface (10), RemID (8), Chassis ID (20), Port ID (18), System Name (18)
+                    # Local Interface (10), RemID (8), Chassis ID (20), Port ID (18), System Name (20)
                     if len(line) < 10:  # Need at least interface
                         continue
                         
@@ -648,7 +648,7 @@ class NetgearDriver(NetworkDriver):
                     # Get remaining fields if present
                     chassis_id = line[18:38].strip() if len(line) > 38 else None
                     port_id = line[38:56].strip() if len(line) > 56 else None
-                    system_name = line[56:74].strip() if len(line) > 74 else None
+                    system_name = line[56:76].strip() if len(line) > 76 else None
                     
                     # Only process if we have valid data
                     if chassis_id and any(c.isalnum() for c in chassis_id):
