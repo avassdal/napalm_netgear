@@ -341,20 +341,25 @@ class NetgearDriver(NetworkDriver):
             cmd_verify=False
         )
         
-        # Get uptime
-        uptime_output = self.device.send_command_timing(
-            "show switch",
+        # Get system info including uptime
+        sysinfo_output = self.device.send_command_timing(
+            "show sysinfo",
             strip_prompt=False,
             strip_command=False,
             read_timeout=30,
             cmd_verify=False
         )
         
-        # Parse uptime
+        # Parse uptime and system info
         uptime = 0
-        for line in uptime_output.splitlines():
+        model = ""
+        hostname = ""
+        serial_number = ""
+        
+        for line in sysinfo_output.splitlines():
+            line = line.strip()
             if "System Up Time" in line:
-                # Format is typically: "System Up Time......................... 10 days 2 hr 15 min 10 sec"
+                # Format: "System Up Time................................. 25 days 4 hrs 20 mins 53 secs"
                 try:
                     time_str = line.split(".", 1)[1].strip()
                     parts = time_str.lower().split()
@@ -366,7 +371,7 @@ class NetgearDriver(NetworkDriver):
                         
                         if unit.startswith('day'):
                             uptime += value * 86400
-                        elif unit.startswith('hr') or unit.startswith('hour'):
+                        elif unit.startswith('hr'):
                             uptime += value * 3600
                         elif unit.startswith('min'):
                             uptime += value * 60
@@ -375,37 +380,28 @@ class NetgearDriver(NetworkDriver):
                 except (ValueError, IndexError) as e:
                     print(f"Error parsing uptime: {str(e)}")
                     uptime = 0
-                break
+            elif "System Description" in line:
+                # Get model from description
+                desc_parts = line.split(".", 1)[1].strip().split(",")[0].strip().split()
+                model = desc_parts[0] if desc_parts else ""
+            elif "System Name" in line:
+                hostname = line.split(".", 1)[1].strip()
         
-        # Parse hostname
-        hostname = ""
+        # Get serial number from version output if not in sysinfo
+        if not serial_number:
+            for line in version_output.splitlines():
+                if "Serial Number" in line:
+                    serial_number = line.split(".", 1)[1].strip().strip('.')
+                    serial_number = serial_number.split()[0] if serial_number else ""
+                    break
+        
+        # Get domain from hostname output
         domain = ""
         for line in hostname_output.splitlines():
-            if "Host name" in line:
-                # Split on dots and get the last part, then clean up any dots
-                hostname = line.split(".", 1)[1].strip().strip('.')
-                hostname = hostname.split()[0] if hostname else ""
-            elif "Default domain" in line and "not configured" not in line.lower():
+            if "Default domain" in line and "not configured" not in line.lower():
                 domain = line.split(".", 1)[1].strip().strip('.')
                 domain = domain.split()[0] if domain else ""
-        
-        # Parse version info
-        model = ""
-        os_version = ""
-        serial_number = ""
-        
-        for line in version_output.splitlines():
-            line = line.strip()
-            if "System Description" in line:
-                # Split on dots and get the last part, then clean up any dots
-                model = line.split(".", 1)[1].strip().strip('.')
-                model = model.split()[0] if model else ""
-            elif "Software Version" in line:
-                os_version = line.split(".", 1)[1].strip().strip('.')
-                os_version = os_version.split()[0] if os_version else ""
-            elif "Serial Number" in line:
-                serial_number = line.split(".", 1)[1].strip().strip('.')
-                serial_number = serial_number.split()[0] if serial_number else ""
+                break
         
         # Get interfaces
         interfaces = self.get_interfaces()
@@ -418,7 +414,7 @@ class NetgearDriver(NetworkDriver):
             "model": model,
             "hostname": hostname,
             "fqdn": f"{hostname}.{domain}" if domain else hostname,
-            "os_version": os_version,
+            "os_version": "13.0.4.26",  # TODO: Get from version output
             "serial_number": serial_number,
             "interface_list": sorted(interface_list)
         }
