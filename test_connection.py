@@ -7,10 +7,10 @@ def print_json(data):
 # Initialize driver
 driver = get_network_driver('netgear')
 device = driver(
-    hostname='10.10.10.3',
-    username='admin',
-    password='LjSnS2wWMt5Ljn',
-    optional_args={'port': 1223}
+    hostname='192.168.1.1',  # Replace with your switch IP
+    username='admin',        # Replace with your username
+    password='password',     # Replace with your password
+    optional_args={'port': 22}  # Optional SSH port
 )
 
 # Connect and get data
