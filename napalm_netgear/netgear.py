@@ -77,12 +77,15 @@ class NetgearDriver(NetworkDriver):
         
         # Convert 10G to 10000
         if 'g' in speed_str:
-            speed_str = str(float(speed_str.replace('g', '')) * 1000)
+            try:
+                return float(speed_str.replace('g', '')) * 1000
+            except ValueError:
+                return 0.0
             
         try:
-            return float(speed_str)
-        except ValueError:
-            return 0.0  # Return 0 for non-numeric speeds (e.g. "Copper", "10GBase-SR")
+            return float(speed_str.split()[0])  # Take first number if multiple parts
+        except (ValueError, IndexError):
+            return 0.0  # Return 0 for non-numeric speeds
 
     def get_interfaces(self) -> Dict[str, Dict[str, Any]]:
         """
@@ -177,6 +180,7 @@ class NetgearDriver(NetworkDriver):
                         interface['speed'] = parts[4] if len(parts) > 4 else ''  # Physical Status
                         interface['type'] = parts[5] if len(parts) > 5 else ''  # Media Type
                         interfaces_status.append(interface)
+            return interfaces_status
         elif "Link" in header and "State" in header:
             # M4500 format:
             # Port    Name      Link    State    Mode      Speed    Type     VLAN
