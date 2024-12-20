@@ -102,16 +102,12 @@ class NetgearDriver(NetworkDriver):
         """
         interfaces = {}
 
-        # Get interface status
+        # Get interface status - single command for all interfaces
         cmd = "show interfaces status all"
         output = self._send_command(cmd)
-        print(f"DEBUG: Found working command: {cmd}")
-        print(f"DEBUG: Raw interface status output:")
-        print(output)
 
         # Parse interface status table
         interface_status = parser.parse_interface_status(output)
-        print(f"DEBUG: Parsed interface status: {interface_status}")
 
         # Process each interface
         for status in interface_status:
@@ -121,42 +117,36 @@ class NetgearDriver(NetworkDriver):
 
             # Skip LAG/VLAN interfaces and invalid interface names
             if iface.startswith(('lag ', 'vlan ', '(')) or not re.match(r'\d+/\d+', iface):
-                print(f"DEBUG: Skipping invalid interface name: {iface}")
                 continue
 
-            # Get interface details
-            print(f"DEBUG: Getting details for interface {iface}")
-            cmd = f"show interface {iface}"
-            details = self._send_command(cmd)
-            print(f"DEBUG: Detail output for {iface}:")
-            print(details)
+            # Create basic interface info
+            interface_info = {
+                "is_up": status.get("state", "").lower() == "up",
+                "is_enabled": True,  # Assume enabled if visible
+                "description": status.get("name", ""),
+                "mac_address": "",  # Not available in status table
+                "last_flapped": -1.0,  # Not available in status table
+                "mtu": 1500,  # Default MTU
+            }
 
-            # Parse interface details
-            interface_info = parser.parse_interface_detail(iface, details)
-            print(f"DEBUG: Parsed details for {iface}: {interface_info}")
-
-            # Update interface info with status
-            interface_info["is_up"] = status.get("state", "").lower() == "up"
-            interface_info["is_enabled"] = True  # Assume enabled if visible
-                
             # Get speed from Physical Status field
-            speed_str = status.get("speed", "")
+            speed_str = status.get("speed", "").lower()
             if speed_str:
-                # Convert speed string to Mbps
-                if "10g" in speed_str.lower():
+                if "10g" in speed_str:
                     interface_info["speed"] = 10000
-                elif "1000" in speed_str.lower():
+                elif "1000" in speed_str:
                     interface_info["speed"] = 1000
-                elif "100" in speed_str.lower():
+                elif "100" in speed_str:
                     interface_info["speed"] = 100
-                elif "10" in speed_str.lower():
+                elif "10" in speed_str:
                     interface_info["speed"] = 10
                 else:
                     interface_info["speed"] = 0
+            else:
+                interface_info["speed"] = 0
             
             interfaces[iface] = interface_info
 
-        print(f"DEBUG: Final interfaces dict: {interfaces}")
         return interfaces
 
     def _parse_interface_status(self, output):
