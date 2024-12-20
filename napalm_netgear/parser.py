@@ -409,14 +409,14 @@ def parse_interface_status(output: str) -> List[Dict[str, str]]:
         
     Returns:
         List of dictionaries containing interface status:
-            - port: Interface name
+            - port: Interface name (0/1, 0/2)
             - name: Interface description
-            - link: Link state (Up/Down) 
-            - state: Physical mode (Auto, 10G Full, etc)
-            - mode: Physical status (1000 Full, 10G Full, etc)
-            - speed: Media type (Copper, 10GBase-SR, etc)
-            - type: Flow control (Inactive)
-            - vlan: VLAN membership (1, 50, Trunk, etc)
+            - state: Link State (Up/Down)
+            - mode: Physical Mode (Auto)
+            - speed: Physical Status (1000 Full, 10G Full)
+            - type: Media Type (Copper, 10GBase-SR)
+            - flow_control: Flow Control state (Inactive)
+            - vlan: VLAN membership (1, 50, Trunk)
             
     Example:
         >>> output = '''
@@ -428,10 +428,10 @@ def parse_interface_status(output: str) -> List[Dict[str, str]]:
         ... '''
         >>> parse_interface_status(output)
         [
-            {'port': '0/1', 'name': '', 'link': 'Down', 'state': 'Auto',
-             'mode': '', 'speed': '', 'type': 'Inactive', 'vlan': '50'},
-            {'port': '0/2', 'name': '', 'link': 'Up', 'state': 'Auto',
-             'mode': '1000 Full', 'speed': 'Copper', 'type': 'Inactive', 'vlan': '1'}
+            {'port': '0/1', 'name': '', 'state': 'Down',
+             'mode': 'Auto', 'speed': '', 'type': '', 'flow_control': 'Inactive', 'vlan': '50'},
+            {'port': '0/2', 'name': '', 'state': 'Up',
+             'mode': 'Auto', 'speed': '1000 Full', 'type': 'Copper', 'flow_control': 'Inactive', 'vlan': '1'}
         ]
     """
     # Skip empty lines
@@ -454,8 +454,10 @@ def parse_interface_status(output: str) -> List[Dict[str, str]]:
     header2 = lines[header_index + 1]
     separator = lines[header_index + 2]
 
-    # Define fields
-    fields = ["port", "name", "link", "state", "mode", "speed", "type", "vlan"]
+    # Define field names based on M4250 format
+    # Map to the actual columns in the output:
+    # Port, Name, Link State, Physical Mode, Physical Status, Media Type, Flow Control, VLAN
+    fields = ["port", "name", "state", "mode", "speed", "type", "flow_control", "vlan"]
 
     # Find column positions from separator line
     positions = []

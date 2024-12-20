@@ -91,7 +91,14 @@ class NetgearDriver(NetworkDriver):
         """Get interface details.
 
         Returns:
-            dict: Interfaces in Napalm format
+            dict: Interfaces in Napalm format:
+                - is_up (bool)
+                - is_enabled (bool)
+                - description (str)
+                - speed (int - Mbps)
+                - mtu (int)
+                - mac_address (str)
+                - last_flapped (float)
         """
         interfaces = {}
 
@@ -129,13 +136,23 @@ class NetgearDriver(NetworkDriver):
             print(f"DEBUG: Parsed details for {iface}: {interface_info}")
 
             # Update interface info with status
-            if status.get("link", "").lower() == "up":
-                interface_info["is_up"] = True
+            interface_info["is_up"] = status.get("state", "").lower() == "up"
+            interface_info["is_enabled"] = True  # Assume enabled if visible
                 
-            # Get speed from mode field first (contains actual speed)
-            speed_str = status.get("mode", "")
+            # Get speed from Physical Status field
+            speed_str = status.get("speed", "")
             if speed_str:
-                interface_info["speed"] = parser.MAP_INTERFACE_SPEED.get(speed_str, 0)
+                # Convert speed string to Mbps
+                if "10g" in speed_str.lower():
+                    interface_info["speed"] = 10000
+                elif "1000" in speed_str.lower():
+                    interface_info["speed"] = 1000
+                elif "100" in speed_str.lower():
+                    interface_info["speed"] = 100
+                elif "10" in speed_str.lower():
+                    interface_info["speed"] = 10
+                else:
+                    interface_info["speed"] = 0
             
             interfaces[iface] = interface_info
 
