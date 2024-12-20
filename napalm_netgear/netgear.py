@@ -980,9 +980,9 @@ class NetgearDriver(NetworkDriver):
     def _enable_mode(self):
         """Enter privileged mode on supported devices."""
         try:
-            self.device.enable(cmd_verify=False)
-        except Exception:
-            pass
+            self.device.enable()
+        except (NetMikoTimeoutException, NetMikoAuthenticationException) as e:
+            raise ConnectionException(str(e))
 
     def close(self) -> None:
         """Close the connection to the device."""
