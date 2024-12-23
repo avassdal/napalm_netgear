@@ -570,7 +570,7 @@ class NetgearDriver(NetworkDriver):
         if "MAC Address" in output and "Type" in output:  # GS108Tv3 format
             return parse_gs108tv3_mac_table(output)
             
-        # Try M4250/M4350/M4500 format
+        # Try M4250/M4350 format
         command = "show mac-addr-table"
         output = self._send_command(command)
         
@@ -778,8 +778,7 @@ class NetgearDriver(NetworkDriver):
             self.log.debug(f"Line parts: {parts}")
             if len(parts) >= 2 and self._is_valid_interface(parts[0]):
                 interface = parts[0]
-                if parts[1].strip():  # Only add if RemID exists
-                    interfaces.append(interface)
+                interfaces.append(interface)  # Add all valid interfaces
         
         self.log.debug(f"Found interfaces with neighbors: {interfaces}")
         
@@ -821,17 +820,19 @@ class NetgearDriver(NetworkDriver):
                 self.log.debug(f"Processing detail line: {line}")
                 
                 # Skip header lines
-                if "LLDP Remote Device Detail" in line:
-                    continue
-                if "Local Interface:" in line:
-                    continue
-                if "Remote Identifier:" in line:
+                if any(header in line for header in [
+                    "LLDP Remote Device Detail",
+                    "Local Interface:",
+                    "Remote Identifier:",
+                    "Chassis ID Subtype:",
+                    "Port ID Subtype:"
+                ]):
                     continue
                     
                 # Handle main fields
-                if "Chassis ID:" in line and "Subtype:" not in line:
+                if "Chassis ID:" in line:
                     neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
-                elif "Port ID:" in line and "Subtype:" not in line:
+                elif "Port ID:" in line:
                     neighbor["remote_port"] = line.split(":", 1)[1].strip()
                 elif "System Name:" in line:
                     neighbor["remote_system_name"] = line.split(":", 1)[1].strip()
@@ -855,12 +856,7 @@ class NetgearDriver(NetworkDriver):
                 elif "Time to Live:" in line:
                     current_section = None
                     
-            # Create a copy without parent_interface for validation
-            neighbor_data = neighbor.copy()
-            del neighbor_data["parent_interface"]
-            
-            # Only add if we found any real data
-            if any(neighbor_data.values()):
+            if any(val for val in neighbor.values() if val):  # Only add if we found any non-empty data
                 self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
                 neighbors[interface] = [neighbor]
         
