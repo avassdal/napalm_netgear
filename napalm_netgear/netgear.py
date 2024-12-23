@@ -766,21 +766,58 @@ class NetgearDriver(NetworkDriver):
                 interface = parts[0]
                 if parts[1].strip():  # Only add if RemID exists
                     interfaces.append(interface)
-                    # Create neighbor entry from available information
-                    neighbor = {
-                        "parent_interface": interface,
-                        "remote_chassis_id": parts[2] if len(parts) > 2 else "",  # Chassis ID column
-                        "remote_port": parts[3] if len(parts) > 3 else "",  # Port ID column
-                        "remote_port_description": "",
-                        "remote_system_name": parts[4] if len(parts) > 4 else "",  # System Name column
-                        "remote_system_description": "",
-                        "remote_system_capab": [],
-                        "remote_system_enable_capab": [],
-                        "remote_management_address": ""
-                    }
-                    neighbors[interface] = [neighbor]
         
         self.log.debug(f"Found interfaces with neighbors: {interfaces}")
+        
+        # Get detailed info for each interface with neighbors
+        for interface in interfaces:
+            command = f"show lldp remote-device detail {interface}"
+            output = self._send_command(command)
+            self.log.debug(f"\nLLDP detail for {interface}:\n{output}")
+            
+            # Parse detailed output
+            neighbor = {
+                "parent_interface": interface,
+                "remote_chassis_id": "",
+                "remote_port": "",
+                "remote_port_description": "",
+                "remote_system_name": "",
+                "remote_system_description": "",
+                "remote_system_capab": [],
+                "remote_system_enable_capab": [],
+                "remote_management_address": ""
+            }
+            
+            in_management = False
+            for line in output.splitlines():
+                line = line.strip()
+                self.log.debug(f"Processing detail line: {line}")
+                
+                if "Chassis ID:" in line and "Subtype:" not in line:
+                    neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
+                elif "Port ID:" in line and "Subtype:" not in line:
+                    neighbor["remote_port"] = line.split(":", 1)[1].strip()
+                elif "System Name:" in line:
+                    neighbor["remote_system_name"] = line.split(":", 1)[1].strip()
+                elif "System Description:" in line:
+                    neighbor["remote_system_description"] = line.split(":", 1)[1].strip()
+                elif "Port Description:" in line:
+                    neighbor["remote_port_description"] = line.split(":", 1)[1].strip()
+                elif "System Capabilities Supported:" in line:
+                    caps = line.split(":", 1)[1].strip()
+                    neighbor["remote_system_capab"] = [c.strip() for c in caps.split(",")]
+                elif "System Capabilities Enabled:" in line:
+                    caps = line.split(":", 1)[1].strip()
+                    neighbor["remote_system_enable_capab"] = [c.strip() for c in caps.split(",")]
+                elif "Management Address:" in line:
+                    in_management = True
+                elif in_management and "Address:" in line:
+                    neighbor["remote_management_address"] = line.split(":", 1)[1].strip()
+                    in_management = False
+            
+            self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
+            neighbors[interface] = [neighbor]
+        
         self.log.debug(f"Final neighbors dict: {neighbors}")
         return neighbors
 
