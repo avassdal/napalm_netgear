@@ -741,12 +741,16 @@ class NetgearDriver(NetworkDriver):
         
         # Get detailed info for each interface with neighbors
         for interface in interfaces:
+            self.log.debug(f"\nGetting details for interface {interface}")
             # Disable paging first
             self._send_command("no pager")
             
             command = f"show lldp remote-device detail {interface}"
+            self.log.debug(f"Sending command: {command}")
             try:
                 output = self._send_command(command)
+                self.log.debug(f"LLDP detail output for {interface}:\n{output}")
+                
                 if not output:
                     self.log.debug(f"No LLDP detail output for interface {interface}")
                     continue
@@ -754,8 +758,6 @@ class NetgearDriver(NetworkDriver):
                 self.log.error(f"Failed to get LLDP detail for interface {interface}: {str(e)}")
                 continue
                 
-            self.log.debug(f"\nLLDP detail for {interface}:\n{output}")
-            
             # Parse detailed output
             neighbor = {
                 "parent_interface": interface,
@@ -777,7 +779,7 @@ class NetgearDriver(NetworkDriver):
                 if not line:
                     continue
                     
-                self.log.debug(f"Processing detail line: {line}")
+                self.log.debug(f"Processing detail line: '{line}'")
                 
                 # Skip header lines
                 if any(header in line for header in [
@@ -978,15 +980,25 @@ class NetgearDriver(NetworkDriver):
             # Disable paging first
             self._send_command("no pager")
             
+            # Try M4500 command first
             command = f"show lldp remote-device detail {interface}"
             self.log.debug(f"Sending command: {command}")
             try:
                 output = self._send_command(command)
                 self.log.debug(f"LLDP detail output for {interface}:\n{output}")
                 
-                if not output:
-                    self.log.debug(f"No LLDP detail output for interface {interface}")
+                if "An invalid interface has been used for this command" in output:
+                    self.log.debug("Initial command not supported, trying alternative")
+                    # Try M4250/M4350 format
+                    command = f"show lldp remote-device {interface} detail"
+                    self.log.debug(f"Sending alternative command: {command}")
+                    output = self._send_command(command)
+                    self.log.debug(f"Alternative LLDP detail output:\n{output}")
+                
+                if not output or "Error:" in output:
+                    self.log.debug(f"No valid LLDP detail output for interface {interface}")
                     continue
+                        
             except Exception as e:
                 self.log.error(f"Failed to get LLDP detail for interface {interface}: {str(e)}")
                 continue
