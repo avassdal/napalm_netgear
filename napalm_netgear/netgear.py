@@ -849,6 +849,9 @@ class NetgearDriver(NetworkDriver):
         """
         self.log.debug("Getting LLDP neighbor details...")
         
+        # Initialize neighbors dictionary
+        neighbors = {}
+        
         # Disable paging first
         self._send_command("no pager")
         
