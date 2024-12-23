@@ -849,6 +849,10 @@ class NetgearDriver(NetworkDriver):
         """
         self.log.debug("Getting LLDP neighbor details...")
         
+        # Set logging level to DEBUG
+        import logging
+        self.log.setLevel(logging.DEBUG)
+        
         # Initialize neighbors dictionary
         neighbors = {}
         
