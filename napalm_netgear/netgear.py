@@ -631,14 +631,26 @@ class NetgearDriver(NetworkDriver):
         try:
             command = "show lldp remote-device all"
             output = self._send_command(command)
-            if "An invalid interface has been used for this command" in output:
+            if not output or "An invalid interface has been used for this command" in output:
                 # Switch to M4500 command if 'all' not supported
                 command = "show lldp remote-device"
                 output = self._send_command(command)
+                
+            if not output:
+                self.log.debug("No LLDP output received")
+                return {}
+                
         except Exception as e:
             self.log.debug(f"Error with first LLDP command, trying alternative: {str(e)}")
-            command = "show lldp remote-device"
-            output = self._send_command(command)
+            try:
+                command = "show lldp remote-device"
+                output = self._send_command(command)
+                if not output:
+                    self.log.debug("No LLDP output received from alternative command")
+                    return {}
+            except Exception as e:
+                self.log.error(f"Failed to get LLDP neighbors: {str(e)}")
+                return {}
             
         self.log.debug(f"LLDP output:\n{output}")
         
@@ -673,7 +685,7 @@ class NetgearDriver(NetworkDriver):
             self.log.debug(f"Line parts: {parts}")
             
             # Need at least interface, chassis ID, and port ID
-            if len(parts) >= 4 and parts[0].startswith(("0/", "1/0/")):
+            if len(parts) >= 4 and self._is_valid_interface(parts[0]):
                 interface = parts[0]
                 chassis_id = parts[2]  # Chassis ID is in 3rd column
                 port = parts[3]  # Port ID is in 4th column
@@ -721,14 +733,26 @@ class NetgearDriver(NetworkDriver):
         try:
             command = "show lldp remote-device all"
             output = self._send_command(command)
-            if "An invalid interface has been used for this command" in output:
+            if not output or "An invalid interface has been used for this command" in output:
                 # Switch to M4500 command if 'all' not supported
                 command = "show lldp remote-device"
                 output = self._send_command(command)
+                
+            if not output:
+                self.log.debug("No LLDP output received")
+                return {}
+                
         except Exception as e:
             self.log.debug(f"Error with first LLDP command, trying alternative: {str(e)}")
-            command = "show lldp remote-device"
-            output = self._send_command(command)
+            try:
+                command = "show lldp remote-device"
+                output = self._send_command(command)
+                if not output:
+                    self.log.debug("No LLDP output received from alternative command")
+                    return {}
+            except Exception as e:
+                self.log.error(f"Failed to get LLDP neighbors: {str(e)}")
+                return {}
             
         self.log.debug(f"LLDP output:\n{output}")
         
@@ -752,7 +776,7 @@ class NetgearDriver(NetworkDriver):
             # Split line and get interface if it has a RemID
             parts = line.split()
             self.log.debug(f"Line parts: {parts}")
-            if len(parts) >= 2 and parts[0].startswith(("0/", "1/0/")):
+            if len(parts) >= 2 and self._is_valid_interface(parts[0]):
                 interface = parts[0]
                 if parts[1].strip():  # Only add if RemID exists
                     interfaces.append(interface)
@@ -762,7 +786,15 @@ class NetgearDriver(NetworkDriver):
         # Get detailed info for each interface with neighbors
         for interface in interfaces:
             command = f"show lldp remote-device detail {interface}"
-            output = self._send_command(command)
+            try:
+                output = self._send_command(command)
+                if not output:
+                    self.log.debug(f"No LLDP detail output for interface {interface}")
+                    continue
+            except Exception as e:
+                self.log.error(f"Failed to get LLDP detail for interface {interface}: {str(e)}")
+                continue
+                
             self.log.debug(f"\nLLDP detail for {interface}:\n{output}")
             
             # Parse detailed output
@@ -795,10 +827,10 @@ class NetgearDriver(NetworkDriver):
                     neighbor["remote_port_description"] = line.split(":", 1)[1].strip()
                 elif "System Capabilities Supported:" in line:
                     caps = line.split(":", 1)[1].strip()
-                    neighbor["remote_system_capab"] = [c.strip() for c in caps.split(",")]
+                    neighbor["remote_system_capab"] = self._parse_capabilities(caps)
                 elif "System Capabilities Enabled:" in line:
                     caps = line.split(":", 1)[1].strip()
-                    neighbor["remote_system_enable_capab"] = [c.strip() for c in caps.split(",")]
+                    neighbor["remote_system_enable_capab"] = self._parse_capabilities(caps)
                 elif "Management Address:" in line:
                     in_management = True
                 elif in_management and "Address:" in line:
@@ -809,16 +841,48 @@ class NetgearDriver(NetworkDriver):
                 elif "Time to Live:" in line:  # End of main LLDP section
                     in_management = False
             
-            # Clean up capabilities - handle spaces in capability names
-            for cap_list in ["remote_system_capab", "remote_system_enable_capab"]:
-                if neighbor[cap_list]:
-                    neighbor[cap_list] = [cap.strip().replace(" access point", "-access-point") for cap in neighbor[cap_list]]
-            
             self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
             neighbors[interface] = [neighbor]
         
         self.log.debug(f"Final neighbors dict: {neighbors}")
         return neighbors
+
+    def _is_valid_interface(self, interface: str) -> bool:
+        """Check if interface name is valid.
+        
+        Valid formats:
+        - 0/1
+        - 1/0/1
+        - 2/0/1
+        etc.
+        """
+        return bool(re.match(r'^\d+/\d+(/\d+)?$', interface))
+
+    def _normalize_capability(self, capability: str) -> str:
+        """Normalize capability name.
+        
+        Handles special cases:
+        - "access point" -> "access-point"
+        - Removes extra spaces
+        - Converts to lowercase
+        """
+        capability = capability.lower().strip()
+        if "access point" in capability:
+            capability = capability.replace("access point", "access-point")
+        return capability
+
+    def _parse_capabilities(self, caps_str: str) -> List[str]:
+        """Parse capabilities string into list.
+        
+        Args:
+            caps_str: Comma-separated list of capabilities
+            
+        Returns:
+            List of normalized capability strings
+        """
+        if not caps_str:
+            return []
+        return [self._normalize_capability(cap) for cap in caps_str.split(",")]
 
     def get_config(
         self,
