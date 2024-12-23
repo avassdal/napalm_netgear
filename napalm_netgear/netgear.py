@@ -762,7 +762,7 @@ class NetgearDriver(NetworkDriver):
         for line in lines:
             self.log.debug(f"Processing line: {line}")
             # Handle both M4500 and M4250/M4350 header formats
-            if any(header in line for header in ["Local Interface", "Interface  RemID"]):
+            if ("LLDP Remote Device Summary" in line) or ("Local" in line and "Interface" in line and "RemID" in line):
                 header_found = True
                 continue
             if "-----" in line:  # Skip separator line
@@ -825,6 +825,15 @@ class NetgearDriver(NetworkDriver):
                 elif in_management and "Address:" in line:
                     neighbor["remote_management_address"] = line.split(":", 1)[1].strip()
                     in_management = False
+                elif in_management and not line:  # Empty line after management section
+                    in_management = False
+                elif "Time to Live:" in line:  # End of main LLDP section
+                    in_management = False
+            
+            # Clean up capabilities - handle spaces in capability names
+            for cap_list in ["remote_system_capab", "remote_system_enable_capab"]:
+                if neighbor[cap_list]:
+                    neighbor[cap_list] = [cap.strip().replace(" access point", "-access-point") for cap in neighbor[cap_list]]
             
             self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
             neighbors[interface] = [neighbor]
