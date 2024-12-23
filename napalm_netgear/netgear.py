@@ -834,32 +834,42 @@ class NetgearDriver(NetworkDriver):
         
         if "invalid" not in output.lower():
             # M4250/M4350 format
+            current_interface = None
+            current_data = None
+            
             for line in output.splitlines():
                 line = line.strip()
-                if not line or 'OUI' in line or '0x' in line:
+                if not line or 'LLDP Remote Device Summary' in line:
+                    continue
+                    
+                # Skip header lines
+                if any(x in line for x in ['Interface  RemID', '--------']):
+                    continue
+                    
+                # Skip OUI/Subtype lines (indented)
+                if line.startswith(' ') or any(x in line for x in ['0x', 'OUI', 'Subtype']):
                     continue
                     
                 parts = line.split()
-                if len(parts) < 4:  # Need at least interface, remid, chassis, port
+                if len(parts) < 2:  # Need at least interface and RemID
                     continue
                     
                 interface = parts[0]
                 if not self._is_valid_interface(interface):
                     continue
                     
-                # Extract neighbor data - handle case where system name might be empty
-                neighbor_data = {
-                    'parent_interface': interface,
-                    'remote_chassis_id': parts[2] if len(parts) > 2 else '',
-                    'remote_port': parts[3] if len(parts) > 3 else '',
-                    'remote_system_name': ' '.join(parts[4:-2]) if len(parts) > 5 else '',
-                    'remote_port_description': '',
-                    'remote_system_description': '',
-                    'remote_system_capab': [],
-                    'remote_system_enable_capab': []
-                }
-                
-                if any(v for k, v in neighbor_data.items() if k != 'parent_interface' and v):
+                # Only process if we have actual neighbor data
+                if len(parts) >= 5:
+                    neighbor_data = {
+                        'parent_interface': interface,
+                        'remote_chassis_id': parts[2],
+                        'remote_port': parts[3],
+                        'remote_system_name': ' '.join(parts[4:-2]) if len(parts) > 5 else '',
+                        'remote_port_description': '',
+                        'remote_system_description': '',
+                        'remote_system_capab': [],
+                        'remote_system_enable_capab': []
+                    }
                     neighbors[interface] = neighbor_data
                     
         else:
@@ -883,7 +893,6 @@ class NetgearDriver(NetworkDriver):
                 if not self._is_valid_interface(interface):
                     continue
                     
-                # Extract neighbor data - handle case where system name might be empty
                 neighbor_data = {
                     'parent_interface': interface,
                     'remote_chassis_id': parts[2],  # MAC address is always present
