@@ -630,10 +630,11 @@ class NetgearDriver(NetworkDriver):
         # Try M4250/M4350 command first
         try:
             # Disable paging first
+            self.log.debug("Disabling paging")
             self._send_command("no pager")
             
             command = "show lldp remote-device all"
-            self.log.debug(f"Sending command: {command}")
+            self.log.debug(f"Executing initial command: {command}")
             output = self._send_command(command)
             self.log.debug(f"Initial LLDP command output:\n{output}")
             
@@ -643,7 +644,7 @@ class NetgearDriver(NetworkDriver):
                 self.log.debug("Initial command not supported, trying alternative")
                 # Switch to M4500 command if 'all' not supported
                 command = "show lldp remote-device"
-                self.log.debug(f"Sending alternative command: {command}")
+                self.log.debug(f"Executing alternative command: {command}")
                 output = self._send_command(command)
                 self.log.debug(f"Alternative LLDP command output:\n{output}")
                 
@@ -651,18 +652,15 @@ class NetgearDriver(NetworkDriver):
                     self.log.debug("No response from device for alternative command")
                     return {}
             
-            if not output:
-                self.log.debug("No LLDP output received")
-                return {}
-                
         except Exception as e:
             self.log.debug(f"Error with first LLDP command, trying alternative: {str(e)}")
             try:
                 # Disable paging first
+                self.log.debug("Disabling paging after error")
                 self._send_command("no pager")
                 
                 command = "show lldp remote-device"
-                self.log.debug(f"Sending alternative command after error: {command}")
+                self.log.debug(f"Executing alternative command after error: {command}")
                 output = self._send_command(command)
                 self.log.debug(f"Alternative LLDP command output after error:\n{output}")
                 
