@@ -629,6 +629,9 @@ class NetgearDriver(NetworkDriver):
         
         # Try M4250/M4350 command first
         try:
+            # Disable paging first
+            self._send_command("no pager")
+            
             command = "show lldp remote-device all"
             output = self._send_command(command)
             self.log.debug(f"Initial LLDP command output:\n{output}")
@@ -646,6 +649,9 @@ class NetgearDriver(NetworkDriver):
         except Exception as e:
             self.log.debug(f"Error with first LLDP command, trying alternative: {str(e)}")
             try:
+                # Disable paging first
+                self._send_command("no pager")
+                
                 command = "show lldp remote-device"
                 output = self._send_command(command)
                 self.log.debug(f"Alternative LLDP command output after error:\n{output}")
@@ -713,6 +719,9 @@ class NetgearDriver(NetworkDriver):
         
         # Get detailed info for each interface with neighbors
         for interface in interfaces:
+            # Disable paging first
+            self._send_command("no pager")
+            
             command = f"show lldp remote-device detail {interface}"
             try:
                 output = self._send_command(command)
@@ -820,6 +829,9 @@ class NetgearDriver(NetworkDriver):
         
         # Try M4250/M4350 command first
         try:
+            # Disable paging first
+            self._send_command("no pager")
+            
             command = "show lldp remote-device all"
             output = self._send_command(command)
             self.log.debug(f"Initial LLDP command output:\n{output}")
@@ -837,6 +849,9 @@ class NetgearDriver(NetworkDriver):
         except Exception as e:
             self.log.debug(f"Error with first LLDP command, trying alternative: {str(e)}")
             try:
+                # Disable paging first
+                self._send_command("no pager")
+                
                 command = "show lldp remote-device"
                 output = self._send_command(command)
                 self.log.debug(f"Alternative LLDP command output after error:\n{output}")
@@ -904,6 +919,9 @@ class NetgearDriver(NetworkDriver):
         
         # Get detailed info for each interface with neighbors
         for interface in interfaces:
+            # Disable paging first
+            self._send_command("no pager")
+            
             command = f"show lldp remote-device detail {interface}"
             try:
                 output = self._send_command(command)
