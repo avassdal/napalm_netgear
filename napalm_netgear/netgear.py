@@ -664,7 +664,10 @@ class NetgearDriver(NetworkDriver):
         
         # Skip header lines until we find the interface listing
         header_found = False
+        data_section = False
+        
         for line in lines:
+            line = line.strip()
             self.log.debug(f"Processing line for interface discovery: '{line}'")
             
             # Handle both M4500 and M4250/M4350 header formats
@@ -678,11 +681,16 @@ class NetgearDriver(NetworkDriver):
                     header_found = True
                 continue
                 
-            if "-----" in line:  # Skip separator line
-                self.log.debug("Skipping separator line")
+            if header_found and "-----" in line:  # Found separator after header
+                self.log.debug("Found separator line after header")
+                data_section = True
                 continue
                 
-            if not line.strip():
+            if not data_section:
+                self.log.debug("Not in data section yet")
+                continue
+                
+            if not line:
                 self.log.debug("Skipping empty line")
                 continue
                 
@@ -691,10 +699,11 @@ class NetgearDriver(NetworkDriver):
             self.log.debug(f"Line parts: {parts}")
             
             if len(parts) >= 1:
-                potential_interface = parts[0]
+                potential_interface = parts[0].strip()
                 if self._is_valid_interface(potential_interface):
                     self.log.debug(f"Found valid interface: {potential_interface}")
-                    interfaces.append(potential_interface)
+                    if potential_interface not in interfaces:  # Avoid duplicates
+                        interfaces.append(potential_interface)
                 else:
                     self.log.debug(f"Invalid interface format: {potential_interface}")
             else:
@@ -776,9 +785,12 @@ class NetgearDriver(NetworkDriver):
                 elif "Time to Live:" in line:
                     current_section = None
                     
-            if any(val for val in neighbor.values() if val):  # Only add if we found any non-empty data
+            # Only add if we have valid data
+            if any(val for val in neighbor.values() if val and val != interface):
                 self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
                 neighbors[interface] = [neighbor]
+            else:
+                self.log.debug(f"No valid neighbor data found for {interface}")
         
         self.log.debug(f"Final neighbors dict: {neighbors}")
         return neighbors
@@ -843,7 +855,10 @@ class NetgearDriver(NetworkDriver):
         
         # Skip header lines until we find the interface listing
         header_found = False
+        data_section = False
+        
         for line in lines:
+            line = line.strip()
             self.log.debug(f"Processing line for interface discovery: '{line}'")
             
             # Handle both M4500 and M4250/M4350 header formats
@@ -857,11 +872,16 @@ class NetgearDriver(NetworkDriver):
                     header_found = True
                 continue
                 
-            if "-----" in line:  # Skip separator line
-                self.log.debug("Skipping separator line")
+            if header_found and "-----" in line:  # Found separator after header
+                self.log.debug("Found separator line after header")
+                data_section = True
                 continue
                 
-            if not line.strip():
+            if not data_section:
+                self.log.debug("Not in data section yet")
+                continue
+                
+            if not line:
                 self.log.debug("Skipping empty line")
                 continue
                 
@@ -870,10 +890,11 @@ class NetgearDriver(NetworkDriver):
             self.log.debug(f"Line parts: {parts}")
             
             if len(parts) >= 1:
-                potential_interface = parts[0]
+                potential_interface = parts[0].strip()
                 if self._is_valid_interface(potential_interface):
                     self.log.debug(f"Found valid interface: {potential_interface}")
-                    interfaces.append(potential_interface)
+                    if potential_interface not in interfaces:  # Avoid duplicates
+                        interfaces.append(potential_interface)
                 else:
                     self.log.debug(f"Invalid interface format: {potential_interface}")
             else:
@@ -955,9 +976,12 @@ class NetgearDriver(NetworkDriver):
                 elif "Time to Live:" in line:
                     current_section = None
                     
-            if any(val for val in neighbor.values() if val):  # Only add if we found any non-empty data
+            # Only add if we have valid data
+            if any(val for val in neighbor.values() if val and val != interface):
                 self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
                 neighbors[interface] = [neighbor]
+            else:
+                self.log.debug(f"No valid neighbor data found for {interface}")
         
         self.log.debug(f"Final neighbors dict: {neighbors}")
         return neighbors
@@ -1318,8 +1342,6 @@ class NetgearDriver(NetworkDriver):
             alloc_kb = None
             
             for line in output.splitlines():
-                line = line.strip()
-                
                 # Memory section starts with "Memory Utilization Report"
                 if "Memory Utilization Report" in line:
                     in_memory_section = True
