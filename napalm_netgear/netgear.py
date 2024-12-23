@@ -654,54 +654,123 @@ class NetgearDriver(NetworkDriver):
             
         self.log.debug(f"LLDP output:\n{output}")
         
-        # Skip header lines and empty lines
-        lines = [line.strip() for line in output.splitlines() if line.strip()]
-        header_found = False
+        # Parse output to get interfaces with neighbors
+        lines = output.splitlines()
+        interfaces = []
         
+        # Skip header lines until we find the interface listing
+        header_found = False
         for line in lines:
-            self.log.debug(f"Processing line: {line}")
+            self.log.debug(f"Processing line for interface discovery: '{line}'")
             
-            # Skip summary line
-            if "LLDP Remote Device Summary" in line:
-                continue
-                
             # Handle both M4500 and M4250/M4350 header formats
-            if ("Local Interface" in line) or ("Interface  RemID" in line):
-                header_found = True
+            if not header_found:
+                if ("LLDP Remote Device Summary" in line) or ("Local Interface" in line and "RemID" in line):
+                    self.log.debug(f"Found header line: '{line}'")
+                    header_found = True
                 continue
                 
             if "-----" in line:  # Skip separator line
+                self.log.debug("Skipping separator line")
                 continue
                 
-            if not header_found or not line.strip():
+            if not line.strip():
+                self.log.debug("Skipping empty line")
                 continue
                 
-            # Skip indented OUI lines
-            if line.startswith(" "):
-                continue
-                
-            # Split line into fields
+            # Split line and get interface if it has a RemID
             parts = line.split()
             self.log.debug(f"Line parts: {parts}")
             
-            # Need at least interface, chassis ID, and port ID
-            if len(parts) >= 4 and self._is_valid_interface(parts[0]):
-                interface = parts[0]
-                chassis_id = parts[2]  # Chassis ID is in 3rd column
-                port = parts[3]  # Port ID is in 4th column
-                hostname = ' '.join(parts[4:]) if len(parts) > 4 else ""  # System name if available
+            if len(parts) >= 1:
+                potential_interface = parts[0]
+                if self._is_valid_interface(potential_interface):
+                    self.log.debug(f"Found valid interface: {potential_interface}")
+                    interfaces.append(potential_interface)
+                else:
+                    self.log.debug(f"Invalid interface format: {potential_interface}")
+            else:
+                self.log.debug("Line has no parts")
+        
+        self.log.debug(f"Found interfaces with neighbors: {interfaces}")
+        
+        # Get detailed info for each interface with neighbors
+        for interface in interfaces:
+            command = f"show lldp remote-device detail {interface}"
+            try:
+                output = self._send_command(command)
+                if not output:
+                    self.log.debug(f"No LLDP detail output for interface {interface}")
+                    continue
+            except Exception as e:
+                self.log.error(f"Failed to get LLDP detail for interface {interface}: {str(e)}")
+                continue
                 
-                # Clean up system name (remove extra spaces)
-                hostname = ' '.join(hostname.split())
+            self.log.debug(f"\nLLDP detail for {interface}:\n{output}")
+            
+            # Parse detailed output
+            neighbor = {
+                "parent_interface": interface,
+                "remote_chassis_id": "",
+                "remote_port": "",
+                "remote_port_description": "",
+                "remote_system_name": "",
+                "remote_system_description": "",
+                "remote_system_capab": [],
+                "remote_system_enable_capab": [],
+                "remote_management_address": ""
+            }
+            
+            lines = output.splitlines()
+            current_section = None
+            
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+                    
+                self.log.debug(f"Processing detail line: {line}")
                 
-                # Only add if we have valid data
-                if chassis_id and any(c.isalnum() for c in chassis_id):
-                    if interface not in neighbors:
-                        neighbors[interface] = []
-                    neighbors[interface].append({
-                        "hostname": hostname or chassis_id,  # Use chassis ID if no hostname
-                        "port": port or interface  # Use interface if no port
-                    })
+                # Skip header lines
+                if any(header in line for header in [
+                    "LLDP Remote Device Detail",
+                    "Local Interface:",
+                    "Remote Identifier:",
+                    "Chassis ID Subtype:",
+                    "Port ID Subtype:"
+                ]):
+                    continue
+                    
+                # Handle main fields
+                if "Chassis ID:" in line:
+                    neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
+                elif "Port ID:" in line:
+                    neighbor["remote_port"] = line.split(":", 1)[1].strip()
+                elif "System Name:" in line:
+                    neighbor["remote_system_name"] = line.split(":", 1)[1].strip()
+                elif "System Description:" in line:
+                    neighbor["remote_system_description"] = line.split(":", 1)[1].strip()
+                elif "Port Description:" in line:
+                    neighbor["remote_port_description"] = line.split(":", 1)[1].strip()
+                elif "System Capabilities Supported:" in line:
+                    caps = line.split(":", 1)[1].strip()
+                    neighbor["remote_system_capab"] = self._parse_capabilities(caps)
+                elif "System Capabilities Enabled:" in line:
+                    caps = line.split(":", 1)[1].strip()
+                    neighbor["remote_system_enable_capab"] = self._parse_capabilities(caps)
+                elif "Management Address:" in line:
+                    current_section = "management"
+                elif current_section == "management" and "Type:" in line:
+                    continue  # Skip the type line
+                elif current_section == "management" and "Address:" in line:
+                    neighbor["remote_management_address"] = line.split(":", 1)[1].strip()
+                    current_section = None
+                elif "Time to Live:" in line:
+                    current_section = None
+                    
+            if any(val for val in neighbor.values() if val):  # Only add if we found any non-empty data
+                self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
+                neighbors[interface] = [neighbor]
         
         self.log.debug(f"Final neighbors dict: {neighbors}")
         return neighbors
@@ -763,22 +832,36 @@ class NetgearDriver(NetworkDriver):
         # Skip header lines until we find the interface listing
         header_found = False
         for line in lines:
-            self.log.debug(f"Processing line: {line}")
+            self.log.debug(f"Processing line for interface discovery: '{line}'")
+            
             # Handle both M4500 and M4250/M4350 header formats
-            if ("LLDP Remote Device Summary" in line) or ("Local" in line and "Interface" in line and "RemID" in line):
-                header_found = True
+            if not header_found:
+                if ("LLDP Remote Device Summary" in line) or ("Local Interface" in line and "RemID" in line):
+                    self.log.debug(f"Found header line: '{line}'")
+                    header_found = True
                 continue
+                
             if "-----" in line:  # Skip separator line
+                self.log.debug("Skipping separator line")
                 continue
-            if not header_found or not line.strip():
+                
+            if not line.strip():
+                self.log.debug("Skipping empty line")
                 continue
                 
             # Split line and get interface if it has a RemID
             parts = line.split()
             self.log.debug(f"Line parts: {parts}")
-            if len(parts) >= 2 and self._is_valid_interface(parts[0]):
-                interface = parts[0]
-                interfaces.append(interface)  # Add all valid interfaces
+            
+            if len(parts) >= 1:
+                potential_interface = parts[0]
+                if self._is_valid_interface(potential_interface):
+                    self.log.debug(f"Found valid interface: {potential_interface}")
+                    interfaces.append(potential_interface)
+                else:
+                    self.log.debug(f"Invalid interface format: {potential_interface}")
+            else:
+                self.log.debug("Line has no parts")
         
         self.log.debug(f"Found interfaces with neighbors: {interfaces}")
         
