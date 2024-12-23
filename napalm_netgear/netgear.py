@@ -750,6 +750,7 @@ class NetgearDriver(NetworkDriver):
         # Skip header lines until we find the interface listing
         header_found = False
         for line in lines:
+            self.log.debug(f"Processing line: {line}")
             if "Interface  RemID   Chassis ID" in line:
                 header_found = True
                 continue
@@ -758,12 +759,13 @@ class NetgearDriver(NetworkDriver):
                 
             # Split line and get interface if it has a RemID
             parts = line.split()
+            self.log.debug(f"Line parts: {parts}")
             if len(parts) >= 2 and parts[0].startswith(("0/", "1/0/")):
                 interface = parts[0]
                 if parts[1].strip():  # Only add if RemID exists
                     interfaces.append(interface)
         
-        self.log.debug(f"Found interfaces: {interfaces}")
+        self.log.debug(f"Found interfaces with neighbors: {interfaces}")
         
         # Get detailed info for each interface with neighbors
         for interface in interfaces:
@@ -787,6 +789,7 @@ class NetgearDriver(NetworkDriver):
             in_capabilities = False
             for line in output.splitlines():
                 line = line.strip()
+                self.log.debug(f"Processing detail line: {line}")
                 
                 if "Chassis ID:" in line:
                     neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
@@ -812,6 +815,7 @@ class NetgearDriver(NetworkDriver):
                     neighbor["remote_management_address"] = line.split(":", 1)[1].strip()
                     in_capabilities = False
             
+            self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
             neighbors[interface] = [neighbor]
         
         self.log.debug(f"Final neighbors dict: {neighbors}")
