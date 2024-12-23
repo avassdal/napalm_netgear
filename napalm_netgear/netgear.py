@@ -1089,15 +1089,27 @@ class NetgearDriver(NetworkDriver):
         return neighbors
 
     def _is_valid_interface(self, interface: str) -> bool:
-        """Check if interface name is valid.
+        """Check if the interface string is valid."""
+        if not interface:
+            self.log.debug("Empty interface name")
+            return False
+            
+        # Check for common interface patterns
+        patterns = [
+            r'^\d+/\d+$',  # e.g. 0/1
+            r'^\d+/\d+/\d+$',  # e.g. 1/0/1
+            r'^[A-Za-z]+\d+/\d+$',  # e.g. Gi0/1
+            r'^[A-Za-z]+\d+/\d+/\d+$'  # e.g. Gi1/0/1
+        ]
         
-        Valid formats:
-        - 0/1
-        - 1/0/1
-        - 2/0/1
-        etc.
-        """
-        return bool(re.match(r'^\d+/\d+(/\d+)?$', interface))
+        import re
+        for pattern in patterns:
+            if re.match(pattern, interface):
+                self.log.debug(f"Interface {interface} matches pattern {pattern}")
+                return True
+                
+        self.log.debug(f"Interface {interface} does not match any valid pattern")
+        return False
 
     def _normalize_capability(self, capability: str) -> str:
         """Normalize capability name.
