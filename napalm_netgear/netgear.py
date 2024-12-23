@@ -625,95 +625,70 @@ class NetgearDriver(NetworkDriver):
             ...     ]
             ... }
         """
+        neighbors = {}
         
-        # First try M4500 command
+        # Try M4250/M4350 command first
         try:
-            # Get basic neighbor info
-            output = self.device.send_command_timing(
-                "show lldp remote-device all",
-                strip_prompt=False,
-                strip_command=False,
-                read_timeout=30,  # Longer timeout
-                cmd_verify=False
-            )
-            
-            # Parse the output
-            neighbors = {}
-            
-            # Skip header lines and empty lines
-            lines = [line.strip() for line in output.splitlines() if line.strip()]
-            header_found = False
-            column_starts = []
-            column_ends = []
-            
-            for line in lines:
-                if "LLDP Remote Device Summary" in line:
-                    continue
-                    
-                if "Interface  RemID   Chassis ID" in line:
-                    header_found = True
-                    header_line = line
-                    continue
-                    
-                if header_found and "-" in line and not any(c.isalnum() for c in line):
-                    # Found separator line, calculate column positions
-                    current_pos = 0
-                    in_column = False
-                    
-                    for i, char in enumerate(line):
-                        if char == "-" and not in_column:
-                            column_starts.append(current_pos)
-                            in_column = True
-                        elif char == " " and in_column:
-                            column_ends.append(current_pos)
-                            in_column = False
-                        current_pos += 1
-                        
-                    if in_column:
-                        column_ends.append(current_pos)
-                    continue
-                    
-                if header_found and column_starts and line:
-                    # Skip OUI lines (indented)
-                    if line.startswith(" "):
-                        continue
-                        
-                    # Get fields using column positions
-                    interface = line[column_starts[0]:column_ends[0]].strip()
-                    # Skip header rows that might appear in the middle
-                    if interface == "Interface":
-                        continue
-                        
-                    # Skip empty interfaces
-                    if not interface:
-                        continue
-                        
-                    # Get remaining fields if present
-                    chassis_id = line[column_starts[2]:column_ends[2]].strip() if len(column_starts) > 2 else None
-                    port_id = line[column_starts[3]:column_ends[3]].strip() if len(column_starts) > 3 else None
-                    system_name = line[column_starts[4]:column_ends[4]].strip() if len(column_starts) > 4 else None
-                    
-                    # Only process if we have valid data
-                    if chassis_id and any(c.isalnum() for c in chassis_id):
-                        if interface not in neighbors:
-                            neighbors[interface] = []
-                            
-                        # Clean up system name (remove extra spaces)
-                        if system_name:
-                            system_name = ' '.join(system_name.split())
-                            
-                        neighbors[interface].append({
-                            "hostname": system_name or chassis_id,  # Use system name if available
-                            "port": port_id or interface  # Use port ID if found, otherwise interface
-                        })
-            
-            # Remove any empty interfaces
-            neighbors = {k: v for k, v in neighbors.items() if v}
-            
-            return neighbors
-            
+            command = "show lldp remote-device all"
+            output = self._send_command(command)
+            if "An invalid interface has been used for this command" in output:
+                # Switch to M4500 command if 'all' not supported
+                command = "show lldp remote-device"
+                output = self._send_command(command)
         except Exception as e:
-            return {}
+            self.log.debug(f"Error with first LLDP command, trying alternative: {str(e)}")
+            command = "show lldp remote-device"
+            output = self._send_command(command)
+            
+        self.log.debug(f"LLDP output:\n{output}")
+        
+        # Skip header lines and empty lines
+        lines = [line.strip() for line in output.splitlines() if line.strip()]
+        header_found = False
+        
+        for line in lines:
+            self.log.debug(f"Processing line: {line}")
+            
+            # Skip summary line
+            if "LLDP Remote Device Summary" in line:
+                continue
+                
+            # Handle both M4500 and M4250/M4350 header formats
+            if ("Local Interface" in line) or ("Interface  RemID" in line):
+                header_found = True
+                continue
+                
+            if "-----" in line:  # Skip separator line
+                continue
+                
+            if not header_found or not line.strip():
+                continue
+                
+            # Skip indented OUI lines
+            if line.startswith(" "):
+                continue
+                
+            # Split line into fields
+            parts = line.split()
+            self.log.debug(f"Line parts: {parts}")
+            
+            # Need at least interface, chassis ID, and port ID
+            if len(parts) >= 4 and parts[0].startswith(("0/", "1/0/")):
+                interface = parts[0]
+                port = parts[3]  # Port ID is in 4th column for both formats
+                hostname = parts[4] if len(parts) > 4 else ""  # System name if available
+                
+                # Only add if we have valid data
+                if port and any(c.isalnum() for c in port):
+                    if interface not in neighbors:
+                        neighbors[interface] = []
+                    neighbors[interface].append({
+                        "hostname": hostname,
+                        "port": port
+                    })
+        
+        self.log.debug(f"Final neighbors dict: {neighbors}")
+        return neighbors
 
     def get_lldp_neighbors_detail(self) -> dict:
         """Return detailed view of the LLDP neighbors.
