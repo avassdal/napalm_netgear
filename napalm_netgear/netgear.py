@@ -829,7 +829,7 @@ class NetgearDriver(NetworkDriver):
         self._disable_paging()
         
         # Try M4250/M4350 command first
-        cmd = "show lldp remote-device all | include :[0-9a-fA-F]:[0-9a-fA-F]"
+        cmd = "show lldp remote-device all | include :"
         output = self._send_command(cmd)
         
         if "invalid" not in output.lower():
@@ -873,7 +873,7 @@ class NetgearDriver(NetworkDriver):
                     
         else:
             # M4500 format with filtering
-            cmd = "show lldp remote-device | include :[0-9a-fA-F]"
+            cmd = "show lldp remote-device | include :"
             output = self._send_command(cmd)
             
             if not output:
