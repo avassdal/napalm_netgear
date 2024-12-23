@@ -570,7 +570,7 @@ class NetgearDriver(NetworkDriver):
         if "MAC Address" in output and "Type" in output:  # GS108Tv3 format
             return parse_gs108tv3_mac_table(output)
             
-        # Try M4250/M4350/M4500 format
+        # Try M4250/M4350 format
         command = "show mac-addr-table"
         output = self._send_command(command)
         
@@ -810,39 +810,68 @@ class NetgearDriver(NetworkDriver):
                 "remote_management_address": ""
             }
             
+            # Track if we found any valid data
+            found_data = False
+            
             in_management = False
             for line in output.splitlines():
                 line = line.strip()
                 self.log.debug(f"Processing detail line: {line}")
                 
                 if "Chassis ID:" in line and "Subtype:" not in line:
-                    neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
+                    value = line.split(":", 1)[1].strip()
+                    if value:
+                        neighbor["remote_chassis_id"] = value
+                        found_data = True
                 elif "Port ID:" in line and "Subtype:" not in line:
-                    neighbor["remote_port"] = line.split(":", 1)[1].strip()
+                    value = line.split(":", 1)[1].strip()
+                    if value:
+                        neighbor["remote_port"] = value
+                        found_data = True
                 elif "System Name:" in line:
-                    neighbor["remote_system_name"] = line.split(":", 1)[1].strip()
+                    value = line.split(":", 1)[1].strip()
+                    if value:
+                        neighbor["remote_system_name"] = value
+                        found_data = True
                 elif "System Description:" in line:
-                    neighbor["remote_system_description"] = line.split(":", 1)[1].strip()
+                    value = line.split(":", 1)[1].strip()
+                    if value:
+                        neighbor["remote_system_description"] = value
+                        found_data = True
                 elif "Port Description:" in line:
-                    neighbor["remote_port_description"] = line.split(":", 1)[1].strip()
+                    value = line.split(":", 1)[1].strip()
+                    if value:
+                        neighbor["remote_port_description"] = value
+                        found_data = True
                 elif "System Capabilities Supported:" in line:
                     caps = line.split(":", 1)[1].strip()
-                    neighbor["remote_system_capab"] = self._parse_capabilities(caps)
+                    if caps:
+                        neighbor["remote_system_capab"] = self._parse_capabilities(caps)
+                        found_data = True
                 elif "System Capabilities Enabled:" in line:
                     caps = line.split(":", 1)[1].strip()
-                    neighbor["remote_system_enable_capab"] = self._parse_capabilities(caps)
+                    if caps:
+                        neighbor["remote_system_enable_capab"] = self._parse_capabilities(caps)
+                        found_data = True
                 elif "Management Address:" in line:
                     in_management = True
                 elif in_management and "Address:" in line:
-                    neighbor["remote_management_address"] = line.split(":", 1)[1].strip()
+                    value = line.split(":", 1)[1].strip()
+                    if value:
+                        neighbor["remote_management_address"] = value
+                        found_data = True
                     in_management = False
                 elif in_management and not line:  # Empty line after management section
                     in_management = False
                 elif "Time to Live:" in line:  # End of main LLDP section
                     in_management = False
             
-            self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
-            neighbors[interface] = [neighbor]
+            # Only add neighbor if we found valid data
+            if found_data:
+                self.log.debug(f"Found valid neighbor data for {interface}: {neighbor}")
+                neighbors[interface] = [neighbor]
+            else:
+                self.log.debug(f"No valid neighbor data found for {interface}")
         
         self.log.debug(f"Final neighbors dict: {neighbors}")
         return neighbors
