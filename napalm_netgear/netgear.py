@@ -810,68 +810,53 @@ class NetgearDriver(NetworkDriver):
                 "remote_management_address": ""
             }
             
-            # Track if we found any valid data
-            found_data = False
+            lines = output.splitlines()
+            current_section = None
             
-            in_management = False
-            for line in output.splitlines():
+            for line in lines:
                 line = line.strip()
+                if not line:
+                    continue
+                    
                 self.log.debug(f"Processing detail line: {line}")
                 
+                # Skip header lines
+                if "LLDP Remote Device Detail" in line:
+                    continue
+                if "Local Interface:" in line:
+                    continue
+                if "Remote Identifier:" in line:
+                    continue
+                    
+                # Handle main fields
                 if "Chassis ID:" in line and "Subtype:" not in line:
-                    value = line.split(":", 1)[1].strip()
-                    if value:
-                        neighbor["remote_chassis_id"] = value
-                        found_data = True
+                    neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
                 elif "Port ID:" in line and "Subtype:" not in line:
-                    value = line.split(":", 1)[1].strip()
-                    if value:
-                        neighbor["remote_port"] = value
-                        found_data = True
+                    neighbor["remote_port"] = line.split(":", 1)[1].strip()
                 elif "System Name:" in line:
-                    value = line.split(":", 1)[1].strip()
-                    if value:
-                        neighbor["remote_system_name"] = value
-                        found_data = True
+                    neighbor["remote_system_name"] = line.split(":", 1)[1].strip()
                 elif "System Description:" in line:
-                    value = line.split(":", 1)[1].strip()
-                    if value:
-                        neighbor["remote_system_description"] = value
-                        found_data = True
+                    neighbor["remote_system_description"] = line.split(":", 1)[1].strip()
                 elif "Port Description:" in line:
-                    value = line.split(":", 1)[1].strip()
-                    if value:
-                        neighbor["remote_port_description"] = value
-                        found_data = True
+                    neighbor["remote_port_description"] = line.split(":", 1)[1].strip()
                 elif "System Capabilities Supported:" in line:
                     caps = line.split(":", 1)[1].strip()
-                    if caps:
-                        neighbor["remote_system_capab"] = self._parse_capabilities(caps)
-                        found_data = True
+                    neighbor["remote_system_capab"] = self._parse_capabilities(caps)
                 elif "System Capabilities Enabled:" in line:
                     caps = line.split(":", 1)[1].strip()
-                    if caps:
-                        neighbor["remote_system_enable_capab"] = self._parse_capabilities(caps)
-                        found_data = True
+                    neighbor["remote_system_enable_capab"] = self._parse_capabilities(caps)
                 elif "Management Address:" in line:
-                    in_management = True
-                elif in_management and "Address:" in line:
-                    value = line.split(":", 1)[1].strip()
-                    if value:
-                        neighbor["remote_management_address"] = value
-                        found_data = True
-                    in_management = False
-                elif in_management and not line:  # Empty line after management section
-                    in_management = False
-                elif "Time to Live:" in line:  # End of main LLDP section
-                    in_management = False
-            
-            # Only add neighbor if we found valid data
-            if found_data:
-                self.log.debug(f"Found valid neighbor data for {interface}: {neighbor}")
+                    current_section = "management"
+                elif current_section == "management" and "Type:" in line:
+                    continue  # Skip the type line
+                elif current_section == "management" and "Address:" in line:
+                    neighbor["remote_management_address"] = line.split(":", 1)[1].strip()
+                    current_section = None
+                elif "Time to Live:" in line:
+                    current_section = None
+                    
+            if any(neighbor.values()):  # Only add if we found any data
                 neighbors[interface] = [neighbor]
-            else:
-                self.log.debug(f"No valid neighbor data found for {interface}")
         
         self.log.debug(f"Final neighbors dict: {neighbors}")
         return neighbors
