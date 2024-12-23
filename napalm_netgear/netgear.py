@@ -672,9 +672,11 @@ class NetgearDriver(NetworkDriver):
         header_found = False
         data_section = False
         
+        self.log.debug("Starting interface discovery from LLDP output...")
+        
         for line in lines:
             line = line.strip()
-            self.log.debug(f"Processing line for interface discovery: '{line}'")
+            self.log.debug(f"Processing line: '{line}'")
             
             # Handle both M4500 and M4250/M4350 header formats
             if not header_found:
@@ -685,10 +687,13 @@ class NetgearDriver(NetworkDriver):
                 ]):
                     self.log.debug(f"Found header line: '{line}'")
                     header_found = True
-                continue
+                    continue
+                else:
+                    self.log.debug("Not a header line, skipping")
+                    continue
                 
             if header_found and "-----" in line:  # Found separator after header
-                self.log.debug("Found separator line after header")
+                self.log.debug("Found separator line, starting data section")
                 data_section = True
                 continue
                 
@@ -706,10 +711,15 @@ class NetgearDriver(NetworkDriver):
             
             if len(parts) >= 1:
                 potential_interface = parts[0].strip()
+                self.log.debug(f"Checking potential interface: '{potential_interface}'")
+                
                 if self._is_valid_interface(potential_interface):
                     self.log.debug(f"Found valid interface: {potential_interface}")
                     if potential_interface not in interfaces:  # Avoid duplicates
+                        self.log.debug(f"Adding new interface: {potential_interface}")
                         interfaces.append(potential_interface)
+                    else:
+                        self.log.debug(f"Interface already found: {potential_interface}")
                 else:
                     self.log.debug(f"Invalid interface format: {potential_interface}")
             else:
@@ -874,9 +884,11 @@ class NetgearDriver(NetworkDriver):
         header_found = False
         data_section = False
         
+        self.log.debug("Starting interface discovery from LLDP output...")
+        
         for line in lines:
             line = line.strip()
-            self.log.debug(f"Processing line for interface discovery: '{line}'")
+            self.log.debug(f"Processing line: '{line}'")
             
             # Handle both M4500 and M4250/M4350 header formats
             if not header_found:
@@ -887,10 +899,13 @@ class NetgearDriver(NetworkDriver):
                 ]):
                     self.log.debug(f"Found header line: '{line}'")
                     header_found = True
-                continue
+                    continue
+                else:
+                    self.log.debug("Not a header line, skipping")
+                    continue
                 
             if header_found and "-----" in line:  # Found separator after header
-                self.log.debug("Found separator line after header")
+                self.log.debug("Found separator line, starting data section")
                 data_section = True
                 continue
                 
@@ -908,10 +923,15 @@ class NetgearDriver(NetworkDriver):
             
             if len(parts) >= 1:
                 potential_interface = parts[0].strip()
+                self.log.debug(f"Checking potential interface: '{potential_interface}'")
+                
                 if self._is_valid_interface(potential_interface):
                     self.log.debug(f"Found valid interface: {potential_interface}")
                     if potential_interface not in interfaces:  # Avoid duplicates
+                        self.log.debug(f"Adding new interface: {potential_interface}")
                         interfaces.append(potential_interface)
+                    else:
+                        self.log.debug(f"Interface already found: {potential_interface}")
                 else:
                     self.log.debug(f"Invalid interface format: {potential_interface}")
             else:
