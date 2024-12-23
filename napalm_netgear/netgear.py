@@ -631,10 +631,13 @@ class NetgearDriver(NetworkDriver):
         try:
             command = "show lldp remote-device all"
             output = self._send_command(command)
+            self.log.debug(f"Initial LLDP command output:\n{output}")
+            
             if not output or "An invalid interface has been used for this command" in output:
                 # Switch to M4500 command if 'all' not supported
                 command = "show lldp remote-device"
                 output = self._send_command(command)
+                self.log.debug(f"Alternative LLDP command output:\n{output}")
                 
             if not output:
                 self.log.debug("No LLDP output received")
@@ -645,6 +648,7 @@ class NetgearDriver(NetworkDriver):
             try:
                 command = "show lldp remote-device"
                 output = self._send_command(command)
+                self.log.debug(f"Alternative LLDP command output after error:\n{output}")
                 if not output:
                     self.log.debug("No LLDP output received from alternative command")
                     return {}
@@ -652,7 +656,7 @@ class NetgearDriver(NetworkDriver):
                 self.log.error(f"Failed to get LLDP neighbors: {str(e)}")
                 return {}
             
-        self.log.debug(f"LLDP output:\n{output}")
+        self.log.debug(f"Final LLDP output to parse:\n{output}")
         
         # Parse output to get interfaces with neighbors
         lines = output.splitlines()
@@ -665,7 +669,11 @@ class NetgearDriver(NetworkDriver):
             
             # Handle both M4500 and M4250/M4350 header formats
             if not header_found:
-                if ("LLDP Remote Device Summary" in line) or ("Local Interface" in line and "RemID" in line):
+                if any(header in line for header in [
+                    "LLDP Remote Device Summary",
+                    "Local Interface",
+                    "Interface  RemID"
+                ]):
                     self.log.debug(f"Found header line: '{line}'")
                     header_found = True
                 continue
@@ -802,10 +810,13 @@ class NetgearDriver(NetworkDriver):
         try:
             command = "show lldp remote-device all"
             output = self._send_command(command)
+            self.log.debug(f"Initial LLDP command output:\n{output}")
+            
             if not output or "An invalid interface has been used for this command" in output:
                 # Switch to M4500 command if 'all' not supported
                 command = "show lldp remote-device"
                 output = self._send_command(command)
+                self.log.debug(f"Alternative LLDP command output:\n{output}")
                 
             if not output:
                 self.log.debug("No LLDP output received")
@@ -816,6 +827,7 @@ class NetgearDriver(NetworkDriver):
             try:
                 command = "show lldp remote-device"
                 output = self._send_command(command)
+                self.log.debug(f"Alternative LLDP command output after error:\n{output}")
                 if not output:
                     self.log.debug("No LLDP output received from alternative command")
                     return {}
@@ -823,7 +835,7 @@ class NetgearDriver(NetworkDriver):
                 self.log.error(f"Failed to get LLDP neighbors: {str(e)}")
                 return {}
             
-        self.log.debug(f"LLDP output:\n{output}")
+        self.log.debug(f"Final LLDP output to parse:\n{output}")
         
         # Parse output to get interfaces with neighbors
         lines = output.splitlines()
@@ -836,7 +848,11 @@ class NetgearDriver(NetworkDriver):
             
             # Handle both M4500 and M4250/M4350 header formats
             if not header_found:
-                if ("LLDP Remote Device Summary" in line) or ("Local Interface" in line and "RemID" in line):
+                if any(header in line for header in [
+                    "LLDP Remote Device Summary",
+                    "Local Interface",
+                    "Interface  RemID"
+                ]):
                     self.log.debug(f"Found header line: '{line}'")
                     header_found = True
                 continue
