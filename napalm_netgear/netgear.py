@@ -826,79 +826,92 @@ class NetgearDriver(NetworkDriver):
         self.log.debug(f"Final neighbors dict: {neighbors}")
         return neighbors
 
-    def get_lldp_neighbors_detail(self) -> dict:
-        """Return detailed view of the LLDP neighbors.
-        
+    def get_lldp_neighbors_detail(self, interface=""):
+        """Get LLDP neighbor information detail.
+
+        Args:
+            interface (str, optional): Interface to get neighbor information for. Defaults to "".
+
         Returns:
-            dict: Detailed LLDP neighbors keyed by interface, where each interface maps to a list of neighbors
-                 {
-                     "interface": [
-                         {
-                             "parent_interface": str,
-                             "remote_chassis_id": str,
-                             "remote_port": str,
-                             "remote_port_description": str,
-                             "remote_system_name": str,
-                             "remote_system_description": str,
-                             "remote_system_capab": List[str],
-                             "remote_system_enable_capab": List[str],
-                             "remote_management_address": str
-                         }
-                     ]
-                 }
+            dict: Detailed LLDP neighbor information.
+                {interface: [{
+                    'parent_interface'          : u'ethernet2',
+                    'remote_port'              : u'Gi1/0/22',
+                    'remote_port_description'  : u'',
+                    'remote_chassis_id'        : u'2c:b0:5d:b9:50:4e',
+                    'remote_system_name'       : u'1.1.1.1',
+                    'remote_system_description': u'Cisco IOS Software...',
+                    'remote_system_capab'      : ['bridge', 'repeater'],
+                    'remote_system_enable_capab': ['bridge']
+                }], }
         """
+        print("DEBUG: Starting get_lldp_neighbors_detail")
         self.log.debug("Getting LLDP neighbor details...")
         
         # Initialize neighbors dictionary
         neighbors = {}
         
         # Disable paging first
-        self._send_command("no pager")
+        print("DEBUG: Sending no pager command")
+        output = self._send_command("no pager")
+        print(f"DEBUG: no pager output: {output}")
         
         # Try M4250/M4350 command first
         try:
             command = "show lldp remote-device all"
-            self.log.debug(f"Sending command: {command}")
+            print(f"DEBUG: Sending command: {command}")
             output = self._send_command(command)
+            print(f"DEBUG: Initial LLDP command output:\n{output}")
             self.log.debug(f"Initial LLDP command output:\n{output}")
             
             if not output:
+                print("DEBUG: No response from device for initial command")
                 self.log.debug("No response from device for initial command")
             elif "An invalid interface has been used for this command" in output:
+                print("DEBUG: Initial command not supported, trying alternative")
                 self.log.debug("Initial command not supported, trying alternative")
                 # Switch to M4500 command if 'all' not supported
                 command = "show lldp remote-device"
-                self.log.debug(f"Sending alternative command: {command}")
+                print(f"DEBUG: Sending alternative command: {command}")
                 output = self._send_command(command)
+                print(f"DEBUG: Alternative LLDP command output:\n{output}")
                 self.log.debug(f"Alternative LLDP command output:\n{output}")
                 
                 if not output:
+                    print("DEBUG: No response from device for alternative command")
                     self.log.debug("No response from device for alternative command")
                     return {}
             
             if not output:
+                print("DEBUG: No LLDP output received")
                 self.log.debug("No LLDP output received")
                 return {}
                 
         except Exception as e:
+            print(f"DEBUG: Error with first LLDP command: {str(e)}")
             self.log.debug(f"Error with first LLDP command, trying alternative: {str(e)}")
             try:
                 # Disable paging first
+                print("DEBUG: Sending no pager command after error")
                 self._send_command("no pager")
                 
                 command = "show lldp remote-device"
-                self.log.debug(f"Sending alternative command after error: {command}")
+                print(f"DEBUG: Sending alternative command after error: {command}")
                 output = self._send_command(command)
+                print(f"DEBUG: Alternative LLDP command output after error:\n{output}")
                 self.log.debug(f"Alternative LLDP command output after error:\n{output}")
                 
                 if not output:
+                    print("DEBUG: No response from device for alternative command after error")
                     self.log.debug("No response from device for alternative command after error")
                     return {}
                     
             except Exception as e:
-                self.log.error(f"Error getting LLDP neighbors: {str(e)}")
+                print(f"DEBUG: Failed to get LLDP neighbors: {str(e)}")
+                self.log.error(f"Failed to get LLDP neighbors: {str(e)}")
                 return {}
             
+        print(f"DEBUG: Final LLDP output to parse:\n{output}")
         self.log.debug(f"Final LLDP output to parse:\n{output}")
         
         # Parse output to get interfaces with neighbors
