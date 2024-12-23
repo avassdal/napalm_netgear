@@ -570,7 +570,7 @@ class NetgearDriver(NetworkDriver):
         if "MAC Address" in output and "Type" in output:  # GS108Tv3 format
             return parse_gs108tv3_mac_table(output)
             
-        # Try M4250/M4350 format
+        # Try M4250/M4350/M4500 format
         command = "show mac-addr-table"
         output = self._send_command(command)
         
