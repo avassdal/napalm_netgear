@@ -851,6 +851,20 @@ class NetgearDriver(NetworkDriver):
         # Initialize neighbors dictionary
         neighbors = {}
         
+        # Check if device is connected
+        try:
+            print("DEBUG: Checking device connection")
+            output = self._send_command("\n")
+            print(f"DEBUG: Connection check output: {output}")
+            if not output and not output.strip():
+                print("DEBUG: No response from device on connection check")
+                self.log.error("No response from device on connection check")
+                return {}
+        except Exception as e:
+            print(f"DEBUG: Connection check failed: {str(e)}")
+            self.log.error(f"Connection check failed: {str(e)}")
+            return {}
+        
         # Disable paging first
         print("DEBUG: Sending no pager command")
         output = self._send_command("no pager")
