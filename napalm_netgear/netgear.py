@@ -825,13 +825,13 @@ class NetgearDriver(NetworkDriver):
                      ]
                  }
         """
-        neighbors = {}
+        self.log.debug("Getting LLDP neighbor details...")
+        
+        # Disable paging first
+        self._send_command("no pager")
         
         # Try M4250/M4350 command first
         try:
-            # Disable paging first
-            self._send_command("no pager")
-            
             command = "show lldp remote-device all"
             output = self._send_command(command)
             self.log.debug(f"Initial LLDP command output:\n{output}")
@@ -855,11 +855,13 @@ class NetgearDriver(NetworkDriver):
                 command = "show lldp remote-device"
                 output = self._send_command(command)
                 self.log.debug(f"Alternative LLDP command output after error:\n{output}")
+                
                 if not output:
                     self.log.debug("No LLDP output received from alternative command")
                     return {}
+                    
             except Exception as e:
-                self.log.error(f"Failed to get LLDP neighbors: {str(e)}")
+                self.log.error(f"Error getting LLDP neighbors: {str(e)}")
                 return {}
             
         self.log.debug(f"Final LLDP output to parse:\n{output}")
