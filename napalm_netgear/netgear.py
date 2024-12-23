@@ -845,7 +845,6 @@ class NetgearDriver(NetworkDriver):
                     'remote_system_enable_capab': ['bridge']
                 }], }
         """
-        print("DEBUG: Starting get_lldp_neighbors_detail")
         self.log.debug("Getting LLDP neighbor details...")
         
         # Initialize neighbors dictionary
@@ -853,79 +852,61 @@ class NetgearDriver(NetworkDriver):
         
         # Check if device is connected
         try:
-            print("DEBUG: Checking device connection")
             output = self._send_command("\n")
-            print(f"DEBUG: Connection check output: {output}")
             if not output and not output.strip():
-                print("DEBUG: No response from device on connection check")
                 self.log.error("No response from device on connection check")
                 return {}
         except Exception as e:
-            print(f"DEBUG: Connection check failed: {str(e)}")
             self.log.error(f"Connection check failed: {str(e)}")
             return {}
         
         # Disable paging first
-        print("DEBUG: Sending no pager command")
-        output = self._send_command("no pager")
-        print(f"DEBUG: no pager output: {output}")
+        self._send_command("no pager")
         
         # Try M4250/M4350 command first
         try:
             command = "show lldp remote-device all"
-            print(f"DEBUG: Sending command: {command}")
+            self.log.debug(f"Sending command: {command}")
             output = self._send_command(command)
-            print(f"DEBUG: Initial LLDP command output:\n{output}")
             self.log.debug(f"Initial LLDP command output:\n{output}")
             
             if not output:
-                print("DEBUG: No response from device for initial command")
                 self.log.debug("No response from device for initial command")
             elif "An invalid interface has been used for this command" in output:
-                print("DEBUG: Initial command not supported, trying alternative")
                 self.log.debug("Initial command not supported, trying alternative")
                 # Switch to M4500 command if 'all' not supported
                 command = "show lldp remote-device"
-                print(f"DEBUG: Sending alternative command: {command}")
+                self.log.debug(f"Sending alternative command: {command}")
                 output = self._send_command(command)
-                print(f"DEBUG: Alternative LLDP command output:\n{output}")
                 self.log.debug(f"Alternative LLDP command output:\n{output}")
                 
                 if not output:
-                    print("DEBUG: No response from device for alternative command")
                     self.log.debug("No response from device for alternative command")
                     return {}
             
             if not output:
-                print("DEBUG: No LLDP output received")
                 self.log.debug("No LLDP output received")
                 return {}
                 
         except Exception as e:
-            print(f"DEBUG: Error with first LLDP command: {str(e)}")
             self.log.debug(f"Error with first LLDP command, trying alternative: {str(e)}")
             try:
                 # Disable paging first
-                print("DEBUG: Sending no pager command after error")
                 self._send_command("no pager")
                 
                 command = "show lldp remote-device"
-                print(f"DEBUG: Sending alternative command after error: {command}")
+                self.log.debug(f"Sending alternative command after error: {command}")
                 output = self._send_command(command)
-                print(f"DEBUG: Alternative LLDP command output after error:\n{output}")
                 self.log.debug(f"Alternative LLDP command output after error:\n{output}")
                 
                 if not output:
-                    print("DEBUG: No response from device for alternative command after error")
                     self.log.debug("No response from device for alternative command after error")
                     return {}
                     
             except Exception as e:
-                print(f"DEBUG: Failed to get LLDP neighbors: {str(e)}")
                 self.log.error(f"Failed to get LLDP neighbors: {str(e)}")
                 return {}
             
-        print(f"DEBUG: Final LLDP output to parse:\n{output}")
         self.log.debug(f"Final LLDP output to parse:\n{output}")
         
         # Parse output to get interfaces with neighbors
@@ -993,12 +974,16 @@ class NetgearDriver(NetworkDriver):
         
         # Get detailed info for each interface with neighbors
         for interface in interfaces:
+            self.log.debug(f"\nGetting details for interface {interface}")
             # Disable paging first
             self._send_command("no pager")
             
             command = f"show lldp remote-device detail {interface}"
+            self.log.debug(f"Sending command: {command}")
             try:
                 output = self._send_command(command)
+                self.log.debug(f"LLDP detail output for {interface}:\n{output}")
+                
                 if not output:
                     self.log.debug(f"No LLDP detail output for interface {interface}")
                     continue
@@ -1006,8 +991,6 @@ class NetgearDriver(NetworkDriver):
                 self.log.error(f"Failed to get LLDP detail for interface {interface}: {str(e)}")
                 continue
                 
-            self.log.debug(f"\nLLDP detail for {interface}:\n{output}")
-            
             # Parse detailed output
             neighbor = {
                 "parent_interface": interface,
@@ -1024,12 +1007,13 @@ class NetgearDriver(NetworkDriver):
             lines = output.splitlines()
             current_section = None
             
+            self.log.debug(f"Parsing LLDP details for {interface}")
             for line in lines:
                 line = line.strip()
                 if not line:
                     continue
                     
-                self.log.debug(f"Processing detail line: {line}")
+                self.log.debug(f"Processing detail line: '{line}'")
                 
                 # Skip header lines
                 if any(header in line for header in [
@@ -1039,38 +1023,50 @@ class NetgearDriver(NetworkDriver):
                     "Chassis ID Subtype:",
                     "Port ID Subtype:"
                 ]):
+                    self.log.debug(f"Skipping header line: '{line}'")
                     continue
                     
                 # Handle main fields
                 if "Chassis ID:" in line:
                     neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
+                    self.log.debug(f"Found chassis ID: {neighbor['remote_chassis_id']}")
                 elif "Port ID:" in line:
                     neighbor["remote_port"] = line.split(":", 1)[1].strip()
+                    self.log.debug(f"Found port ID: {neighbor['remote_port']}")
                 elif "System Name:" in line:
                     neighbor["remote_system_name"] = line.split(":", 1)[1].strip()
+                    self.log.debug(f"Found system name: {neighbor['remote_system_name']}")
                 elif "System Description:" in line:
                     neighbor["remote_system_description"] = line.split(":", 1)[1].strip()
+                    self.log.debug(f"Found system description: {neighbor['remote_system_description']}")
                 elif "Port Description:" in line:
                     neighbor["remote_port_description"] = line.split(":", 1)[1].strip()
+                    self.log.debug(f"Found port description: {neighbor['remote_port_description']}")
                 elif "System Capabilities Supported:" in line:
                     caps = line.split(":", 1)[1].strip()
                     neighbor["remote_system_capab"] = self._parse_capabilities(caps)
+                    self.log.debug(f"Found system capabilities: {neighbor['remote_system_capab']}")
                 elif "System Capabilities Enabled:" in line:
                     caps = line.split(":", 1)[1].strip()
                     neighbor["remote_system_enable_capab"] = self._parse_capabilities(caps)
+                    self.log.debug(f"Found enabled capabilities: {neighbor['remote_system_enable_capab']}")
                 elif "Management Address:" in line:
                     current_section = "management"
+                    self.log.debug("Starting management address section")
                 elif current_section == "management" and "Type:" in line:
+                    self.log.debug("Skipping management address type")
                     continue  # Skip the type line
                 elif current_section == "management" and "Address:" in line:
                     neighbor["remote_management_address"] = line.split(":", 1)[1].strip()
+                    self.log.debug(f"Found management address: {neighbor['remote_management_address']}")
                     current_section = None
                 elif "Time to Live:" in line:
                     current_section = None
+                    self.log.debug("Found Time to Live, ending section")
                     
             # Only add if we have valid data
             if any(val for val in neighbor.values() if val and val != interface):
-                self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
+                self.log.debug(f"Adding neighbor for {interface}: {neighbor}")
                 neighbors[interface] = [neighbor]
             else:
                 self.log.debug(f"No valid neighbor data found for {interface}")
