@@ -856,6 +856,7 @@ class NetgearDriver(NetworkDriver):
                     current_section = None
                     
             if any(neighbor.values()):  # Only add if we found any data
+                self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
                 neighbors[interface] = [neighbor]
         
         self.log.debug(f"Final neighbors dict: {neighbors}")
