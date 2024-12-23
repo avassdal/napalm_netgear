@@ -675,16 +675,20 @@ class NetgearDriver(NetworkDriver):
             # Need at least interface, chassis ID, and port ID
             if len(parts) >= 4 and parts[0].startswith(("0/", "1/0/")):
                 interface = parts[0]
-                port = parts[3]  # Port ID is in 4th column for both formats
-                hostname = parts[4] if len(parts) > 4 else ""  # System name if available
+                chassis_id = parts[2]  # Chassis ID is in 3rd column
+                port = parts[3]  # Port ID is in 4th column
+                hostname = ' '.join(parts[4:]) if len(parts) > 4 else ""  # System name if available
+                
+                # Clean up system name (remove extra spaces)
+                hostname = ' '.join(hostname.split())
                 
                 # Only add if we have valid data
-                if port and any(c.isalnum() for c in port):
+                if chassis_id and any(c.isalnum() for c in chassis_id):
                     if interface not in neighbors:
                         neighbors[interface] = []
                     neighbors[interface].append({
-                        "hostname": hostname,
-                        "port": port
+                        "hostname": hostname or chassis_id,  # Use chassis ID if no hostname
+                        "port": port or interface  # Use interface if no port
                     })
         
         self.log.debug(f"Final neighbors dict: {neighbors}")
