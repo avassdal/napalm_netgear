@@ -829,81 +829,43 @@ class NetgearDriver(NetworkDriver):
         self._disable_paging()
         
         # Try M4250/M4350 command first
-        cmd = "show lldp remote-device all | include :"
+        cmd = "show lldp remote-device all | include :[0-9a-fA-F]"
         output = self._send_command(cmd)
         
-        if "invalid" not in output.lower():
-            # M4250/M4350 format
-            current_interface = None
-            
-            for line in output.splitlines():
-                line = line.strip()
-                if not line or 'LLDP Remote Device Summary' in line:
-                    continue
-                    
-                # Skip header lines
-                if any(x in line for x in ['Interface  RemID', '--------']):
-                    continue
-                    
-                # Skip indented continuation lines
-                if line.startswith(' '):
-                    continue
-                    
-                parts = line.split()
-                if len(parts) < 4:  # Need at least interface, remid, chassis, port
-                    continue
-                    
-                interface = parts[0]
-                if not self._is_valid_interface(interface):
-                    continue
-                    
-                # Only process if we have a MAC address (chassis ID)
-                if ':' in parts[2]:
-                    neighbor_data = {
-                        'parent_interface': interface,
-                        'remote_chassis_id': parts[2],
-                        'remote_port': parts[3],
-                        'remote_system_name': ' '.join(parts[4:-2]) if len(parts) > 5 else '',
-                        'remote_port_description': '',
-                        'remote_system_description': '',
-                        'remote_system_capab': [],
-                        'remote_system_enable_capab': []
-                    }
-                    neighbors[interface] = neighbor_data
-                    
-        else:
-            # M4500 format with filtering
-            cmd = "show lldp remote-device | include :"
+        if "invalid" in output.lower():
+            # Try M4500 format
+            cmd = "show lldp remote-device | include :[0-9a-fA-F]"
             output = self._send_command(cmd)
             
-            if not output:
-                return neighbors
+        if not output:
+            return neighbors
+            
+        # Process output - format is same for both models after filtering
+        for line in output.splitlines():
+            line = line.strip()
+            if not line:
+                continue
                 
-            for line in output.splitlines():
-                line = line.strip()
-                if not line:
-                    continue
-                    
-                parts = line.split()
-                if len(parts) < 4:  # Need at least interface, remid, chassis, port
-                    continue
-                    
-                interface = parts[0]
-                if not self._is_valid_interface(interface):
-                    continue
-                    
-                neighbor_data = {
-                    'parent_interface': interface,
-                    'remote_chassis_id': parts[2],  # MAC address is always present
-                    'remote_port': parts[3],
-                    'remote_system_name': ' '.join(parts[4:-2]) if len(parts) > 5 else '',
-                    'remote_port_description': '',
-                    'remote_system_description': '',
-                    'remote_system_capab': [],
-                    'remote_system_enable_capab': []
-                }
+            parts = line.split()
+            if len(parts) < 4:  # Need at least interface, remid, chassis, port
+                continue
                 
-                neighbors[interface] = neighbor_data
+            interface = parts[0]
+            if not self._is_valid_interface(interface):
+                continue
+                
+            neighbor_data = {
+                'parent_interface': interface,
+                'remote_chassis_id': parts[2],  # MAC address is always present
+                'remote_port': parts[3],
+                'remote_system_name': ' '.join(parts[4:-2]) if len(parts) > 5 else '',
+                'remote_port_description': '',
+                'remote_system_description': '',
+                'remote_system_capab': [],
+                'remote_system_enable_capab': []
+            }
+            
+            neighbors[interface] = neighbor_data
         
         return neighbors
 
