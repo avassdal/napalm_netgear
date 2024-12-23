@@ -829,11 +829,13 @@ class NetgearDriver(NetworkDriver):
         self._disable_paging()
         
         # Try M4250/M4350 command first
-        cmd = "show lldp remote-device all | exclude OUI"
+        cmd = "show lldp remote-device all | include :[0-9a-fA-F]:[0-9a-fA-F]"
         output = self._send_command(cmd)
         
         if "invalid" not in output.lower():
             # M4250/M4350 format
+            current_interface = None
+            
             for line in output.splitlines():
                 line = line.strip()
                 if not line or 'LLDP Remote Device Summary' in line:
@@ -841,6 +843,10 @@ class NetgearDriver(NetworkDriver):
                     
                 # Skip header lines
                 if any(x in line for x in ['Interface  RemID', '--------']):
+                    continue
+                    
+                # Skip indented continuation lines
+                if line.startswith(' '):
                     continue
                     
                 parts = line.split()
