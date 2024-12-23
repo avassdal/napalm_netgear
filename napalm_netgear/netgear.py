@@ -855,7 +855,12 @@ class NetgearDriver(NetworkDriver):
                 elif "Time to Live:" in line:
                     current_section = None
                     
-            if any(neighbor.values()):  # Only add if we found any data
+            # Create a copy without parent_interface for validation
+            neighbor_data = neighbor.copy()
+            del neighbor_data["parent_interface"]
+            
+            # Only add if we found any real data
+            if any(neighbor_data.values()):
                 self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
                 neighbors[interface] = [neighbor]
         
