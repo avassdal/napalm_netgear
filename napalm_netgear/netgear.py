@@ -738,9 +738,19 @@ class NetgearDriver(NetworkDriver):
         """
         neighbors = {}
         
-        # Get list of interfaces with LLDP neighbors
-        command = "show lldp remote-device"  # M4500 doesn't support 'all' parameter
-        output = self._send_command(command)
+        # Try M4250/M4350 command first
+        try:
+            command = "show lldp remote-device all"
+            output = self._send_command(command)
+            if "An invalid interface has been used for this command" in output:
+                # Switch to M4500 command if 'all' not supported
+                command = "show lldp remote-device"
+                output = self._send_command(command)
+        except Exception as e:
+            self.log.debug(f"Error with first LLDP command, trying alternative: {str(e)}")
+            command = "show lldp remote-device"
+            output = self._send_command(command)
+            
         self.log.debug(f"LLDP output:\n{output}")
         
         # Parse output to get interfaces with neighbors
@@ -751,7 +761,8 @@ class NetgearDriver(NetworkDriver):
         header_found = False
         for line in lines:
             self.log.debug(f"Processing line: {line}")
-            if "Local" in line and "Interface" in line:
+            # Handle both M4500 and M4250/M4350 header formats
+            if any(header in line for header in ["Local Interface", "Interface  RemID"]):
                 header_found = True
                 continue
             if "-----" in line:  # Skip separator line
