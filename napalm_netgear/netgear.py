@@ -829,14 +829,18 @@ class NetgearDriver(NetworkDriver):
         self._disable_paging()
         
         # Try M4250/M4350 command first
-        cmd = "show lldp remote-device all | include :[0-9a-fA-F] | exclude ^[[:space:]]"
+        cmd = "show lldp remote-device all | exclude OUI"
         output = self._send_command(cmd)
         
         if "invalid" not in output.lower():
-            # M4250/M4350 format - filtered output should only contain lines with actual neighbors
+            # M4250/M4350 format
             for line in output.splitlines():
                 line = line.strip()
                 if not line or 'LLDP Remote Device Summary' in line:
+                    continue
+                    
+                # Skip header lines
+                if any(x in line for x in ['Interface  RemID', '--------']):
                     continue
                     
                 parts = line.split()
@@ -847,17 +851,19 @@ class NetgearDriver(NetworkDriver):
                 if not self._is_valid_interface(interface):
                     continue
                     
-                neighbor_data = {
-                    'parent_interface': interface,
-                    'remote_chassis_id': parts[2],
-                    'remote_port': parts[3],
-                    'remote_system_name': ' '.join(parts[4:-2]) if len(parts) > 5 else '',
-                    'remote_port_description': '',
-                    'remote_system_description': '',
-                    'remote_system_capab': [],
-                    'remote_system_enable_capab': []
-                }
-                neighbors[interface] = neighbor_data
+                # Only process if we have a MAC address (chassis ID)
+                if ':' in parts[2]:
+                    neighbor_data = {
+                        'parent_interface': interface,
+                        'remote_chassis_id': parts[2],
+                        'remote_port': parts[3],
+                        'remote_system_name': ' '.join(parts[4:-2]) if len(parts) > 5 else '',
+                        'remote_port_description': '',
+                        'remote_system_description': '',
+                        'remote_system_capab': [],
+                        'remote_system_enable_capab': []
+                    }
+                    neighbors[interface] = neighbor_data
                     
         else:
             # M4500 format with filtering
