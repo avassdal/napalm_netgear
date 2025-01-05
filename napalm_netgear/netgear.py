@@ -660,14 +660,14 @@ class NetgearDriver(NetworkDriver):
             # Get detailed LLDP info
             detail_output = self._send_command(f"show lldp remote-device detail {interface}")
             
-            # Initialize neighbor data
+            # Initialize neighbor data with None values
             neighbor = {
                 "parent_interface": interface,
-                "remote_chassis_id": "",
-                "remote_port": "",
-                "remote_port_description": "",
-                "remote_system_name": "",
-                "remote_system_description": "",
+                "remote_chassis_id": None,
+                "remote_port": None,
+                "remote_port_description": None,
+                "remote_system_name": None,
+                "remote_system_description": None,
                 "remote_system_capab": [],
                 "remote_system_enable_capab": []
             }
@@ -681,24 +681,29 @@ class NetgearDriver(NetworkDriver):
                     
                 # Handle main fields
                 if "Chassis ID:" in line:
-                    neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
+                    value = line.split(":", 1)[1].strip()
+                    neighbor["remote_chassis_id"] = value if value else None
                 elif "Port ID:" in line:
-                    neighbor["remote_port"] = line.split(":", 1)[1].strip()
+                    value = line.split(":", 1)[1].strip()
+                    neighbor["remote_port"] = value if value else None
                 elif "System Name:" in line:
-                    neighbor["remote_system_name"] = line.split(":", 1)[1].strip()
+                    value = line.split(":", 1)[1].strip()
+                    neighbor["remote_system_name"] = value if value else None
                 elif "System Description:" in line:
-                    neighbor["remote_system_description"] = line.split(":", 1)[1].strip()
+                    value = line.split(":", 1)[1].strip()
+                    neighbor["remote_system_description"] = value if value else None
                 elif "Port Description:" in line:
-                    neighbor["remote_port_description"] = line.split(":", 1)[1].strip()
+                    value = line.split(":", 1)[1].strip()
+                    neighbor["remote_port_description"] = value if value else None
                 elif "System Capabilities Supported:" in line:
-                    caps = line.split(":", 1)[1].strip()
-                    neighbor["remote_system_capab"] = [cap.strip() for cap in caps.split(",") if cap.strip()]
+                    value = line.split(":", 1)[1].strip()
+                    neighbor["remote_system_capab"] = [cap.strip() for cap in value.split(",") if cap.strip()]
                 elif "System Capabilities Enabled:" in line:
-                    caps = line.split(":", 1)[1].strip()
-                    neighbor["remote_system_enable_capab"] = [cap.strip() for cap in caps.split(",") if cap.strip()]
+                    value = line.split(":", 1)[1].strip()
+                    neighbor["remote_system_enable_capab"] = [cap.strip() for cap in value.split(",") if cap.strip()]
             
             # Only add if we have valid data
-            if any(val for val in neighbor.values() if val and val != interface):
+            if any(val for val in neighbor.values() if val not in (None, [], interface)):
                 neighbors[interface] = neighbor
         
         return neighbors
