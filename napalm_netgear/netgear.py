@@ -435,40 +435,58 @@ class NetgearDriver(NetworkDriver):
 
         # Get interface list from status command
         output = self._send_command("show interfaces status all")
+        self.log.debug(f"Interface status output:\n{output}")
+        
         header_found = False
         separator_found = False
         
         for line in output.splitlines():
             line = line.strip()
+            self.log.debug(f"Processing line: '{line}'")
             
             # Skip empty lines
             if not line:
+                self.log.debug("Skipping empty line")
                 continue
                 
             # Look for header line
-            if "Port" in line and "Link" in line:
+            if not header_found and any(h in line for h in ["Port", "Interface"]):
+                self.log.debug("Found header line")
                 header_found = True
                 continue
                 
             # Look for separator after header
-            if header_found and "-" * 5 in line:
+            if header_found and not separator_found and "-" * 5 in line:
+                self.log.debug("Found separator line")
                 separator_found = True
                 continue
                 
             # Only process lines after the separator
             if not separator_found:
+                self.log.debug("Waiting for separator")
                 continue
                 
             # Split line into fields and get interface name
             fields = line.split()
-            if fields and len(fields) >= 1:
-                interface = fields[0]
-                # Only add physical interfaces (skip LAG/VLAN/etc)
-                if interface and not interface.startswith(("lag", "vlan", "(")) and "/" in interface:
-                    interface_list.append(interface)
+            self.log.debug(f"Fields: {fields}")
+            
+            if not fields:
+                self.log.debug("No fields found")
+                continue
+                
+            interface = fields[0]
+            self.log.debug(f"Potential interface: {interface}")
+            
+            # Only add physical interfaces (skip LAG/VLAN/etc)
+            if interface and "/" in interface and not any(p in interface.lower() for p in ["lag", "vlan", "(", "ch"]):
+                self.log.debug(f"Adding interface: {interface}")
+                interface_list.append(interface)
+            else:
+                self.log.debug(f"Skipping non-physical interface: {interface}")
 
         # Sort interfaces naturally
         interface_list.sort(key=lambda x: [int(n) for n in x.split('/') if n.isdigit()])
+        self.log.debug(f"Final interface list: {interface_list}")
 
         # Build facts dictionary
         facts = {
