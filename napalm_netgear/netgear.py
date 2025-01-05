@@ -553,7 +553,17 @@ class NetgearDriver(NetworkDriver):
         return mac_entries
 
     def get_lldp_neighbors(self) -> Dict[str, List[Dict[str, str]]]:
-        """Get LLDP neighbors."""
+        """Get LLDP neighbors.
+
+        Returns:
+            dict: Interfaces and their LLDP neighbors:
+                {
+                    "local_port": [{
+                        "hostname": "string",
+                        "port": "string",
+                    }],
+                }
+        """
         neighbors = {}
         
         # Get LLDP neighbors
@@ -564,7 +574,8 @@ class NetgearDriver(NetworkDriver):
         data_lines = False
         
         for line in lines:
-            if "Remote Device" in line or "-" * 5 in line:
+            # Skip until we find the separator line
+            if '-' * 5 in line:
                 data_lines = True
                 continue
                 
@@ -572,21 +583,26 @@ class NetgearDriver(NetworkDriver):
                 continue
                 
             # Split line into fields
-            fields = line.split("|")
+            fields = line.split()
             if len(fields) < 4:  # Need local port, remote ID, remote port, system name
                 continue
                 
-            local_port = fields[0].strip()
+            local_port = fields[0]
             if not local_port or local_port.startswith(('lag', 'vlan')):
                 continue
                 
-            remote_port = fields[2].strip() if len(fields) > 2 else ""
-            remote_name = fields[3].strip() if len(fields) > 3 else ""
+            # Get remote info - fields are: Local Port, Remote ID, Remote Port, Remote Name
+            remote_name = fields[3] if len(fields) > 3 else ""
+            remote_port = fields[2] if len(fields) > 2 else ""
             
-            neighbors[local_port] = [{
+            # Add neighbor info
+            if local_port not in neighbors:
+                neighbors[local_port] = []
+                
+            neighbors[local_port].append({
                 "hostname": remote_name,
-                "port": remote_port
-            }]
+                "port": remote_port,
+            })
         
         return neighbors
 
