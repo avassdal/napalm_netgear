@@ -435,16 +435,36 @@ class NetgearDriver(NetworkDriver):
 
         # Get interface list from status command
         output = self._send_command("show interfaces status all")
+        header_found = False
+        separator_found = False
+        
         for line in output.splitlines():
             line = line.strip()
-            if not line or "Port" in line or "-" * 5 in line:
+            
+            # Skip empty lines
+            if not line:
+                continue
+                
+            # Look for header line
+            if "Port" in line and "Link" in line:
+                header_found = True
+                continue
+                
+            # Look for separator after header
+            if header_found and "-" * 5 in line:
+                separator_found = True
+                continue
+                
+            # Only process lines after the separator
+            if not separator_found:
                 continue
                 
             # Split line into fields and get interface name
             fields = line.split()
             if fields and len(fields) >= 1:
                 interface = fields[0]
-                if interface and not interface.startswith(("lag", "vlan", "(")):
+                # Only add physical interfaces (skip LAG/VLAN/etc)
+                if interface and not interface.startswith(("lag", "vlan", "(")) and "/" in interface:
                     interface_list.append(interface)
 
         # Sort interfaces naturally
