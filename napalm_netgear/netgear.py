@@ -590,6 +590,103 @@ class NetgearDriver(NetworkDriver):
         
         return neighbors
 
+    def get_lldp_neighbors_detail(self, *args, **kwargs) -> Dict[str, Dict[str, Any]]:
+        """Get detailed information about LLDP neighbors.
+
+        Returns:
+            dict: Detailed information about LLDP neighbors keyed by interface:
+                {
+                    "local_port": {
+                        "parent_interface": "string",
+                        "remote_chassis_id": "string",
+                        "remote_port": "string",
+                        "remote_port_description": "string",
+                        "remote_system_name": "string",
+                        "remote_system_description": "string",
+                        "remote_system_capab": ["string"],
+                        "remote_system_enable_capab": ["string"]
+                    }
+                }
+        """
+        neighbors = {}
+        
+        # Get LLDP neighbors
+        output = self._send_command("show lldp remote-device all")
+        
+        # Skip header lines
+        lines = [line.strip() for line in output.splitlines() if line.strip()]
+        data_lines = False
+        
+        # First get list of interfaces with neighbors
+        interfaces = []
+        for line in lines:
+            # Skip until we find the separator line
+            if '-' * 5 in line:
+                data_lines = True
+                continue
+                
+            if not data_lines:
+                continue
+                
+            # Split line into fields
+            fields = line.split()
+            if len(fields) < 4:  # Need local port, remote ID, remote port, system name
+                continue
+                
+            local_port = fields[0]
+            if not local_port or local_port.startswith(('lag', 'vlan')):
+                continue
+                
+            interfaces.append(local_port)
+        
+        # Now get detailed info for each interface
+        for interface in interfaces:
+            # Get detailed LLDP info
+            detail_output = self._send_command(f"show lldp remote-device detail {interface}")
+            
+            # Initialize neighbor data
+            neighbor = {
+                "parent_interface": interface,
+                "remote_chassis_id": "",
+                "remote_port": "",
+                "remote_port_description": "",
+                "remote_system_name": "",
+                "remote_system_description": "",
+                "remote_system_capab": [],
+                "remote_system_enable_capab": []
+            }
+            
+            # Parse detailed output
+            current_field = None
+            for line in detail_output.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                    
+                # Handle main fields
+                if "Chassis ID:" in line:
+                    neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
+                elif "Port ID:" in line:
+                    neighbor["remote_port"] = line.split(":", 1)[1].strip()
+                elif "System Name:" in line:
+                    neighbor["remote_system_name"] = line.split(":", 1)[1].strip()
+                elif "System Description:" in line:
+                    neighbor["remote_system_description"] = line.split(":", 1)[1].strip()
+                elif "Port Description:" in line:
+                    neighbor["remote_port_description"] = line.split(":", 1)[1].strip()
+                elif "System Capabilities Supported:" in line:
+                    caps = line.split(":", 1)[1].strip()
+                    neighbor["remote_system_capab"] = [cap.strip() for cap in caps.split(",") if cap.strip()]
+                elif "System Capabilities Enabled:" in line:
+                    caps = line.split(":", 1)[1].strip()
+                    neighbor["remote_system_enable_capab"] = [cap.strip() for cap in caps.split(",") if cap.strip()]
+            
+            # Only add if we have valid data
+            if any(val for val in neighbor.values() if val and val != interface):
+                neighbors[interface] = neighbor
+        
+        return neighbors
+
     def is_alive(self) -> Dict[str, bool]:
         """Return connection status."""
         return {
