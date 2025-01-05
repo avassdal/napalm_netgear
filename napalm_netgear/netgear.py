@@ -433,35 +433,24 @@ class NetgearDriver(NetworkDriver):
                         serial_number = serial.split()[0]
                         break
 
-        # Get interface list from status command
-        output = self._send_command("show interfaces status all")
-        header_seen = False
-        
+        # Get interface list from status command with header filtering
+        output = self._send_command('show interfaces status all | exclude "Port|Name|Link|Type|Speed|Duplex|Mode|Status|VLAN"')
         for line in output.splitlines():
             line = line.strip()
-            
-            # Skip empty lines
-            if not line:
-                continue
-                
-            # Mark when we see the header separator
-            if "-" * 5 in line:
-                header_seen = True
-                continue
-                
-            # Skip lines until we've seen the header separator
-            if not header_seen:
+            if not line or "-" * 5 in line:  # Skip empty lines and separator
                 continue
                 
             # Split line into fields and get interface name
             fields = line.split()
-            if fields and len(fields) >= 1:
-                interface = fields[0]
-                # Only add if it's a valid interface name (e.g., "1/0/1")
-                if interface and "/" in interface and not interface.startswith(("lag", "vlan", "(")):
-                    interface_list.append(interface)
+            if not fields:
+                continue
+                
+            interface = fields[0]
+            # Only include physical interfaces (1/0/X format)
+            if interface and "/" in interface and not interface.startswith(("lag", "vlan")):
+                interface_list.append(interface)
 
-        # Sort interfaces naturally
+        # Sort interfaces naturally by their numeric components
         interface_list.sort(key=lambda x: [int(n) for n in x.split('/') if n.isdigit()])
 
         # Build facts dictionary
@@ -895,7 +884,6 @@ class NetgearDriver(NetworkDriver):
                 if "Temperature Sensors:" in line:
                     in_temp_section = True
                     continue
-                # Check for fan section
                 elif "Fans:" in line:
                     in_temp_section = False
                     continue
@@ -927,7 +915,6 @@ class NetgearDriver(NetworkDriver):
                 if "Fans:" in line:
                     in_fan_section = True
                     continue
-                # Check for power section
                 elif "Power Modules:" in line:
                     in_fan_section = False
                     continue
@@ -957,8 +944,7 @@ class NetgearDriver(NetworkDriver):
                 if "Power Modules:" in line:
                     in_power_section = True
                     continue
-                # Check for end of section
-                elif line == "":
+                elif line == "":  # End of section
                     in_power_section = False
                     continue
                     
