@@ -370,6 +370,7 @@ class NetgearDriver(NetworkDriver):
         hostname = ""
         os_version = ""
         serial_number = ""
+        interface_list = []
         
         # Get all info from sysinfo command
         sysinfo_output = self._send_command("show sysinfo")
@@ -405,20 +406,49 @@ class NetgearDriver(NetworkDriver):
                 
             elif "System Up Time" in line:
                 try:
-                    uptime_str = line.split(":", 1)[1].strip()
-                    parts = uptime_str.replace(",", "").split()
-                    days = int(parts[0]) if "days" in parts else 0
-                    hours = int(parts[parts.index("hrs")-1]) if "hrs" in parts else 0
-                    mins = int(parts[parts.index("mins")-1]) if "mins" in parts else 0
-                    secs = int(parts[parts.index("secs")-1]) if "secs" in parts else 0
-                    uptime = ((days * 24 + hours) * 60 + mins) * 60 + secs
+                    uptime_str = self._clean_output_line(line)
+                    if uptime_str:
+                        parts = uptime_str.replace(",", "").split()
+                        days = int(parts[parts.index("days")-1]) if "days" in parts else 0
+                        hours = int(parts[parts.index("hrs")-1]) if "hrs" in parts else 0
+                        mins = int(parts[parts.index("mins")-1]) if "mins" in parts else 0
+                        secs = int(parts[parts.index("secs")-1]) if "secs" in parts else 0
+                        uptime = ((days * 24 + hours) * 60 + mins) * 60 + secs
                 except (ValueError, IndexError):
                     uptime = 0
                     
             elif "Serial Number" in line:
-                serial_number = self._clean_output_line(line)
-                if serial_number:
-                    serial_number = serial_number.split()[0]
+                serial = self._clean_output_line(line)
+                if serial:
+                    serial_number = serial.split()[0]
+                    
+        # If serial number not found in sysinfo, try show version
+        if not serial_number:
+            version_output = self._send_command("show version")
+            for line in version_output.splitlines():
+                line = line.strip()
+                if "Serial Number" in line:
+                    serial = self._clean_output_line(line)
+                    if serial:
+                        serial_number = serial.split()[0]
+                        break
+
+        # Get interface list from status command
+        output = self._send_command("show interfaces status all")
+        for line in output.splitlines():
+            line = line.strip()
+            if not line or "Port" in line or "-" * 5 in line:
+                continue
+                
+            # Split line into fields and get interface name
+            fields = line.split()
+            if fields and len(fields) >= 1:
+                interface = fields[0]
+                if interface and not interface.startswith(("lag", "vlan", "(")):
+                    interface_list.append(interface)
+
+        # Sort interfaces naturally
+        interface_list.sort(key=lambda x: [int(n) for n in x.split('/') if n.isdigit()])
 
         # Build facts dictionary
         facts = {
@@ -429,7 +459,7 @@ class NetgearDriver(NetworkDriver):
             "fqdn": hostname,  # No domain support needed
             "os_version": os_version,
             "serial_number": serial_number,
-            "interface_list": []  # Will be populated by get_interfaces
+            "interface_list": interface_list
         }
         
         return facts
