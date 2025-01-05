@@ -99,116 +99,60 @@ class NetgearDriver(NetworkDriver):
             return 0.0  # Return 0 for non-numeric speeds
 
     def get_interfaces(self) -> Dict[str, Dict[str, Any]]:
-        """Get interface details.
-
-        Returns:
-            dict: Interfaces in Napalm format:
-                - is_up (bool)
-                - is_enabled (bool)
-                - description (str)
-                - speed (int - Mbps)
-                - mtu (int)
-                - mac_address (str)
-                - last_flapped (float)
-        """
+        """Get interface details."""
         interfaces = {}
 
-        # Get interface status - single command for all interfaces
-        cmd = "show interfaces status all"
-        output = self._send_command(cmd)
-
-        # Parse interface status table
-        interface_status = parser.parse_interface_status(output)
-
-        # Process each interface
-        for status in interface_status:
-            iface = status.get("port")
-            if not iface:
-                continue
-
-            # Skip LAG/VLAN interfaces and invalid interface names
-            if iface.startswith(('lag ', 'vlan ', '(')) or not re.match(r'\d+/\d+', iface):
-                continue
-
-            # Create basic interface info
-            interface_info = {
-                "is_up": status.get("state", "").lower() == "up",
-                "is_enabled": True,  # Assume enabled if visible
-                "description": status.get("name", ""),
-                "mac_address": "",  # Not available in status table
-                "last_flapped": -1.0,  # Not available in status table
-                "mtu": 1500,  # Default MTU
-            }
-
-            # Get speed from Physical Status field
-            speed_str = status.get("speed", "").lower()
-            if speed_str:
-                if "10g" in speed_str:
-                    interface_info["speed"] = 10000
-                elif "1000" in speed_str:
-                    interface_info["speed"] = 1000
-                elif "100" in speed_str:
-                    interface_info["speed"] = 100
-                elif "10" in speed_str:
-                    interface_info["speed"] = 10
-                else:
-                    interface_info["speed"] = 0
-            else:
-                interface_info["speed"] = 0
-            
-            interfaces[iface] = interface_info
-
-        return interfaces
-
-    def _parse_interface_status(self, output):
-        """Parse the output of 'show interfaces status all'."""
-        interfaces = []
-        header = None
-        fields = None
-
-        for line in output.splitlines():
-            # Skip empty lines
-            if not line.strip():
-                continue
-
-            # Check for M4250 format header
-            if "Link    Physical    Physical    Media" in line:
-                fields = ['port', 'name', 'link_state', 'physical_mode', 'physical_status', 'media_type', 'flow_control', 'vlan']
-                continue
-            # Check for M4500 format header
-            elif "Port       Name                    Link" in line:
-                fields = ['port', 'name', 'link', 'state', 'mode', 'speed', 'type', 'vlan']
-                continue
-            # Default format header
-            elif "Port" in line and "Link" in line:
-                fields = ['port', 'link', 'admin', 'speed', 'duplex', 'type', 'name']
-                continue
-
-            if not fields:
-                continue
-
-            # Skip separator line
+        # Get interface status
+        output = self._send_command("show interfaces status all")
+        
+        # Skip header lines
+        lines = [line.strip() for line in output.splitlines() if line.strip()]
+        data_lines = False
+        
+        for line in lines:
+            # Skip until we find the separator line
             if '-' * 5 in line:
+                data_lines = True
                 continue
-
-            # Parse values based on field mapping
-            values = line.split()
-            if not values:
+                
+            if not data_lines:
                 continue
-
-            interface = {}
-            for i, field in enumerate(fields):
-                if i < len(values):
-                    interface[field] = values[i]
-                else:
-                    interface[field] = ''
-
-            # Skip invalid interfaces
-            if not interface.get('port') or interface['port'].startswith('lag') or interface['port'].startswith('vlan'):
+                
+            # Split line into fields
+            fields = line.split()
+            if len(fields) < 4:  # Need at least port, type, admin, status
                 continue
-
-            interfaces.append(interface)
-
+                
+            interface = fields[0]
+            if not interface or interface.startswith(('lag', 'vlan', '(')):
+                continue
+                
+            # Parse interface state
+            admin_state = fields[2] if len(fields) > 2 else ""
+            phys_state = fields[3] if len(fields) > 3 else ""
+            
+            interfaces[interface] = {
+                "is_up": phys_state.lower() == "up",
+                "is_enabled": admin_state.lower() == "enable",
+                "description": "",  # Not available in status output
+                "mac_address": "",  # Not available in status output
+                "last_flapped": -1.0,  # Not available
+                "mtu": 1500,  # Default MTU
+                "speed": 0  # Will be updated if available
+            }
+            
+            # Try to parse speed if available
+            if len(fields) > 4:
+                speed_str = fields[4].lower()
+                if "10g" in speed_str:
+                    interfaces[interface]["speed"] = 10000
+                elif "1000" in speed_str:
+                    interfaces[interface]["speed"] = 1000
+                elif "100" in speed_str:
+                    interfaces[interface]["speed"] = 100
+                elif "10" in speed_str:
+                    interfaces[interface]["speed"] = 10
+        
         return interfaces
 
     def get_interfaces_counters(self) -> dict:
@@ -411,7 +355,7 @@ class NetgearDriver(NetworkDriver):
         
         Returns:
             dict: Facts about the device:
-                - uptime (str): System uptime
+                - uptime (int): System uptime in seconds
                 - vendor (str): Always "Netgear"
                 - model (str): Switch model (e.g. M4250-8G2XF-PoE+, M4350-24X4V, GS108Tv3)
                 - hostname (str): Device hostname
@@ -420,38 +364,37 @@ class NetgearDriver(NetworkDriver):
                 - serial_number (str): Device serial number
                 - interface_list (list): List of interface names
         """
-        # Get all info from sysinfo command
-        sysinfo_output = self._send_command("show sysinfo")
-        
         # Initialize variables
-        uptime = "0 secs"
+        uptime = 0
         model = ""
         hostname = ""
         os_version = ""
         serial_number = ""
+        
+        # Get all info from sysinfo command
+        sysinfo_output = self._send_command("show sysinfo")
         
         # Parse sysinfo output
         for line in sysinfo_output.splitlines():
             line = line.strip()
             
             if "System Description" in line:
-                # Format: "System Description............................. M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.4.26, 1.0.0.11"
-                # Or: "System Description............................. NETGEAR M4350-24X4V 24x10G Copper 4x25G Fiber Managed Switch, 14.0.2.26, B1.0.0.6"
-                # Or: "System Description............................. GS108Tv3 8-Port Gigabit Smart Managed Pro Switch, 7.0.7.3"
                 desc = self._clean_output_line(line)
                 if desc:
-                    parts = desc.split(",")
-                    if len(parts) >= 2:
-                        # Extract model from first part
-                        model_part = parts[0]
-                        for word in model_part.split():
+                    # For GS108Tv3, model is first word before "ProSAFE"
+                    if "ProSAFE" in desc:
+                        model = desc.split("ProSAFE")[0].strip().split()[0]
+                    else:
+                        # For other models, look for M4xxx or GSxxx pattern
+                        for word in desc.split():
                             if word.startswith(("M4", "GS")):
                                 model = word
                                 break
-                            
-                        # Extract version
-                        version = parts[1].strip()  # Second part is version
-                        # Format version if it's just digits (130426 -> 13.0.4.26)
+                    
+                    # Extract version if present
+                    parts = desc.split(",")
+                    if len(parts) >= 2:
+                        version = parts[1].strip()
                         if version.isdigit() and len(version) == 6:
                             os_version = f"{version[0:2]}.{version[2]}.{version[3]}.{version[4:6]}"
                         else:
@@ -468,55 +411,25 @@ class NetgearDriver(NetworkDriver):
                     hours = int(parts[parts.index("hrs")-1]) if "hrs" in parts else 0
                     mins = int(parts[parts.index("mins")-1]) if "mins" in parts else 0
                     secs = int(parts[parts.index("secs")-1]) if "secs" in parts else 0
-                    uptime_secs = ((days * 24 + hours) * 60 + mins) * 60 + secs
-                    uptime = self._format_uptime(uptime_secs)
+                    uptime = ((days * 24 + hours) * 60 + mins) * 60 + secs
                 except (ValueError, IndexError):
-                    uptime = "0 secs"
+                    uptime = 0
                     
             elif "Serial Number" in line:
                 serial_number = self._clean_output_line(line)
                 if serial_number:
                     serial_number = serial_number.split()[0]
 
-        # If serial number not in sysinfo, try show version
-        if not serial_number:
-            version_output = self._send_command("show version")
-            for line in version_output.splitlines():
-                if "Serial Number" in line:
-                    serial = self._clean_output_line(line)
-                    if serial:
-                        serial_number = serial.split()[0]
-                    break
-
-        # Get interfaces from status command
-        output = self._send_command("show interfaces status all")
-        interface_list = []
-        
-        # Parse interface list from status output
-        for line in output.splitlines():
-            # Skip headers and empty lines
-            if not line.strip() or "Link" in line or "-" * 5 in line:
-                continue
-                
-            # Split line into columns
-            fields = line.split()
-            if fields and "/" in fields[0]:  # Only physical interfaces
-                if not fields[0].startswith(("lag", "vlan")):
-                    interface_list.append(fields[0])
-        
-        # Sort interfaces naturally
-        interface_list.sort(key=lambda x: tuple(int(n) for n in x.split('/')))
-
         # Build facts dictionary
         facts = {
-            "uptime": uptime,
+            "uptime": uptime,  # Now returning integer seconds
             "vendor": "Netgear",
             "model": model,
             "hostname": hostname,
             "fqdn": hostname,  # No domain support needed
             "os_version": os_version,
             "serial_number": serial_number,
-            "interface_list": interface_list
+            "interface_list": []  # Will be populated by get_interfaces
         }
         
         return facts
@@ -561,327 +474,145 @@ class NetgearDriver(NetworkDriver):
         
         return interfaces_ip
 
-    def get_mac_address_table(self) -> list:
-        """Return LLDP neighbors details."""
-        # Try GS108Tv3 command first
-        command = "show mac address-table"
-        output = self._send_command(command)
-        
-        if "MAC Address" in output and "Type" in output:  # GS108Tv3 format
-            return parse_gs108tv3_mac_table(output)
-            
-        # Try M4250/M4350 format
-        command = "show mac-addr-table"
-        output = self._send_command(command)
-        
-        # Parse output using fixed width table parser
-        fields = ["vlan", "mac", "type", "port"]
-        parsed = parse_fixed_width_table(fields, output.splitlines())
-        
+    def get_mac_address_table(self) -> List[Dict[str, Any]]:
+        """Return the MAC address table."""
         mac_entries = []
-        for entry in parsed:
-            try:
-                vlan_id = int(entry["vlan"])
-                mac_entries.append({
-                    "mac": entry["mac"],
-                    "interface": entry["port"],
-                    "vlan": vlan_id,
-                    "static": entry["type"].lower() != "dynamic",
-                    "active": True,
-                    "moves": 0,
-                    "last_move": 0.0
-                })
-            except (ValueError, KeyError):
+        
+        # Get MAC address table
+        output = self._send_command("show mac-addr-table")
+        
+        # Skip header lines
+        lines = [line.strip() for line in output.splitlines() if line.strip()]
+        data_lines = False
+        
+        for line in lines:
+            # Skip until we find the separator line
+            if '-' * 5 in line:
+                data_lines = True
                 continue
                 
+            if not data_lines:
+                continue
+                
+            # Split line into fields
+            fields = line.split()
+            if len(fields) < 4:  # Need VLAN, MAC, Port, Type
+                continue
+                
+            try:
+                vlan_id = int(fields[0])
+                mac_addr = fields[1]
+                interface = fields[2]
+                entry_type = fields[3].lower()
+                
+                mac_entries.append({
+                    'mac': mac_addr,
+                    'interface': interface,
+                    'vlan': vlan_id,
+                    'static': entry_type == 'static',
+                    'active': True,
+                    'moves': 0,
+                    'last_move': 0.0
+                })
+            except (ValueError, IndexError):
+                continue
+        
         return mac_entries
 
     def get_lldp_neighbors(self) -> Dict[str, List[Dict[str, str]]]:
-        """Get LLDP neighbors.
-        
-        Example M4350:
-            >>> {
-            ...     "1/0/2": [
-            ...         {
-            ...             "hostname": "SWITCH-1",  # System name if available
-            ...             "port": "0/10"
-            ...         }
-            ...     ]
-            ... }
-            
-        Example M4250:
-            >>> {
-            ...     "0/3": [
-            ...         {
-            ...             "hostname": "AP-1",  # System name if available
-            ...             "port": "00:11:22:33:44:55"
-            ...         }
-            ...     ],
-            ...     "0/10": [
-            ...         {
-            ...             "hostname": "SWITCH-2",
-            ...             "port": "1/0/2"
-            ...         }
-            ...     ]
-            ... }
-        """
+        """Get LLDP neighbors."""
         neighbors = {}
         
-        # Try M4250/M4350 command first
-        try:
-            # Disable paging first
-            self.log.debug("Disabling paging")
-            self._send_command("no pager")
-            
-            command = "show lldp remote-device all"
-            self.log.debug(f"Executing initial command: {command}")
-            output = self._send_command(command)
-            self.log.debug(f"Initial LLDP command output:\n{output}")
-            
-            if not output:
-                self.log.debug("No response from device for initial command")
-            elif "An invalid interface has been used for this command" in output:
-                self.log.debug("Initial command not supported, trying alternative")
-                # Switch to M4500 command if 'all' not supported
-                command = "show lldp remote-device"
-                self.log.debug(f"Executing alternative command: {command}")
-                output = self._send_command(command)
-                self.log.debug(f"Alternative LLDP command output:\n{output}")
-                
-                if not output:
-                    self.log.debug("No response from device for alternative command")
-                    return {}
-            
-        except Exception as e:
-            self.log.debug(f"Error with first LLDP command, trying alternative: {str(e)}")
-            try:
-                # Disable paging first
-                self.log.debug("Disabling paging after error")
-                self._send_command("no pager")
-                
-                command = "show lldp remote-device"
-                self.log.debug(f"Executing alternative command after error: {command}")
-                output = self._send_command(command)
-                self.log.debug(f"Alternative LLDP command output after error:\n{output}")
-                
-                if not output:
-                    self.log.debug("No response from device for alternative command after error")
-                    return {}
-                    
-            except Exception as e:
-                self.log.error(f"Failed to get LLDP neighbors: {str(e)}")
-                return {}
-            
-        self.log.debug(f"Final LLDP output to parse:\n{output}")
+        # Get LLDP neighbors
+        output = self._send_command("show lldp remote-device all")
         
-        # Parse output to get interfaces with neighbors
-        lines = output.splitlines()
-        interfaces = []
-        
-        # Skip header lines until we find the separator
-        header_found = False
-        data_section = False
-        
-        self.log.debug("Starting interface discovery from LLDP output...")
+        # Skip header lines
+        lines = [line.strip() for line in output.splitlines() if line.strip()]
+        data_lines = False
         
         for line in lines:
-            line = line.strip()
+            if "Remote Device" in line or "-" * 5 in line:
+                data_lines = True
+                continue
+                
+            if not data_lines:
+                continue
+                
+            # Split line into fields
+            fields = line.split("|")
+            if len(fields) < 4:  # Need local port, remote ID, remote port, system name
+                continue
+                
+            local_port = fields[0].strip()
+            if not local_port or local_port.startswith(('lag', 'vlan')):
+                continue
+                
+            remote_port = fields[2].strip() if len(fields) > 2 else ""
+            remote_name = fields[3].strip() if len(fields) > 3 else ""
             
-            # Handle both M4500 and M4250/M4350 header formats
-            if not header_found:
-                if any(header in line for header in [
-                    "LLDP Remote Device Summary",
-                    "Local Interface:",
-                    "Interface  RemID"
-                ]):
-                    self.log.debug(f"Found header line: '{line}'")
-                    header_found = True
-                    continue
-                else:
-                    self.log.debug("Not a header line, skipping")
-                    continue
-                
-            if header_found and "-----" in line:  # Found separator after header
-                self.log.debug("Found separator line, starting data section")
-                data_section = True
-                continue
-                
-            if not data_section:
-                self.log.debug("Not in data section yet")
-                continue
-                
-            if not line:
-                self.log.debug("Skipping empty line")
-                continue
-                
-            # Split line and get interface if it has a RemID
-            parts = line.split()
-            self.log.debug(f"Line parts: {parts}")
-            
-            if len(parts) >= 1:
-                potential_interface = parts[0].strip()
-                self.log.debug(f"Checking potential interface: '{potential_interface}'")
-                
-                if self._is_valid_interface(potential_interface):
-                    self.log.debug(f"Found valid interface: {potential_interface}")
-                    if potential_interface not in interfaces:  # Avoid duplicates
-                        self.log.debug(f"Adding new interface: {potential_interface}")
-                        interfaces.append(potential_interface)
-                    else:
-                        self.log.debug(f"Interface already found: {potential_interface}")
-                else:
-                    self.log.debug(f"Invalid interface format: {potential_interface}")
-            else:
-                self.log.debug("Line has no parts")
+            neighbors[local_port] = [{
+                "hostname": remote_name,
+                "port": remote_port
+            }]
         
-        self.log.debug(f"Found interfaces with neighbors: {interfaces}")
-        
-        # Get detailed info for each interface with neighbors
-        for interface in interfaces:
-            self.log.debug(f"\nGetting details for interface {interface}")
-            # Disable paging first
-            self._send_command("no pager")
-            
-            command = f"show lldp remote-device detail {interface}"
-            self.log.debug(f"Sending command: {command}")
-            try:
-                output = self._send_command(command)
-                self.log.debug(f"LLDP detail output for {interface}:\n{output}")
-                
-                if not output:
-                    self.log.debug(f"No LLDP detail output for interface {interface}")
-                    continue
-            except Exception as e:
-                self.log.error(f"Failed to get LLDP detail for interface {interface}: {str(e)}")
-                continue
-                
-            # Parse detailed output
-            neighbor = {
-                "parent_interface": interface,
-                "remote_chassis_id": "",
-                "remote_port": "",
-                "remote_port_description": "",
-                "remote_system_name": "",
-                "remote_system_description": "",
-                "remote_system_capab": [],
-                "remote_system_enable_capab": [],
-                "remote_management_address": ""
-            }
-            
-            lines = output.splitlines()
-            current_section = None
-            
-            for line in lines:
-                line = line.strip()
-                
-                # Skip header lines
-                if any(header in line for header in [
-                    "LLDP Remote Device Detail",
-                    "Local Interface:",
-                    "Remote Identifier:",
-                    "Chassis ID Subtype:",
-                    "Port ID Subtype:"
-                ]):
-                    continue
-                    
-                # Handle main fields
-                if "Chassis ID:" in line:
-                    neighbor["remote_chassis_id"] = line.split(":", 1)[1].strip()
-                elif "Port ID:" in line:
-                    neighbor["remote_port"] = line.split(":", 1)[1].strip()
-                elif "System Name:" in line:
-                    neighbor["remote_system_name"] = line.split(":", 1)[1].strip()
-                elif "System Description:" in line:
-                    neighbor["remote_system_description"] = line.split(":", 1)[1].strip()
-                elif "Port Description:" in line:
-                    neighbor["remote_port_description"] = line.split(":", 1)[1].strip()
-                elif "System Capabilities Supported:" in line:
-                    caps = line.split(":", 1)[1].strip()
-                    neighbor["remote_system_capab"] = self._parse_capabilities(caps)
-                elif "System Capabilities Enabled:" in line:
-                    caps = line.split(":", 1)[1].strip()
-                    neighbor["remote_system_enable_capab"] = self._parse_capabilities(caps)
-                elif "Management Address:" in line:
-                    current_section = "management"
-                elif current_section == "management" and "Type:" in line:
-                    continue  # Skip the type line
-                elif current_section == "management" and "Address:" in line:
-                    neighbor["remote_management_address"] = line.split(":", 1)[1].strip()
-                    current_section = None
-                elif "Time to Live:" in line:
-                    current_section = None
-                    
-            # Only add if we have valid data
-            if any(val for val in neighbor.values() if val and val != interface):
-                self.log.debug(f"Parsed neighbor for {interface}: {neighbor}")
-                neighbors[interface] = [neighbor]
-            else:
-                self.log.debug(f"No valid neighbor data found for {interface}")
-        
-        self.log.debug(f"Final neighbors dict: {neighbors}")
         return neighbors
 
-    def get_lldp_neighbors_detail(self, *args, **kwargs):
-        """Get detailed information about LLDP neighbors."""
-        neighbors = {}
-        
-        # Disable paging
-        self._disable_paging()
-        
-        # Try M4250/M4350 command first
-        cmd = "show lldp remote-device all | include :[0-9a-fA-F]"
-        output = self._send_command(cmd)
-        
-        if "invalid" in output.lower():
-            # Try M4500 format
-            cmd = "show lldp remote-device | include :[0-9a-fA-F]"
-            output = self._send_command(cmd)
-            
-        if not output:
-            return neighbors
-            
-        # Process output - format is same for both models after filtering
+    def is_alive(self) -> Dict[str, bool]:
+        """Return connection status."""
+        return {
+            "is_alive": self.device is not None
+        }
+
+    def _parse_interface_status(self, output):
+        """Parse the output of 'show interfaces status all'."""
+        interfaces = []
+        header = None
+        fields = None
+
         for line in output.splitlines():
-            line = line.strip()
-            if not line:
+            # Skip empty lines
+            if not line.strip():
                 continue
-                
-            parts = line.split()
-            if len(parts) < 4:  # Need at least interface, remid, chassis, port
-                continue
-                
-            interface = parts[0]
-            if not self._is_valid_interface(interface):
-                continue
-                
-            neighbor_data = {
-                'parent_interface': interface,
-                'remote_chassis_id': parts[2],  # MAC address is always present
-                'remote_port': parts[3],
-                'remote_system_name': ' '.join(parts[4:-2]) if len(parts) > 5 else '',
-                'remote_port_description': '',
-                'remote_system_description': '',
-                'remote_system_capab': [],
-                'remote_system_enable_capab': []
-            }
-            
-            neighbors[interface] = neighbor_data
-        
-        return neighbors
 
-    def _is_valid_interface(self, interface):
-        """Check if interface name matches expected format."""
-        if not interface or not isinstance(interface, str):
-            return False
-            
-        # Common interface patterns for Netgear switches
-        patterns = [
-            r'^\d+/\d+$',  # Format: 0/1
-            r'^\d+/\d+/\d+$',  # Format: 1/0/1 
-            r'^[A-Za-z]+\d+(/\d+)?$'  # Format: Port1 or Port1/1
-        ]
-        
-        return any(re.match(pattern, interface) for pattern in patterns)
+            # Check for M4250 format header
+            if "Link    Physical    Physical    Media" in line:
+                fields = ['port', 'name', 'link_state', 'physical_mode', 'physical_status', 'media_type', 'flow_control', 'vlan']
+                continue
+            # Check for M4500 format header
+            elif "Port       Name                    Link" in line:
+                fields = ['port', 'name', 'link', 'state', 'mode', 'speed', 'type', 'vlan']
+                continue
+            # Default format header
+            elif "Port" in line and "Link" in line:
+                fields = ['port', 'link', 'admin', 'speed', 'duplex', 'type', 'name']
+                continue
+
+            if not fields:
+                continue
+
+            # Skip separator line
+            if '-' * 5 in line:
+                continue
+
+            # Parse values based on field mapping
+            values = line.split()
+            if not values:
+                continue
+
+            interface = {}
+            for i, field in enumerate(fields):
+                if i < len(values):
+                    interface[field] = values[i]
+                else:
+                    interface[field] = ''
+
+            # Skip invalid interfaces
+            if not interface.get('port') or interface['port'].startswith('lag') or interface['port'].startswith('vlan'):
+                continue
+
+            interfaces.append(interface)
+
+        return interfaces
 
     def get_config(
         self,
