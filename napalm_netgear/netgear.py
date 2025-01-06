@@ -570,7 +570,25 @@ class NetgearDriver(NetworkDriver):
         """
         neighbors = {}
         
-        # Get LLDP neighbors
+        # First get detailed info to map system names
+        detail_output = self._send_command("show lldp remote-device detail all")
+        system_names = {}
+        current_port = None
+        
+        for line in detail_output.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+                
+            if line.startswith("Interface:"):
+                current_port = line.split(":", 1)[1].strip()
+            elif line.startswith("System Name:"):
+                if current_port:
+                    name = line.split(":", 1)[1].strip()
+                    if name:  # Only store if we got a valid name
+                        system_names[current_port] = name
+        
+        # Now get basic LLDP info
         output = self._send_command("show lldp remote-device all")
         
         # Skip header lines
@@ -588,25 +606,32 @@ class NetgearDriver(NetworkDriver):
                 
             # Split line into fields
             fields = line.split()
-            if len(fields) < 4:  # Need local port, remote ID, remote port, system name
+            if len(fields) < 3:  # Need at least local port and remote ID
                 continue
                 
             local_port = fields[0]
             if not local_port or local_port.startswith(('lag', 'vlan')):
                 continue
                 
-            # Get remote info - fields are: Local Port, Remote ID, Remote Port, Remote Name
-            remote_id = fields[1] if len(fields) > 1 else ""
-            remote_port = fields[2] if len(fields) > 2 else ""
-            remote_name = " ".join(fields[3:]) if len(fields) > 3 else ""
+            # Get remote info - fields are: Local Port, Remote ID, Remote Port
+            remote_id = fields[1]  # This is usually the chassis ID/MAC
+            remote_port = fields[2]  # This is the port ID
             
             # Add neighbor info
             if local_port not in neighbors:
                 neighbors[local_port] = []
                 
+            # Use system name from detailed output if available
+            hostname = system_names.get(local_port, remote_id)
+            
+            # For the port, use remote_port unless it's a MAC address (in which case use remote_id)
+            port = remote_port
+            if ':' in remote_port:  # If port looks like a MAC, use remote_id
+                port = remote_id
+            
             neighbors[local_port].append({
-                "hostname": remote_name if remote_name else remote_id,  # Use system name if available, fallback to chassis ID
-                "port": remote_port if remote_port != remote_id else remote_id  # Use port if different from chassis ID
+                "hostname": hostname,
+                "port": port
             })
         
         return neighbors
