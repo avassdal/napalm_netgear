@@ -395,8 +395,12 @@ class NetgearDriver(NetworkDriver):
                     # Extract version if present
                     parts = desc.split(",")
                     if len(parts) >= 2:
-                        version = parts[1].strip()
-                        if version.isdigit() and len(version) == 6:
+                        # Extract model from first part
+                        model = parts[0].split()[0]  # First word of first part
+                        version = parts[1].strip()  # Second part is version
+                        
+                        # Add dots back to version (format: XX.X.X.XX)
+                        if len(version) == 6:  # 130426 -> 13.0.4.26
                             os_version = f"{version[0:2]}.{version[2]}.{version[3]}.{version[4:6]}"
                         else:
                             os_version = version
@@ -592,16 +596,17 @@ class NetgearDriver(NetworkDriver):
                 continue
                 
             # Get remote info - fields are: Local Port, Remote ID, Remote Port, Remote Name
-            remote_name = fields[3] if len(fields) > 3 else ""
+            remote_id = fields[1] if len(fields) > 1 else ""
             remote_port = fields[2] if len(fields) > 2 else ""
+            remote_name = " ".join(fields[3:]) if len(fields) > 3 else ""
             
             # Add neighbor info
             if local_port not in neighbors:
                 neighbors[local_port] = []
                 
             neighbors[local_port].append({
-                "hostname": remote_name,
-                "port": remote_port,
+                "hostname": remote_name if remote_name else remote_id,  # Use system name if available, fallback to chassis ID
+                "port": remote_port if remote_port != remote_id else remote_id  # Use port if different from chassis ID
             })
         
         return neighbors
