@@ -556,6 +556,75 @@ class NetgearDriver(NetworkDriver):
         
         return mac_entries
 
+    def _parse_lldp_summary(self, output: str):
+        """Parse the fixed-width LLDP summary table.
+        
+        Returns:
+            list of dicts with keys: local_port, chassis_id, port_id, system_name
+        """
+        results = []
+        lines = output.splitlines()
+        
+        # Find the separator line to determine column positions
+        sep_idx = None
+        for i, line in enumerate(lines):
+            if '-' * 5 in line:
+                sep_idx = i
+                break
+        
+        if sep_idx is None or sep_idx < 1:
+            return results
+        
+        # Column headers: Interface, RemID, Chassis ID, Port ID, System Name, OUI, OUI Subtype
+        # Find start positions by looking at the separator dashes
+        sep_line = lines[sep_idx]
+        col_starts = []
+        in_dash = False
+        for j, ch in enumerate(sep_line):
+            if ch == '-' and not in_dash:
+                col_starts.append(j)
+                in_dash = True
+            elif ch != '-':
+                in_dash = False
+        
+        # We expect at least 5 columns: Interface, RemID, Chassis ID, Port ID, System Name
+        if len(col_starts) < 5:
+            return results
+        
+        # Parse data lines after separator
+        for line in lines[sep_idx + 1:]:
+            if not line.strip():
+                continue
+                
+            # Extract local port from first column
+            local_port = line[col_starts[0]:col_starts[1]].strip() if len(col_starts) > 1 else line[col_starts[0]:].strip()
+            if not local_port:
+                continue  # Continuation line (capabilities etc.)
+            if local_port.startswith(('lag', 'vlan', '(')):
+                continue
+            
+            # Extract fields using column positions
+            chassis_id = line[col_starts[2]:col_starts[3]].strip() if len(col_starts) > 3 else ""
+            port_id = line[col_starts[3]:col_starts[4]].strip() if len(col_starts) > 4 else ""
+            # System name goes from col 4 to col 5 (or end if fewer columns)
+            if len(col_starts) > 5:
+                system_name = line[col_starts[4]:col_starts[5]].strip()
+            else:
+                system_name = line[col_starts[4]:].strip()
+            
+            # Skip lines that only have a port but no neighbor data
+            if not chassis_id and not port_id:
+                continue
+            
+            results.append({
+                "local_port": local_port,
+                "chassis_id": chassis_id,
+                "port_id": port_id,
+                "system_name": system_name,
+            })
+        
+        return results
+
     def get_lldp_neighbors(self) -> Dict[str, List[Dict[str, str]]]:
         """Get LLDP neighbors.
 
@@ -573,53 +642,18 @@ class NetgearDriver(NetworkDriver):
         # Get LLDP neighbors
         output = self._send_command("show lldp remote-device all")
         
-        # Skip header lines
-        lines = [line.strip() for line in output.splitlines() if line.strip()]
-        data_lines = False
-        
-        for line in lines:
-            # Skip until we find the separator line
-            if '-' * 5 in line:
-                data_lines = True
-                continue
-                
-            if not data_lines:
-                continue
-                
-            # Split line into fields and clean up
-            fields = line.split()
-            if len(fields) < 4:  # Need local port, remote ID, remote port, system name
-                continue
-                
-            local_port = fields[0]
-            if not local_port or local_port.startswith(('lag', 'vlan')):
-                continue
-                
-            # Get remote info - fields are: Local Port, Remote ID, Remote Port, Remote Name
-            remote_id = fields[1]  # This is usually the chassis ID/MAC
-            remote_port = fields[2]  # This is the port ID
-            remote_name = " ".join(fields[3:])  # Rest is the system name
+        for entry in self._parse_lldp_summary(output):
+            local_port = entry["local_port"]
+            chassis_id = entry["chassis_id"]
+            port_id = entry["port_id"]
+            system_name = entry["system_name"]
             
-            # Get detailed info for this port
-            detail_output = self._send_command(f"show lldp remote-device detail {local_port}")
-            system_name = None
-            
-            # Parse detailed output for system name
-            for detail_line in detail_output.splitlines():
-                detail_line = detail_line.strip()
-                if detail_line.startswith("System Name:"):
-                    name = detail_line.split(":", 1)[1].strip()
-                    if name:
-                        system_name = name
-                        break
-            
-            # Add neighbor info
             if local_port not in neighbors:
                 neighbors[local_port] = []
             
             neighbors[local_port].append({
-                "hostname": system_name or remote_name or remote_id,  # Use system name, then remote name, then chassis ID
-                "port": remote_port if not remote_port.startswith("0x") else remote_id  # Use port unless it's a hex value
+                "hostname": system_name or chassis_id,
+                "port": port_id if not port_id.startswith("0x") else chassis_id
             })
         
         return neighbors
@@ -644,41 +678,14 @@ class NetgearDriver(NetworkDriver):
         """
         neighbors = {}
         
-        # Get LLDP neighbors
+        # Get list of interfaces with neighbors from summary table (1 command)
         output = self._send_command("show lldp remote-device all")
+        interfaces = list({e["local_port"] for e in self._parse_lldp_summary(output)})
         
-        # Skip header lines
-        lines = [line.strip() for line in output.splitlines() if line.strip()]
-        data_lines = False
-        
-        # First get list of interfaces with neighbors
-        interfaces = []
-        for line in lines:
-            # Skip until we find the separator line
-            if '-' * 5 in line:
-                data_lines = True
-                continue
-                
-            if not data_lines:
-                continue
-                
-            # Split line into fields
-            fields = line.split()
-            if len(fields) < 4:  # Need local port, remote ID, remote port, system name
-                continue
-                
-            local_port = fields[0]
-            if not local_port or local_port.startswith(('lag', 'vlan')):
-                continue
-                
-            interfaces.append(local_port)
-        
-        # Now get detailed info for each interface
+        # Fetch detail per interface that has a neighbor
         for interface in interfaces:
-            # Get detailed LLDP info
             detail_output = self._send_command(f"show lldp remote-device detail {interface}")
             
-            # Initialize neighbor data with None values
             neighbor = {
                 "parent_interface": interface,
                 "remote_chassis_id": None,
@@ -690,33 +697,30 @@ class NetgearDriver(NetworkDriver):
                 "remote_system_enable_capab": []
             }
             
-            # Parse detailed output
-            current_field = None
             for line in detail_output.splitlines():
                 line = line.strip()
                 if not line:
                     continue
                     
-                # Handle main fields
-                if "Chassis ID:" in line:
+                if line.startswith("Chassis ID:"):
                     value = line.split(":", 1)[1].strip()
                     neighbor["remote_chassis_id"] = value if value else None
-                elif "Port ID:" in line:
+                elif line.startswith("Port ID:"):
                     value = line.split(":", 1)[1].strip()
                     neighbor["remote_port"] = value if value else None
-                elif "System Name:" in line:
+                elif line.startswith("System Name:"):
                     value = line.split(":", 1)[1].strip()
                     neighbor["remote_system_name"] = value if value else None
-                elif "System Description:" in line:
+                elif line.startswith("System Description:"):
                     value = line.split(":", 1)[1].strip()
                     neighbor["remote_system_description"] = value if value else None
-                elif "Port Description:" in line:
+                elif line.startswith("Port Description:"):
                     value = line.split(":", 1)[1].strip()
                     neighbor["remote_port_description"] = value if value else None
-                elif "System Capabilities Supported:" in line:
+                elif line.startswith("System Capabilities Supported:"):
                     value = line.split(":", 1)[1].strip()
                     neighbor["remote_system_capab"] = [cap.strip() for cap in value.split(",") if cap.strip()]
-                elif "System Capabilities Enabled:" in line:
+                elif line.startswith("System Capabilities Enabled:"):
                     value = line.split(":", 1)[1].strip()
                     neighbor["remote_system_enable_capab"] = [cap.strip() for cap in value.split(",") if cap.strip()]
             
