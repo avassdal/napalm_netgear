@@ -4,6 +4,8 @@ from builtins import super
 
 import types
 import sys
+# napalm.__init__ imports all drivers including napalm.ios, which requires
+# telnetlib at module level. Python 3.13 removed telnetlib from stdlib.
 sys.modules.setdefault("telnetlib", types.ModuleType("telnetlib"))
 
 import pytest
