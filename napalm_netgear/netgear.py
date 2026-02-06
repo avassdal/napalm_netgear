@@ -791,6 +791,7 @@ class NetgearDriver(NetworkDriver):
         retrieve: str = "all",
         full: bool = False,
         sanitized: bool = False,
+        format: str = "text",
     ) -> Dict[str, str]:
         """Return the configuration of a device.
 

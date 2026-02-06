@@ -18,7 +18,7 @@ classifiers = [
 ]
 keywords = ["network", "automation", "netgear"]
 dependencies = [
-    "napalm>=4.0.0,<5.0.0"
+    "napalm>=4.0.0"
 ]
 
 [tool.setuptools.packages]
