@@ -1,0 +1,21 @@
+{
+  "fans": {
+    "fan-1": {"status": true},
+    "fan-2": {"status": true}
+  },
+  "temperature": {
+    "system-1": {"temperature": 29.0, "is_alert": false, "is_critical": false},
+    "cpu-1": {"temperature": 49.0, "is_alert": false, "is_critical": false}
+  },
+  "power": {
+    "PSU1": {"status": true, "capacity": -1.0, "output": -1.0},
+    "PSU2": {"status": true, "capacity": -1.0, "output": -1.0}
+  },
+  "cpu": {
+    "0": {"%usage": 5.0}
+  },
+  "memory": {
+    "available_ram": 2097152000,
+    "used_ram": 1572864000
+  }
+}

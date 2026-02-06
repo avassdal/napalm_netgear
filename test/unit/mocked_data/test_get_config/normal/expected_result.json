@@ -1,0 +1,5 @@
+{
+  "running": "!Current Configuration:\n!\nhostname P3M-4350\nusername admin password encrypted abc123\nsnmp-server community public ro\nvlan database\nvlan 1\nexit\ninterface 1/0/1\nexit",
+  "startup": "!Startup Configuration:\n!\nhostname P3M-4350\nusername admin password encrypted abc123\nsnmp-server community public ro\nvlan database\nvlan 1\nexit",
+  "candidate": ""
+}

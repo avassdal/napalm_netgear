@@ -1,0 +1,7 @@
+
+Memory Utilization Report
+
+ free      512000    KBytes
+ alloc     1536000   KBytes
+
+CPU Utilization: 5%

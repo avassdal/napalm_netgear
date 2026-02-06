@@ -1,0 +1,11 @@
+
+LLDP Remote Device Detail
+
+Local Interface: 1/0/2
+Chassis ID: 54:07:7D:0D:2E:94
+Port ID: 1/0/24
+System Name: TestSwitch
+System Description: NETGEAR M4350 Managed Switch
+Port Description: 1/0/24
+System Capabilities Supported: bridge, router
+System Capabilities Enabled: bridge, router

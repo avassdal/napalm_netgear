@@ -1,0 +1,6 @@
+
+LLDP Remote Device Detail
+
+Local Interface: 1/0/4
+Chassis ID: 00:20:FC:3A:5C:35
+Port ID: 00:20:FC:3A:5C:35

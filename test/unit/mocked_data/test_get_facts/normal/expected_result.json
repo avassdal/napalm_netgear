@@ -1,0 +1,10 @@
+{
+  "uptime": 883815.0,
+  "vendor": "Netgear",
+  "model": "NETGEAR",
+  "hostname": "P3M-4350",
+  "fqdn": "P3M-4350",
+  "os_version": "14.0.6.13",
+  "serial_number": "ABC1234D567",
+  "interface_list": ["1/0/1", "1/0/2", "1/0/3", "1/0/4"]
+}

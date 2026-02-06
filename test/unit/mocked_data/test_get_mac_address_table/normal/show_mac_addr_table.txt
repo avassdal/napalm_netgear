@@ -1,0 +1,6 @@
+
+VLAN  MAC Address         Interface  Type
+----- ----------------    ---------- -------
+1     AA:BB:CC:DD:EE:01   1/0/1      Dynamic
+1     AA:BB:CC:DD:EE:02   1/0/2      Dynamic
+1     AA:BB:CC:DD:EE:03   1/0/4      Static

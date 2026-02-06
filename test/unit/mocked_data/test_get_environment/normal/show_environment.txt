@@ -1,0 +1,21 @@
+
+Temperature Sensors:
+
+Unit  Sensor  Description           Temp (C)  State
+----  ------  --------------------  --------  ----------
+1     1       system-1              29        Normal
+1     2       cpu-1                 49        Normal
+
+Fans:
+
+Unit Fan  Tray  Speed     Duty    Level  State
+---- ---- ----- --------- ------ ------ ----------
+1    1    fan-1  5000      RPM    50     Operational
+1    2    fan-2  5000      RPM    50     Operational
+
+Power Modules:
+
+Unit  Module  Desc      Type     State
+----  ------  --------  ------   ----------
+1     1       PS1       Fixed    Operational
+1     2       PS2       Fixed    Operational

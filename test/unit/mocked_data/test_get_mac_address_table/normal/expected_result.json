@@ -1,0 +1,29 @@
+[
+  {
+    "mac": "AA:BB:CC:DD:EE:01",
+    "interface": "1/0/1",
+    "vlan": 1,
+    "static": false,
+    "active": true,
+    "moves": 0,
+    "last_move": 0.0
+  },
+  {
+    "mac": "AA:BB:CC:DD:EE:02",
+    "interface": "1/0/2",
+    "vlan": 1,
+    "static": false,
+    "active": true,
+    "moves": 0,
+    "last_move": 0.0
+  },
+  {
+    "mac": "AA:BB:CC:DD:EE:03",
+    "interface": "1/0/4",
+    "vlan": 1,
+    "static": true,
+    "active": true,
+    "moves": 0,
+    "last_move": 0.0
+  }
+]

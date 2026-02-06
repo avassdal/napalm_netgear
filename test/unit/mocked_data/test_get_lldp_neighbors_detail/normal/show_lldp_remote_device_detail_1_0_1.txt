@@ -1,0 +1,11 @@
+
+LLDP Remote Device Detail
+
+Local Interface: 1/0/1
+Chassis ID: 9C:6B:00:1C:E2:C5
+Port ID: 9C:6B:00:1C:E2:C5
+System Name: BMC-Device1
+System Description: Linux 5.4.210-ami armv7l
+Port Description: eth0
+System Capabilities Supported: bridge, router, station only
+System Capabilities Enabled: station only

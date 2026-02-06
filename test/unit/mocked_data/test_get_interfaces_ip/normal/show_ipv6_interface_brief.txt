@@ -1,0 +1,5 @@
+
+             Oper.
+Interface    Mode     IPv6 Address/Length
+-----------  -------- ---------------------------------
+vlan 1       Disabled fe80::e246:eeff:fe20:6fd8/64                       [TENT]

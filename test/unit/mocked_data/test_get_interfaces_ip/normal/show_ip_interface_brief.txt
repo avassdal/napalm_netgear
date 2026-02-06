@@ -1,0 +1,4 @@
+
+Interface    State  IP Address      IP Mask         TYPE            Method
+-----------  -----  --------------- --------------- --------------- ---------------
+vlan 1       Up     10.10.10.17     255.255.255.0   Primary         Manual

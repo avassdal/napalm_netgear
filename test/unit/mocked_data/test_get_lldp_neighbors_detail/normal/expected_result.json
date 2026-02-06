@@ -1,0 +1,38 @@
+{
+  "1/0/1": [
+    {
+      "parent_interface": "1/0/1",
+      "remote_chassis_id": "9C:6B:00:1C:E2:C5",
+      "remote_port": "9C:6B:00:1C:E2:C5",
+      "remote_port_description": "eth0",
+      "remote_system_name": "BMC-Device1",
+      "remote_system_description": "Linux 5.4.210-ami armv7l",
+      "remote_system_capab": ["bridge", "router", "station only"],
+      "remote_system_enable_capab": ["station only"]
+    }
+  ],
+  "1/0/2": [
+    {
+      "parent_interface": "1/0/2",
+      "remote_chassis_id": "54:07:7D:0D:2E:94",
+      "remote_port": "1/0/24",
+      "remote_port_description": "1/0/24",
+      "remote_system_name": "TestSwitch",
+      "remote_system_description": "NETGEAR M4350 Managed Switch",
+      "remote_system_capab": ["bridge", "router"],
+      "remote_system_enable_capab": ["bridge", "router"]
+    }
+  ],
+  "1/0/4": [
+    {
+      "parent_interface": "1/0/4",
+      "remote_chassis_id": "00:20:FC:3A:5C:35",
+      "remote_port": "00:20:FC:3A:5C:35",
+      "remote_port_description": "",
+      "remote_system_name": "",
+      "remote_system_description": "",
+      "remote_system_capab": [],
+      "remote_system_enable_capab": []
+    }
+  ]
+}

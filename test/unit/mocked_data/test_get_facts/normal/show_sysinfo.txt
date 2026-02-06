@@ -1,0 +1,5 @@
+
+System Description............................. NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15
+System Name.................................... P3M-4350
+System Up Time................................. 10 days 5 hrs 30 mins 15 secs
+Serial Number.................................. ABC1234D567

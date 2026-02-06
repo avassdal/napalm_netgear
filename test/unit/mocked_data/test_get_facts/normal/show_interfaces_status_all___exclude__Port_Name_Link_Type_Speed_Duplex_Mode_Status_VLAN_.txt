@@ -1,0 +1,6 @@
+
+---------- --------------------------------  ------   ------   ------------- -----------
+1/0/1      Server1                           Enable   Up       10G Full      10GBase-T
+1/0/2      Switch2                           Enable   Up       10G Full      10GBase-T
+1/0/3      Unused                            Disable  Down                   Unknown
+1/0/4      Device4                           Enable   Up       10G Full      10GBase-T

@@ -1,0 +1,10 @@
+!Current Configuration:
+!
+hostname P3M-4350
+username admin password encrypted abc123
+snmp-server community public ro
+vlan database
+vlan 1
+exit
+interface 1/0/1
+exit

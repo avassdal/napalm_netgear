@@ -1,0 +1,20 @@
+{
+  "1/0/1": [
+    {
+      "hostname": "BMC-Device1",
+      "port": "9C:6B:00:1C:E2:C5"
+    }
+  ],
+  "1/0/2": [
+    {
+      "hostname": "TestSwitch",
+      "port": "1/0/24"
+    }
+  ],
+  "1/0/4": [
+    {
+      "hostname": "00:20:FC:3A:5C:35",
+      "port": "00:20:FC:3A:5C:35"
+    }
+  ]
+}

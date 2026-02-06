@@ -1,0 +1,14 @@
+{
+  "vlan1": {
+    "ipv4": {
+      "10.10.10.17": {
+        "prefix_length": 24
+      }
+    },
+    "ipv6": {
+      "fe80::e246:eeff:fe20:6fd8": {
+        "prefix_length": 64
+      }
+    }
+  }
+}

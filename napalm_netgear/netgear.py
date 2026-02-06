@@ -43,6 +43,7 @@ class NetgearDriver(NetworkDriver):
         self.password = password
         self.timeout = timeout
         self.optional_args = optional_args if optional_args else {}
+        self.platform = "netgear"
         self.log = logger
 
     def _send_command(self, command: str, read_timeout: Optional[int] = None) -> str:
@@ -138,20 +139,20 @@ class NetgearDriver(NetworkDriver):
                 "mac_address": "",  # Not available in status output
                 "last_flapped": -1.0,  # Not available
                 "mtu": 1500,  # Default MTU
-                "speed": 0  # Will be updated if available
+                "speed": 0.0  # Will be updated if available
             }
             
             # Try to parse speed if available
             if len(fields) > 4:
                 speed_str = fields[4].lower()
                 if "10g" in speed_str:
-                    interfaces[interface]["speed"] = 10000
+                    interfaces[interface]["speed"] = 10000.0
                 elif "1000" in speed_str:
-                    interfaces[interface]["speed"] = 1000
+                    interfaces[interface]["speed"] = 1000.0
                 elif "100" in speed_str:
-                    interfaces[interface]["speed"] = 100
+                    interfaces[interface]["speed"] = 100.0
                 elif "10" in speed_str:
-                    interfaces[interface]["speed"] = 10
+                    interfaces[interface]["speed"] = 10.0
         
         return interfaces
 
@@ -272,10 +273,6 @@ class NetgearDriver(NetworkDriver):
             
         return counters
 
-    def get_interface_counters(self) -> dict:
-        """Alias for get_interfaces_counters to match NAPALM CLI."""
-        return self.get_interfaces_counters()
-        
     def _clean_output_line(self, line: str, remove_dots: bool = True) -> str:
         """Clean up output line by removing dots and extra whitespace.
         
@@ -459,7 +456,7 @@ class NetgearDriver(NetworkDriver):
 
         # Build facts dictionary
         facts = {
-            "uptime": uptime,  # Now returning integer seconds
+            "uptime": float(uptime),
             "vendor": "Netgear",
             "model": model,
             "hostname": hostname,
@@ -658,13 +655,13 @@ class NetgearDriver(NetworkDriver):
         
         return neighbors
 
-    def get_lldp_neighbors_detail(self, *args, **kwargs) -> Dict[str, Dict[str, Any]]:
+    def get_lldp_neighbors_detail(self, interface: str = "") -> Dict[str, List[Dict[str, Any]]]:
         """Get detailed information about LLDP neighbors.
 
         Returns:
             dict: Detailed information about LLDP neighbors keyed by interface:
                 {
-                    "local_port": {
+                    "local_port": [{
                         "parent_interface": "string",
                         "remote_chassis_id": "string",
                         "remote_port": "string",
@@ -673,7 +670,7 @@ class NetgearDriver(NetworkDriver):
                         "remote_system_description": "string",
                         "remote_system_capab": ["string"],
                         "remote_system_enable_capab": ["string"]
-                    }
+                    }]
                 }
         """
         neighbors = {}
@@ -688,11 +685,11 @@ class NetgearDriver(NetworkDriver):
             
             neighbor = {
                 "parent_interface": interface,
-                "remote_chassis_id": None,
-                "remote_port": None,
-                "remote_port_description": None,
-                "remote_system_name": None,
-                "remote_system_description": None,
+                "remote_chassis_id": "",
+                "remote_port": "",
+                "remote_port_description": "",
+                "remote_system_name": "",
+                "remote_system_description": "",
                 "remote_system_capab": [],
                 "remote_system_enable_capab": []
             }
@@ -704,19 +701,19 @@ class NetgearDriver(NetworkDriver):
                     
                 if line.startswith("Chassis ID:"):
                     value = line.split(":", 1)[1].strip()
-                    neighbor["remote_chassis_id"] = value if value else None
+                    neighbor["remote_chassis_id"] = value
                 elif line.startswith("Port ID:"):
                     value = line.split(":", 1)[1].strip()
-                    neighbor["remote_port"] = value if value else None
+                    neighbor["remote_port"] = value
                 elif line.startswith("System Name:"):
                     value = line.split(":", 1)[1].strip()
-                    neighbor["remote_system_name"] = value if value else None
+                    neighbor["remote_system_name"] = value
                 elif line.startswith("System Description:"):
                     value = line.split(":", 1)[1].strip()
-                    neighbor["remote_system_description"] = value if value else None
+                    neighbor["remote_system_description"] = value
                 elif line.startswith("Port Description:"):
                     value = line.split(":", 1)[1].strip()
-                    neighbor["remote_port_description"] = value if value else None
+                    neighbor["remote_port_description"] = value
                 elif line.startswith("System Capabilities Supported:"):
                     value = line.split(":", 1)[1].strip()
                     neighbor["remote_system_capab"] = [cap.strip() for cap in value.split(",") if cap.strip()]
@@ -725,8 +722,10 @@ class NetgearDriver(NetworkDriver):
                     neighbor["remote_system_enable_capab"] = [cap.strip() for cap in value.split(",") if cap.strip()]
             
             # Only add if we have valid data
-            if any(val for val in neighbor.values() if val not in (None, [], interface)):
-                neighbors[interface] = neighbor
+            if neighbor["remote_chassis_id"] or neighbor["remote_port"]:
+                if interface not in neighbors:
+                    neighbors[interface] = []
+                neighbors[interface].append(neighbor)
         
         return neighbors
 
@@ -792,7 +791,6 @@ class NetgearDriver(NetworkDriver):
         retrieve: str = "all",
         full: bool = False,
         sanitized: bool = False,
-        format: str = "text",
     ) -> Dict[str, str]:
         """Return the configuration of a device.
 
@@ -1146,7 +1144,6 @@ class NetgearDriver(NetworkDriver):
                 environment["memory"] = {
                     "available_ram": total_kb * 1024,  # Convert to bytes
                     "used_ram": alloc_kb * 1024,      # Convert to bytes
-                    "free_ram": free_kb * 1024        # Convert to bytes
                 }
                 self.log.debug(f"Set memory values - total: {total_kb}KB, used: {alloc_kb}KB, free: {free_kb}KB")
             else:
@@ -1154,7 +1151,6 @@ class NetgearDriver(NetworkDriver):
                 environment["memory"] = {
                     "available_ram": -1,
                     "used_ram": -1,
-                    "free_ram": -1
                 }
 
             # Parse CPU information
