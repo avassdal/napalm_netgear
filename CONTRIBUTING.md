@@ -97,15 +97,13 @@ GS fixtures follow the same pattern under `test/unit/gs_mocked_data/` with a sin
 
 1. Implement the getter in `napalm_netgear/netgear.py` (branch on `_platform_type` if needed).
 2. Create mock fixture directories for each variant:
+
    ```text
    test/unit/mocked_data/test_get_<name>/m4250/
    test/unit/mocked_data/test_get_<name>/m4350/
    test/unit/mocked_data/test_get_<name>/m4500/
    ```
+
 3. Add the sanitized CLI output `.txt` files.
 4. Add `expected_result.json` matching the getter's return value.
 5. If NAPALM's `BaseTestGetters` includes a `test_get_<name>` method it will be picked up automatically by `TestGetter` in `test_getters.py`. Otherwise add a test to `test_compare_config.py` or a new file.
-
-### Regenerating Expected Results
-
-Use the scripts in `scripts/` (gitignored) to collect real device output, anonymize it, and regenerate `expected_result.json` files.
