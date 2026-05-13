@@ -48,6 +48,24 @@ def get_facts(self):
 - Uses `show tech-support` as the primary data source, cached in `self._gs_tech_support_cache`.
 - Sections are delimited by `---------- Section Name ----------` lines and accessed via `_get_gs_section(name)`.
 
+## Configuration Files
+
+| File | Purpose |
+| ---- | ------- |
+| `pyproject.toml` | Package metadata, runtime dependencies (`napalm`, `netmiko`), and `[dev]` extras for testing |
+| `requirements.txt` | Pinned runtime deps — used by `tox` via `-rrequirements.txt` |
+| `requirements-dev.txt` | Test/lint deps (`pytest`, `pytest-cov`, `pylama`, `mock`, `tox`) — used by `tox` |
+| `setup.cfg` | Tool config: pylama linter rules (pep8, pyflakes, mccabe), pytest `addopts`, and coverage include/exclude paths |
+| `tox.ini` | Multi-Python test matrix (3.10–3.13); installs both requirements files and runs `pytest` |
+
+**For local development** the recommended install is:
+
+```bash
+pip install -e ".[dev]"
+```
+
+This installs the package in editable mode with all dev dependencies declared in `pyproject.toml`. The `requirements*.txt` files are used by `tox` and CI only.
+
 ## Testing
 
 ### Running Tests
