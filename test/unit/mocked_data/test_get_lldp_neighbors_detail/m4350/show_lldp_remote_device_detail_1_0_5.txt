@@ -1,0 +1,32 @@
+show lldp remote-device detail 1/0/5
+
+LLDP Remote Device Detail
+
+Local Interface: 1/0/5
+
+
+Remote Identifier: 4
+Chassis ID Subtype: MAC Address
+Chassis ID: 9C:6B:00:1C:E2:C5
+Port ID Subtype: MAC Address
+Port ID: 9C:6B:00:1C:E2:C5
+System Name: test-server-02
+System Description:  Linux 5.4.210-ami #1 SMP Mon May 6 03:32:52 UTC 2024 armv7l
+Port Description: eth0
+System Capabilities Supported: bridge, WLAN access point, router, station only
+System Capabilities Enabled: station only
+Management Address:
+    Type: IPv4
+    Address: 192.0.2.35
+Time to Live: 97 seconds
+Port VLAN:
+VLANs:
+
+Maximum Frame Size:
+
+Link Aggregation Information:
+  Aggregation Capable: Yes
+  Aggregation Status: Yes
+  Aggregation ID: 8
+
+(M4350-24X4V)#

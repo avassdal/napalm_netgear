@@ -1,0 +1,32 @@
+show lldp remote-device detail 0/10
+
+LLDP Remote Device Detail
+
+Local Interface: 0/10
+
+
+Remote Identifier: 482
+Chassis ID Subtype: MAC Address
+Chassis ID: E0:46:EE:37:9B:48
+Port ID Subtype: Interface Name
+Port ID: 0/28
+System Name: test-switch-04
+System Description: M4250-26G4XF-PoE+ 26x1G PoE+ 480W and 4xSFP+ Managed Switch, 13.0.5.20, 1.0.0.12
+Port Description: 0/28
+System Capabilities Supported: bridge, router
+System Capabilities Enabled: bridge, router
+Management Address:
+    Type: IPv4
+    Address: 192.0.2.158
+Time to Live: 100 seconds
+
+Port VLAN Identity: 1
+Link Aggregation: 
+    Aggregation Status: Supported, Enabled
+    Aggregation Port Id: 1
+Maximum Frame Size: 9216
+Auto-LAG: Supported, Enabled
+Auto-Trunk: Supported, Enabled
+
+
+(test-switch-04) #

@@ -1,0 +1,25 @@
+show environment
+
+Fan Control Mode............................... Quiet
+Temp (C)....................................... 39
+Temperature traps range: 0 to 90 degrees (Celsius)
+
+Temperature Sensors:
+Unit     Sensor  Description          Temp (C)    State              Max_Temp (C)
+----     ------  -------------------  ----------  -----------------  --------------
+1        1       sensor-System1       36          Normal             81
+1        2       sensor-MAC           39          Normal             81
+1        3       sensor-System2       37          Normal             81
+
+Fans:
+Unit Fan Description    Type      Speed         Duty level    State
+---- --- -------------- --------- ------------- ------------- --------------
+1    1   FAN-1          Fixed     -             -             Stop
+
+Power Modules:
+Unit     Power supply   Description        Type          State
+----     ------------   ----------------   ----------    --------------
+1        1              PS-1               Fixed         Operational
+
+
+(M4250-8G2XF-PoE+)#

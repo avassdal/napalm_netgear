@@ -1,0 +1,27 @@
+show interfaces status all
+
+                                   Link    Physical    Physical    Media       Flow
+Port       Name                    State   Mode        Status      Type        Control     VLAN
+---------  ----------------------  ------  ----------  ----------  ----------  ----------  ----------
+0/1                                Down    Auto                                    Inactive    50
+0/2                                Up      Auto        10 Full     Copper          Inactive    50
+0/3                                Up      Auto        10 Full     Copper          Inactive    50
+0/4                                Down    Auto                                    Inactive    50
+0/5                                Down    Auto                                    Inactive    50
+0/6                                Down    Auto                                    Inactive    1
+0/7                                Down    Auto                                    Inactive    1
+0/8                                Up      Auto        1000 Full   Copper          Inactive    1,50
+0/9                                Down    10G Full                                Inactive    1
+0/10                               Up      10G Full    10G Full    10GBase-SR      Inactive    Trunk
+lag 1                              Down                                                        1
+lag 2                              Down                                                        1
+lag 3                              Down                                                        1
+lag 4                              Down                                                        1
+lag 5                              Down                                                        1
+lag 6                              Down                                                        1
+lag 7                              Down                                                        1
+lag 8                              Down                                                        1
+vlan 1                             Up      10 Half     10 Half     Unknown
+vlan 50                            Up      10 Half     10 Half     Unknown
+
+(M4250-8G2XF-PoE+)#

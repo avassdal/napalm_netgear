@@ -1,0 +1,40 @@
+show lldp remote-device detail 1/0/28
+
+LLDP Remote Device Detail
+
+Local Interface: 1/0/28
+
+
+Remote Identifier: 16
+Chassis ID Subtype: MAC Address
+Chassis ID: 54:07:7D:EA:AA:01
+Port ID Subtype: Interface Name
+Port ID: 0/8
+System Name:
+System Description:
+Port Description:
+System Capabilities Supported:
+System Capabilities Enabled:
+Management Address:
+    Type: IPv4
+    Address: 192.0.2.238
+Time to Live: 98 seconds
+Port VLAN: 1
+VLANs:
+VLAN ID VLAN Name
+------- --------------------------------
+1       default
+11      CEPH Data
+50      AV
+60      IPMX
+61      IPMX Redundancy
+91      Guest
+101     Pharos
+102     sACN
+Maximum Frame Size: 9202
+Link Aggregation Information:
+  Aggregation Capable: Yes
+  Aggregation Status: Yes
+  Aggregation ID: 358
+
+(M4350-24X4V)#

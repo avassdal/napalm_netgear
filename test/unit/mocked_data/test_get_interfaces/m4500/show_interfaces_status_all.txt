@@ -1,0 +1,5 @@
+show interfaces status all
+                         ^
+% Invalid input detected at '^' marker.
+
+(test-switch-04) #

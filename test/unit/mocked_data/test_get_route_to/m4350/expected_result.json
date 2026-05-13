@@ -1,0 +1,17 @@
+{
+    "1.0.4.0/24": [
+        {
+            "protocol": "BGP",
+            "current_active": true,
+            "last_active": true,
+            "age": -1,
+            "next_hop": "192.0.2.1",
+            "outgoing_interface": "",
+            "selected_next_hop": true,
+            "preference": 20,
+            "inactive_reason": "",
+            "routing_table": "default",
+            "protocol_attributes": {}
+        }
+    ]
+}

@@ -1,0 +1,29 @@
+show snmp
+
+Community-String     Community-Access View Name        IP Address               IP Mask
+-------------------- ---------------- ---------------- ------------------------ ----------------
+FtbSvZsQ26J3qX       Read/Write       Default          All
+
+
+Community-String     Group Name                     IP Address
+-------------------- ------------------------------ ---------------------------------------
+FtbSvZsQ26J3qX       DefaultWrite                   All
+
+Traps are enabled.
+Authentication trap is enabled.
+
+
+Version 1,2 notifications
+Target Address   Type    Community            Version UDP    Filter   TO Retries
+                                                      Port   name     Sec
+---------------- ------- -------------------- ------- ------ -------- --- ------
+
+
+Version 3 notifications
+Target Address   Type    Username           Security UDP    Filter   TO  Retries
+                                            Level    Port   name     Sec
+---------------- ------- ------------------ -------- ------ -------- --- -------
+
+
+System Contact:
+System Location:

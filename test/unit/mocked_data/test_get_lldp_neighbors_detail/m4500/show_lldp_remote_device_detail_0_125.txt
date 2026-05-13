@@ -1,0 +1,10 @@
+show lldp remote-device detail 0/125
+
+LLDP Remote Device Detail
+
+Local Interface: 0/125
+
+
+No LLDP data has been received on this interface.
+
+(test-switch-04) #

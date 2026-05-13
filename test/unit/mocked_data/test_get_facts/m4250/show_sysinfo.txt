@@ -1,0 +1,214 @@
+show sysinfo
+
+System Description............................. M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.5.20, 1.0.0.11
+System Name.................................... test-switch-03
+System Location................................
+System Contact.................................
+System Object ID............................... 1.3.6.1.4.1.4526.100.11.40
+System Up Time................................. 87 days 15 hrs 8 mins 35 secs
+Current Time................................... Feb  6 12:16:10 2026 ZZZZ(UTC+1:00, DST offset 60 mins)
+
+MIBs Supported:
+
+DIFFSERV-DSCP-TC                   The Textual Conventions defined in this
+                                   module should be used whenever a
+                                   Differentiated Services Code Point is used
+                                   in a MIB.
+DISMAN-PING-MIB                    The Ping MIB (DISMAN-PING-MIB) provides the
+                                   capability of controlling the use of the
+                                   ping function at a remote host.
+DISMAN-TRACEROUTE-MIB              The Traceroute MIB (DISMAN-TRACEROUTE-MIB)
+                                   provides access to the traceroute capability
+                                   at a remote host.
+DNS-RESOLVER-MIB                   The MIB module for entities implementing the
+                                   client (resolver) side of the Domain Name
+                                   System (DNS) protocol.
+DNS-SERVER-MIB                     The MIB module for entities implementing the
+                                   server side of the Domain Name System (DNS)
+                                   protocol.
+HC-ALARM-MIB                       Initial version of the High Capacity Alarm
+                                   MIB module. This version published as RFC
+                                   3434.
+HC-RMON-MIB                        The original version of this MIB, published
+                                   as RFC3273.
+HCNUM-TC                           A MIB module containing textual conventions
+                                   for high capacity data types.
+IANA-ADDRESS-FAMILY-NUMBERS-MIB    The MIB module defines the
+                                   AddressFamilyNumbers textual convention.
+IANA-MAU-MIB                       This MIB module defines dot3MauType
+                                   OBJECT-IDENTITIES and IANAifMauListBits,
+                                   IANAifMauMediaAvailable,
+                                   IANAifMauAutoNegCapBits,
+IANA-RTPROTO-MIB                   IANA IP Route Protocol and IP MRoute
+                                   Protocol Textual Conventions
+IANAifType-MIB                     This MIB module defines the IANAifType
+                                   Textual Convention
+IEEE 802.1X (Revision of           The MIB module for IEEE 802.1X configuration.
+802.1X-2004).
+IEEE8021-AS-MIB                    The Management Information Base module for
+                                   IEEE 802.1AS time synchronization protocol.
+INET-ADDRESS-MIB                   This MIB module defines textual conventions
+                                   for representing Internet addresses.
+IP-FORWARD-MIB                     The MIB module for the management of CIDR
+                                   multipath IP Routes.
+IP-MIB                             The MIB module for managing IP and ICMP
+                                   implementations, but excluding their
+                                   management of IP routes.
+IPMROUTE-STD-MIB                   The MIB module for management of IP
+                                   Multicast routing, but independent of the
+                                   specific multicast routing protocol in use.
+LAG-MIB                            The Link Aggregation module for managing
+                                   IEEE 802.3ad
+LLDP-EXT-DOT3-MIB                  The LLDP Management Information Base
+                                   extension module for IEEE 802.3
+                                   organizationally defined discovery
+                                   information.
+LLDP-EXT-MED-MIB                   The LLDP Management Information Base
+                                   extension module for TIA-TR41.4 Media
+                                   Endpoint Discovery information.
+LLDP-MIB                           Management Information Base module for LLDP
+                                   configuration, statistics, local system data
+                                   and remote systems data components.
+MGMD-STD-MIB                       The MIB module for MGMD Management.
+NETGEAR-AUTHENTICATION-MANAGER-MI  The NETGEAR Private MIB for NETGEAR
+B                                  authentication manager feature.
+NETGEAR-BONJOUR-MIB                The NETGEAR Private MIB for NETGEAR Bonjour
+NETGEAR-BOXSERVICES-PRIVATE-MIB    The NETGEAR Private MIB for NETGEAR Box
+                                   Services Feature.
+NETGEAR-CAPTIVE-PORTAL-MIB         NETGEAR Captive Portal MIB
+NETGEAR-DENIALOFSERVICE-PRIVATE-M  The NETGEAR Private MIB for NETGEAR Denial
+IB                                 of Service.
+NETGEAR-DHCP6SERVER-PRIVATE-MIB    The NETGEAR Private MIB for NETGEAR DHCPv6
+                                   Server/Relay
+NETGEAR-DHCPCLIENT-PRIVATE-MIB     The NETGEAR Private MIB for NETGEAR DHCP
+                                   Client
+NETGEAR-DHCPSERVER-PRIVATE-MIB     The NETGEAR Private MIB for NETGEAR DHCP
+                                   Server
+NETGEAR-DNS-RESOLVER-CONTROL-MIB   Defines a portion of the SNMP MIB under the
+                                   NETGEAR Corporation enterprise OID
+                                   pertaining to DNS Client control
+                                   configuration
+NETGEAR-DOT1X-ADVANCED-FEATURES-M  The NETGEAR Private MIB for NETGEAR Dot1x
+IB                                 Advanced Features
+NETGEAR-DOT1X-AUTHENTICATION-SERV  The NETGEAR Private MIB for NETGEAR Dot1x
+ER-MIB                             Authentication Server
+NETGEAR-GREENETHERNET-PRIVATE-MIB  The MIB definitions for NETGEAR Green
+                                   Ethernet Feature.
+NETGEAR-INTERFACE-APP-MIB          The NETGEAR Private MIB for NETGEAR
+                                   Interface Application
+NETGEAR-INVENTORY-MIB              Unit and Slot configuration.
+NETGEAR-IPV6-LOOPBACK-MIB          The NETGEAR Private MIB for NETGEAR Loopback
+                                   IPV6 address configuration.
+NETGEAR-IPV6-TUNNEL-MIB            The NETGEAR Private MIB for NETGEAR IPV6
+                                   Tunnel.
+NETGEAR-ISDP-MIB                   Industry Standard Discovery Protocol MIB
+NETGEAR-LLPF-PRIVATE-MIB           The NETGEAR Private MIB for NETGEAR Link
+                                   Local Protocol Filtering.
+NETGEAR-LOGGING-MIB                This MIB provides objects to configure and
+                                   display events logged on this system.
+NETGEAR-LOOPBACK-MIB               The NETGEAR Private MIB for NETGEAR Loopback
+NETGEAR-MAB-MIB                    The NETGEAR MIB for MAB specific objects
+NETGEAR-MANAGEMENT-ACAL-MIB        The NETGEAR Private MIB for NETGEAR
+                                   management acal feature.
+NETGEAR-MGMT-SECURITY-MIB          The NETGEAR Private MIB for NETGEAR Mgmt
+                                   Security
+NETGEAR-MMRP-MIB                   The NETGEAR Private MIB for 802.1ak MMRP
+                                   Configuration
+NETGEAR-MRP-MIB                    The NETGEAR Private MIB for 802.1Qat,
+                                   802.1Qav Configuration
+NETGEAR-MSRP-MIB                   The NETGEAR Private MIB for 802.1Qat,
+                                   802.1Qav Configuration
+NETGEAR-MULTICAST-MIB              The MIB definitions for Multicast Routing
+                                   Flex package.
+NETGEAR-MVR-PRIVATE-MIB            The NETGEAR Private MIB for MVR Configuration
+NETGEAR-MVRP-MIB                   The NETGEAR Private MIB for 802.1ak MVRP
+                                   Configuration
+NETGEAR-NTP-MIB                    The NETGEAR Private MIB for NTP
+                                   Configuration.
+NETGEAR-OUTBOUNDTELNET-PRIVATE-MI  The NETGEAR Private MIB for NETGEAR Outbound
+B                                  Telnet
+NETGEAR-PORTSECURITY-PRIVATE-MIB   Port Security MIB.
+NETGEAR-POWER-ETHERNET-MIB         NETGEAR Power Ethernet Extensions MIB
+NETGEAR-QOS-ACL-MIB                NETGEAR Flex QOS ACL
+NETGEAR-QOS-AUTOVOIP-MIB           NETGEAR Flex QOS VOIP
+NETGEAR-QOS-COS-MIB                NETGEAR Flex QOS COS
+NETGEAR-QOS-DIFFSERV-EXTENSIONS-M  NETGEAR Flex QOS DiffServ Extensions Private
+IB                                 MIBs' definitions
+NETGEAR-QOS-DIFFSERV-PRIVATE-MIB   NETGEAR Flex QOS DiffServ Private MIBs'
+                                   definitions
+NETGEAR-QOS-MIB                    NETGEAR Flex QOS Support
+NETGEAR-RADIUS-AUTH-CLIENT-MIB     The NETGEAR Private MIB for NETGEAR Radius
+                                   Authentication Client.
+NETGEAR-REF-MIB                    NETGEAR Reference
+NETGEAR-ROUTE-POLICY-MIB           The MIB definitions for Route Policy system.
+NETGEAR-ROUTING-MIB                NETGEAR Routing - Layer 3
+NETGEAR-ROUTING6-MIB               The NETGEAR Private MIB for NETGEAR IPv6
+                                   Routing.
+NETGEAR-SFLOW-MIB                  The NETGEAR Private MIB for NETGEAR SFLOW
+NETGEAR-SMTP-MIB                   The NETGEAR Private MIB for SMTP
+                                   Configuration.
+NETGEAR-SWITCHING-MIB              NETGEAR Switching - Layer 2
+NETGEAR-TC-MIB                     The NETGEAR textual conventions.
+NETGEAR-TIMERANGE-MIB              The NETGEAR Private MIB for NETGEAR Time
+                                   Ranges
+NETGEAR-TIMEZONE-PRIVATE-MIB       The NETGEAR Private MIB for NETGEAR for
+                                   system time, timezone and summer-time
+                                   settings
+NETGEAR-UDLD-MIB                   UDLD MIB
+NOTIFICATION-LOG-MIB               The MIB module for logging SNMP
+                                   Notifications, that is, Traps and Informs.
+NTPv4-MIB                          The Network Time Protocol Version 4 for
+                                   Internet Engineering Task Force (IETF) and
+                                   NTP Working Group (ntpwg).
+POWER-ETHERNET-MIB                 Power Ethernet MIB
+RADIUS-ACC-CLIENT-MIB              RADIUS Accounting Client MIB
+RADIUS-AUTH-CLIENT-MIB             RADIUS Authentication Client MIB
+RFC 1213 - RFC1213-MIB             Management Information Base for Network
+                                   Management of TCP/IP-based internets: MIB-II
+RFC 1493 - BRIDGE-MIB              Definitions of Managed Objects for Bridges
+                                   (dot1d)
+RFC 1724 - RIPv2-MIB               RIP Version 2 MIB Extension
+RFC 1907 - SNMPv2-MIB              The MIB module for SNMPv2 entities
+RFC 2465 - IPV6-MIB                Management Information Base for IP Version
+                                   6: Textual Conventions and General Group
+RFC 2466 - IPV6-ICMP-MIB           Management Information Base for IP Version
+                                   6: ICMPv6 Group
+RFC 2674 - P-BRIDGE-MIB            The Bridge MIB Extension module for managing
+                                   Priority and Multicast Filtering, defined by
+                                   IEEE 802.1D-1998.
+RFC 2674 - Q-BRIDGE-MIB            The VLAN Bridge MIB module for managing
+                                   Virtual Bridged Local Area Networks
+RFC 2737 - ENTITY-MIB              Entity MIB (Version 2)
+RFC 2819 - RMON-MIB                Remote Network Monitoring Management
+                                   Information Base
+RFC 2863 - IF-MIB                  The Interfaces Group MIB using SMIv2
+RFC 3289 - DIFFSERV-MIB            Management Information Base for the
+                                   Differentiated Services Architecture
+RFC 3419 - TRANSPORT-ADDRESS-MIB   Textual Conventions for Transport Addresses
+RFC 3635 - Etherlike-MIB           Definitions of Managed Objects for the
+                                   Ethernet-like Interface Types
+RFC 5060 - PIM-STD-MIB             Protocol Independent Multicast MIB
+RFC 5240 - PIM-BSR-MIB             Bootstrap Router mechanism for PIM routers
+SFLOW-MIB                          sFlow MIB
+SMON-MIB                           The MIB module for managing remote
+                                   monitoring device implementations for
+                                   Switched Networks
+SNMP-FRAMEWORK-MIB                 The SNMP Management Architecture MIB
+SNMP-MPD-MIB                       The MIB for Message Processing and
+                                   Dispatching
+SNMP-NOTIFICATION-MIB              The Notification MIB Module
+SNMP-TARGET-MIB                    The Target MIB Module
+SNMP-USER-BASED-SM-MIB             The management information definitions for
+                                   the SNMP User-based Security Model.
+SNMP-VIEW-BASED-ACM-MIB            The management information definitions for
+                                   the View-based Access Control Model for SNMP.
+SYSAPPL-TC-MIB                     System Application Textual conventions MIB
+                                   for Definitions of System-Level Managed
+                                   Objects for Applications.
+TACACS-CLIENT-MIB                  Defines a portion of the SNMP MIB under the
+                                   NETGEAR Corporation enterprise OID
+                                   pertaining to TACACS+ client configuration.
+The MAC security entity (SecY)     The MIB module for IEEE 802.1X MAC SecY
+module for IEEE 802.1AE.           configuration.
+
+(M4250-8G2XF-PoE+)#

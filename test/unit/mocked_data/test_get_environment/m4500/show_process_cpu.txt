@@ -1,0 +1,87 @@
+
+
+Temperature Sensors:
+Unit  Sensor  Description   Temp (C)   Crit_Temp (C)   State     Max_Temp (C)
+----  ------  ------------  ---------  --------------  --------  -------------
+1     1       Temp-1        28         65              Normal    29
+1     2       Temp-2        30         62              Normal    30
+1     3       Temp-3        19         56              Normal    19
+1     4       Temp-4        25         60              Normal    26
+1     5       Temp-5        28         64              Normal    28
+1     6       Temp-6        28         66              Normal    29
+1     7       Temp-7        24         63              Normal    24
+
+Fans:
+Unit Fan Description    Type      Speed (RPM)   State
+---- --- -------------- --------- ------------- -------------
+1    1   Fan-1          Removable 6720          Operational
+1    2   Fan-2          Removable 6560          Operational
+1    3   Fan-3          Removable 6720          Operational
+1    4   Fan-4          Removable 6880          Operational
+1    5   Fan-5          Removable 6720          Operational
+1    6   Fan-6          Removable 6720          Operational
+1    7   Fan-7          Removable 5920          Operational
+1    8   Fan-8          Removable 5920          Operational
+1    9   Fan-9          Removable 5920          Operational
+1    10  Fan-10         Removable 5920          Operational
+1    11  Fan-11         Removable 5920          Operational
+1    12  Fan-12         Removable 6080          Operational
+
+Power Modules:
+Description  Type        Temp1 (C) Temp2 (C) Speed (RPM) Power (W) State
+------------ ----------- --------- --------- ----------- --------- ------------
+PS-1         Removable   32        53        3000        70        Operational
+PS-2         Removable   27        49        3000        50        Operational
+
+
+(test-switch-04) #show process cpu
+
+Memory and Process CPU Utilization Info of Unit:1
+
+Memory Utilization Report
+status     KBytes
+------ ----------
+free      3744912
+alloc     4384068
+CPU Utilization:
+
+PID        Name                  5 Secs  60 Secs 300 Secs
+---------- ------------------- -------- -------- --------
+10         rcu_sched             0.00%    0.01%    0.00%
+77         kipmi0                0.24%    0.28%    0.28%
+182        systemd-udevd         0.68%    0.52%    0.50%
+640        procmgr               0.00%    0.01%    0.01%
+710        syncdb                0.00%    0.01%    0.01%
+1043       osapiTimer            0.00%    0.01%    0.01%
+1045       bcmINTR               0.14%    0.12%    0.12%
+1047       socdmadesc.0          0.04%    0.05%    0.04%
+1054       bcmCNTR.0             0.48%    0.65%    0.66%
+1058       bcmMEM_SCAN.0         0.00%    0.09%    0.07%
+1061       bcmLINK.0             0.83%    0.85%    0.85%
+1064       bcmRX                 0.09%    0.07%    0.07%
+1065       cpuUtilMonitorTask    0.04%    0.05%    0.04%
+1071       tap_monitor_task      0.00%    0.02%    0.02%
+1074       simPts_task           0.04%    0.00%    0.00%
+1092       emWeb                 0.00%    0.03%    0.00%
+1094       dtlTask               0.04%    0.02%    0.02%
+1100       hapiRxTask            0.00%    0.03%    0.03%
+1104       hapiStatsPollTask     0.04%    0.08%    0.08%
+1110       hapiBroadBfdCtrlTas   0.00%    0.04%    0.04%
+1121       DHCP snoop            0.04%    0.00%    0.00%
+1133       dot1s_timer_task      0.04%    0.03%    0.02%
+1144       snoopTask             0.09%    0.06%    0.06%
+1154       tRpcsrv.01000         0.00%    0.28%    0.32%
+1156       tRpcsrv.00050         0.00%    0.00%    0.01%
+1161       ipMapForwardingTask   0.09%    0.07%    0.07%
+1235       lldpTask              0.24%    0.10%    0.10%
+1241       RMONTask              0.24%    0.07%    0.05%
+1311       openrTask             0.14%    0.16%    0.16%
+1553       lighttpd              0.04%    0.01%    0.02%
+1775       netsnmp_app           0.00%    0.00%    0.02%
+1832       automatic             0.00%    0.00%    0.01%
+1886       avahi-daemon          0.04%    0.04%    0.05%
+------------------------------ -------- -------- --------
+Total CPU Utilization            3.77%    3.98%    3.97%
+
+
+(test-switch-04) #

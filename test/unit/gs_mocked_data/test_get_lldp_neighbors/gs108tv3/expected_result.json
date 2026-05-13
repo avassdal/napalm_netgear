@@ -1,0 +1,64 @@
+{
+    "g1": [
+        {
+            "hostname": "test-switch-05",
+            "port": "1/0/17"
+        },
+        {
+            "hostname": "192.0.2.21",
+            "port": "PD, SN, SD, SC"
+        }
+    ],
+    "g2": [
+        {
+            "hostname": "70:85:C2:DB:00:48",
+            "port": "70:85:C2:DB:00:48"
+        },
+        {
+            "hostname": "192.0.2.21",
+            "port": "PD, SN, SD, SC"
+        }
+    ],
+    "Port": [
+        {
+            "hostname": "Address",
+            "port": "Optional TLVs"
+        }
+    ],
+    "g3": [
+        {
+            "hostname": "192.0.2.21",
+            "port": "PD, SN, SD, SC"
+        }
+    ],
+    "g4": [
+        {
+            "hostname": "192.0.2.21",
+            "port": "PD, SN, SD, SC"
+        }
+    ],
+    "g5": [
+        {
+            "hostname": "192.0.2.21",
+            "port": "PD, SN, SD, SC"
+        }
+    ],
+    "g6": [
+        {
+            "hostname": "192.0.2.21",
+            "port": "PD, SN, SD, SC"
+        }
+    ],
+    "g7": [
+        {
+            "hostname": "192.0.2.21",
+            "port": "PD, SN, SD, SC"
+        }
+    ],
+    "g8": [
+        {
+            "hostname": "192.0.2.21",
+            "port": "PD, SN, SD, SC"
+        }
+    ]
+}

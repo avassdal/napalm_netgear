@@ -1,0 +1,32 @@
+{
+    "g1": [
+        {
+            "parent_interface": "g1",
+            "remote_chassis_id": "54:07:7D:0D:2F:7C",
+            "remote_port": "1/0/17",
+            "remote_port_description": "",
+            "remote_system_name": "test-switch-02",
+            "remote_system_description": "",
+            "remote_system_capab": [
+                "Bridge",
+                "Router"
+            ],
+            "remote_system_enable_capab": [
+                "Bridge",
+                "Router"
+            ]
+        }
+    ],
+    "g2": [
+        {
+            "parent_interface": "g2",
+            "remote_chassis_id": "70:85:C2:DB:00:48",
+            "remote_port": "70:85:C2:DB:00:48",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ]
+}

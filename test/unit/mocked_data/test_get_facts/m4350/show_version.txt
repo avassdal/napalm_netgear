@@ -1,0 +1,15 @@
+show version
+
+Switch: 1
+
+System Description............................. NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15
+Machine Model.................................. M4350-24X4V
+Serial Number.................................. 75013B52A007B
+Burned In MAC Address.......................... 54:07:7D:0D:2F:DC
+Software Version............................... 14.0.6.13
+Sys MCU version................................ 0x8
+Board Revision................................. 0x0
+Bootcode Version............................... 1.0.0.15
+Current Time................................... Feb  6 12:14:31 2026 ZZZZ(UTC+1:00, DST offset 60 mins)
+
+(M4350-24X4V)#

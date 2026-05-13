@@ -1,0 +1,11 @@
+show ip interface brief
+
+                                                                             Netdir   Multi
+Interface    State  IP Address      IP Mask                         Method   Bcast    CastFwd
+----------   -----  --------------- --------------- --------------- -------- -------- --------
+vlan 1       Up     192.0.2.2      255.255.255.0   Primary         Manual   Disable  Disable
+vlan 60      Up     10.10.60.2      255.255.255.0   Primary         Manual   Disable  Disable
+vlan 50      Up     10.10.50.2      255.255.255.0   Primary         Manual   Disable  Disable
+vlan 101     Up     10.101.0.2      255.255.0.0     Primary         Manual   Disable  Disable
+
+(test-switch-04) #

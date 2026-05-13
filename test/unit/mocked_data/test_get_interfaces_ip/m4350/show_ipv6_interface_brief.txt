@@ -1,0 +1,10 @@
+show ipv6 interface brief
+
+             Oper.
+Interface    Mode     IPv6 Address/Length
+-----------  -------- ---------------------------------
+vlan 1       Disabled fe80::5607:7dff:fe0d:2fdf/64                       [TENT]
+vlan 60      Disabled fe80::5607:7dff:fe0d:2fdf/64                       [TENT]
+vlan 50      Disabled fe80::5607:7dff:fe0d:2fdf/64                       [TENT]
+
+(M4350-24X4V)#

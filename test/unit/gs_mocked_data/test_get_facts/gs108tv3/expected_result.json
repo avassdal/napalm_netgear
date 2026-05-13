@@ -1,0 +1,19 @@
+{
+    "uptime": 7569493.0,
+    "vendor": "Netgear",
+    "model": "GS108Tv3",
+    "hostname": "test-switch-05",
+    "fqdn": "test-switch-05",
+    "os_version": "7.1.1.12",
+    "serial_number": "7K31455WA09F5",
+    "interface_list": [
+        "g1",
+        "g2",
+        "g3",
+        "g4",
+        "g5",
+        "g6",
+        "g7",
+        "g8"
+    ]
+}

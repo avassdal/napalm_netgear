@@ -1,0 +1,22 @@
+show lldp remote-device detail 0/9
+
+LLDP Remote Device Detail
+
+Local Interface: 0/9
+
+
+Remote Identifier: 1
+Chassis ID Subtype: MAC Address
+Chassis ID: 24:5E:BE:8A:29:E2
+Port ID Subtype: MAC Address
+Port ID: 24:5E:BE:8A:29:E2
+System Name:
+System Description:
+Port Description:
+System Capabilities Supported:
+System Capabilities Enabled:
+Time to Live: 103 seconds
+
+
+
+(test-switch-04) #

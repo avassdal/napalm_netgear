@@ -1,0 +1,94 @@
+show sysinfo
+
+System Description............................. M4500-48XF8C, Runtime Code 7.0.4.30
+System Name.................................... test-switch-04
+System Location................................
+System Contact.................................
+System Object ID............................... 1.3.6.1.4.1.4526.100.3.10
+System Up Time................................. 87 days 15 hrs 18 mins 8 secs
+
+MIBs Supported:
+
+DIFFSERV-DSCP-TC                   The Textual Conventions defined in this
+                                   module should be used whenever a
+                                   Differentiated Services Code Point is used
+                                   in a MIB.
+DISMAN-TRACEROUTE-MIB              The Traceroute MIB (DISMAN-TRACEROUTE-MIB)
+                                   provides access to the traceroute capability
+                                   at a remote host.
+DNS-SERVER-MIB                     The MIB module for entities implementing the
+                                   server side of the Domain Name System (DNS)
+                                   protocol.
+HC-RMON-MIB                        The original version of this MIB, published
+                                   as RFC3273.
+IANA-ADDRESS-FAMILY-NUMBERS-MIB    The MIB module defines the
+                                   AddressFamilyNumbers textual convention.
+IANA-RTPROTO-MIB                   IANA IP Route Protocol and IP MRoute
+                                   Protocol Textual Conventions
+IEEE8021-PAE-MIB                   Port Access Entity module for managing IEEE
+                                   802.1X.
+INET-ADDRESS-MIB                   This MIB module defines textual conventions
+                                   for representing Internet addresses.
+IP-MIB                             The MIB module for managing IP and ICMP
+                                   implementations, but excluding their
+                                   management of IP routes.
+LAG-MIB                            The Link Aggregation module for managing
+                                   IEEE 802.3ad
+LLDP-EXT-MED-MIB                   The LLDP Management Information Base
+                                   extension module for TIA-TR41.4 Media
+                                   Endpoint Discovery information.
+MGMD-STD-MIB                       The MIB module for MGMD Management.
+NETGEAR-BOXSERVICES-PRIVATE-MIB    The Netgear Private MIB for NETGEAR Box
+                                   Services Feature.
+NETGEAR-DHCPCLIENT-PRIVATE-MIB     The Netgear Private MIB for NETGEAR DHCP
+                                   Client
+NETGEAR-FIPSNOOPING-MIB            The MIB module defines objects to configure
+                                   FIP snooping and monitor the status of FCoE
+                                   sessions.
+NETGEAR-INVENTORY-MIB              Unit and Slot configuration.
+NETGEAR-IPV6-TUNNEL-MIB            The Netgear Private MIB for NETGEAR IPV6
+                                   Tunnel.
+NETGEAR-LOGGING-MIB                This MIB provides objects to configure and
+                                   display events logged on this system.
+NETGEAR-MGMT-SECURITY-MIB          The Netgear Private MIB for NETGEAR Mgmt
+                                   Security
+NETGEAR-MULTICAST-MIB              The MIB definitions for Multicast Routing
+                                   Flex package.
+NETGEAR-OUTBOUNDTELNET-PRIVATE-MI  The Netgear Private MIB for NETGEAR Outbound
+B                                  Telnet
+NETGEAR-PORTSECURITY-PRIVATE-MIB   Port Security MIB.
+NETGEAR-QOS-COS-MIB                NETGEAR Flex QOS COS
+NETGEAR-QOS-ISCSI-MIB              NETGEAR Flex QOS iSCSI Flow Acceleration
+                                   MIBs' definitions
+NETGEAR-RADIUS-AUTH-CLIENT-MIB     The Netgear Private MIB for NETGEAR Radius
+                                   Authentication Client.
+NETGEAR-ROUTING-MIB                NETGEAR Routing - Layer 3
+NETGEAR-SFLOW-MIB                  The Netgear Private MIB for NETGEAR SFLOW
+NETGEAR-SWITCHING-MIB              NETGEAR Switching - Layer 2
+NETGEAR-UDLD-MIB                   UDLD MIB
+Netgear-REF-MIB                    Netgear Reference
+RADIUS-AUTH-CLIENT-MIB             RADIUS Authentication Client MIB
+RFC 1493 - BRIDGE-MIB              Definitions of Managed Objects for Bridges
+                                   (dot1d)
+RFC 1850 - OSPF-MIB                OSPF Version 2 Management Information Base
+RFC 1907 - SNMPv2-MIB              The MIB module for SNMPv2 entities
+RFC 2466 - IPV6-ICMP-MIB           Management Information Base for IP Version
+                                   6: ICMPv6 Group
+RFC 2674 - Q-BRIDGE-MIB            The VLAN Bridge MIB module for managing
+                                   Virtual Bridged Local Area Networks
+RFC 2787 - VRRP-MIB                Definitions of Managed Objects for the
+                                   Virtual Router Redundancy Protocol
+RFC 2863 - IF-MIB                  The Interfaces Group MIB using SMIv2
+RFC 3635 - Etherlike-MIB           Definitions of Managed Objects for the
+                                   Ethernet-like Interface Types
+RFC 5240 - PIM-BSR-MIB             Bootstrap Router mechanism for PIM routers
+SMON-MIB                           The MIB module for managing remote
+                                   monitoring device implementations for
+                                   Switched Networks
+SNMP-MPD-MIB                       The MIB for Message Processing and
+                                   Dispatching
+SNMP-TARGET-MIB                    The Target MIB Module
+SNMP-VIEW-BASED-ACM-MIB            The management information definitions for
+                                   the View-based Access Control Model for SNMP.
+
+(test-switch-04) #

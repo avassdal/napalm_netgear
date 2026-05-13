@@ -1,0 +1,10 @@
+show lldp remote-device
+
+LLDP Remote Device Summary
+
+Local                                                                  Organizational TLV
+Interface  RemID   Chassis ID            Port ID   System Name            OUI     Subtype
+--------- -------  --------------------  --------  ------------------  ------------------
+0/1        52      54:07:7D:0D:2F:7C     1/0/25    test-switch-05         0x0080C2  0x01
+0/2        64      54:07:7D:0D:2F:7C     1/0/26    test-switch-05         0x0080C2  0x01
+0/5        57      54:07:7D:0D:2F:D0     1/0/25    test-switch-06          0x0080C2  0x01

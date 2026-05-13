@@ -1,0 +1,340 @@
+{
+    "0/13": [
+        {
+            "parent_interface": "0/13",
+            "remote_chassis_id": "54:07:7D:1B:7F:5C",
+            "remote_port": "1/0/25",
+            "remote_port_description": "1/0/25",
+            "remote_system_name": "test-switch-02",
+            "remote_system_description": "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "0/52": [
+        {
+            "parent_interface": "0/52",
+            "remote_chassis_id": "54:07:7D:EA:AA:01",
+            "remote_port": "0/52",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "0/41": [
+        {
+            "parent_interface": "0/41",
+            "remote_chassis_id": "00:20:FC:3A:5C:35",
+            "remote_port": "00:20:FC:3A:5C:36",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "0/53": [
+        {
+            "parent_interface": "0/53",
+            "remote_chassis_id": "54:07:7D:EA:AA:01",
+            "remote_port": "0/53",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "0/50": [
+        {
+            "parent_interface": "0/50",
+            "remote_chassis_id": "54:07:7D:EA:AA:01",
+            "remote_port": "0/50",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "0/49": [
+        {
+            "parent_interface": "0/49",
+            "remote_chassis_id": "54:07:7D:EA:AA:01",
+            "remote_port": "0/49",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "0/10": [
+        {
+            "parent_interface": "0/10",
+            "remote_chassis_id": "E0:46:EE:37:9B:48",
+            "remote_port": "0/28",
+            "remote_port_description": "0/28",
+            "remote_system_name": "test-switch-04",
+            "remote_system_description": "M4250-26G4XF-PoE+ 26x1G PoE+ 480W and 4xSFP+ Managed Switch, 13.0.5.20, 1.0.0.12",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "0/1": [
+        {
+            "parent_interface": "0/1",
+            "remote_chassis_id": "54:07:7D:0D:2F:7C",
+            "remote_port": "1/0/25",
+            "remote_port_description": "1/0/25",
+            "remote_system_name": "test-switch-02",
+            "remote_system_description": "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "0/55": [
+        {
+            "parent_interface": "0/55",
+            "remote_chassis_id": "54:07:7D:EA:AA:01",
+            "remote_port": "0/55",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "0/16": [
+        {
+            "parent_interface": "0/16",
+            "remote_chassis_id": "54:07:7D:1B:7F:78",
+            "remote_port": "1/0/26",
+            "remote_port_description": "1/0/26",
+            "remote_system_name": "test-switch-01",
+            "remote_system_description": "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "0/14": [
+        {
+            "parent_interface": "0/14",
+            "remote_chassis_id": "54:07:7D:1B:7F:5C",
+            "remote_port": "1/0/26",
+            "remote_port_description": "1/0/26",
+            "remote_system_name": "test-switch-02",
+            "remote_system_description": "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "0/8": [
+        {
+            "parent_interface": "0/8",
+            "remote_chassis_id": "54:07:7D:0D:2F:DC",
+            "remote_port": "1/0/27",
+            "remote_port_description": "1/0/27",
+            "remote_system_name": "test-switch-01",
+            "remote_system_description": "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "0/9": [
+        {
+            "parent_interface": "0/9",
+            "remote_chassis_id": "24:5E:BE:8A:29:E2",
+            "remote_port": "24:5E:BE:8A:29:E2",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "0/6": [
+        {
+            "parent_interface": "0/6",
+            "remote_chassis_id": "54:07:7D:0D:2F:D0",
+            "remote_port": "1/0/26",
+            "remote_port_description": "1/0/26",
+            "remote_system_name": "test-switch-03",
+            "remote_system_description": "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "0/2": [
+        {
+            "parent_interface": "0/2",
+            "remote_chassis_id": "54:07:7D:0D:2F:7C",
+            "remote_port": "1/0/26",
+            "remote_port_description": "1/0/26",
+            "remote_system_name": "test-switch-02",
+            "remote_system_description": "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "0/7": [
+        {
+            "parent_interface": "0/7",
+            "remote_chassis_id": "54:07:7D:0D:2F:DC",
+            "remote_port": "1/0/25",
+            "remote_port_description": "1/0/25",
+            "remote_system_name": "test-switch-01",
+            "remote_system_description": "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "0/47": [
+        {
+            "parent_interface": "0/47",
+            "remote_chassis_id": "0C:C4:7A:73:69:CE",
+            "remote_port": "0C:C4:7A:73:69:CE",
+            "remote_port_description": "eth0",
+            "remote_system_name": "test-router-01",
+            "remote_system_description": "test-router-01 23.05.2 @ test-router-01",
+            "remote_system_capab": [
+                "bridge",
+                "WLAN access point",
+                "router",
+                "station only"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "0/15": [
+        {
+            "parent_interface": "0/15",
+            "remote_chassis_id": "54:07:7D:1B:7F:78",
+            "remote_port": "1/0/25",
+            "remote_port_description": "1/0/25",
+            "remote_system_name": "test-switch-01",
+            "remote_system_description": "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "0/56": [
+        {
+            "parent_interface": "0/56",
+            "remote_chassis_id": "54:07:7D:EA:AA:01",
+            "remote_port": "0/56",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "0/51": [
+        {
+            "parent_interface": "0/51",
+            "remote_chassis_id": "54:07:7D:EA:AA:01",
+            "remote_port": "0/51",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "0/54": [
+        {
+            "parent_interface": "0/54",
+            "remote_chassis_id": "54:07:7D:EA:AA:01",
+            "remote_port": "0/54",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "0/5": [
+        {
+            "parent_interface": "0/5",
+            "remote_chassis_id": "54:07:7D:0D:2F:D0",
+            "remote_port": "1/0/25",
+            "remote_port_description": "1/0/25",
+            "remote_system_name": "test-switch-03",
+            "remote_system_description": "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ]
+}

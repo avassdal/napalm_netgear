@@ -1,0 +1,17 @@
+show interfaces GigabitEthernet 2
+GigabitEthernet2 is up
+  Hardware is Gigabit Ethernet
+  Auto-duplex, Auto-speed, media type is Copper
+  flow-control is off
+  back-pressure is enabled
+     6666868 packets input, 1931437995 bytes, 0 throttles
+     Received 34452 broadcasts (329895 multicasts)
+     2 runts, 0 giants, 0 throttles
+     2 input errors, 0 CRC, 0 frame
+     329895 multicast, 0 pause input
+     0 input packets with dribble condition detected
+     226772588 packets output, 4148817290 bytes, 16 underrun
+     16 output errors, 0 collisions
+     0 babbles, 0 late collision, 0 deferred
+     0 PAUSE output
+test-switch-05# 

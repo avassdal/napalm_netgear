@@ -1,0 +1,32 @@
+show lldp remote-device detail 0/7
+
+LLDP Remote Device Detail
+
+Local Interface: 0/7
+
+
+Remote Identifier: 61
+Chassis ID Subtype: MAC Address
+Chassis ID: 54:07:7D:0D:2F:DC
+Port ID Subtype: Interface Name
+Port ID: 1/0/25
+System Name: test-switch-01
+System Description: NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15
+Port Description: 1/0/25
+System Capabilities Supported: bridge, router
+System Capabilities Enabled: bridge, router
+Management Address:
+    Type: IPv4
+    Address: 192.0.2.11
+Time to Live: 97 seconds
+
+Port VLAN Identity: 1
+Link Aggregation: 
+    Aggregation Status: Supported, Enabled
+    Aggregation Port Id: 1
+Maximum Frame Size: 9216
+Auto-LAG: Supported, Enabled
+Auto-Trunk: Supported, Enabled
+
+
+(test-switch-04) #

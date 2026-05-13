@@ -1,0 +1,1532 @@
+[
+    {
+        "mac": "54:07:7D:17:F7:D0",
+        "interface": "CPU",
+        "vlan": 1,
+        "static": true,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:00:5E:00:01:32",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:00:5E:00:01:3C",
+        "interface": "g1",
+        "vlan": 60,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:00:5E:00:01:65",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:04:C4:07:0F:B4",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:04:C4:07:8C:62",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:04:C4:07:99:4F",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:04:C4:07:9D:02",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:01:42:9E",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:01:42:A0",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:01:42:A1",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:01:42:A2",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:01:42:A3",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:01:42:A5",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:01:43:5C",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:01:43:5D",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:01:43:5E",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:01:43:61",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:01:4B:89",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:01:5E:E6",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:02:0C:6F",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:06:09:45",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:06:09:46",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:06:09:5A",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:07:30:02",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:13:B2:07:30:3C",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:53:68:2D",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:55:D1:40",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:55:D2:12",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:81:AF:AA",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:83:A2:DC",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:83:A2:E1",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:83:AA:74",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:85:C5:A5",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:85:C5:FC",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:85:F1:FD",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:85:F1:FE",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:88:C2:E8",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:88:C2:F1",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:88:C2:F9",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:89:39:98",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:1D:C1:D1:31:19",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:20:FC:3A:5B:CC",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:20:FC:3A:5B:E8",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:20:FC:3A:5C:35",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:20:FC:3A:5C:36",
+        "interface": "g1",
+        "vlan": 60,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:20:FC:3A:D3:A7",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:20:FC:3A:D3:C5",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:20:FC:3C:5D:F4",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:20:FC:3C:70:36",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:21:6D:DE:3A:71",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:30:59:19:DB:24",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:60:74:EE:20:C1",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:60:74:F4:3E:D1",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:60:74:F8:BD:85",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "00:60:74:F8:E1:53",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "0C:C4:7A:73:68:1A",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "0C:C4:7A:73:69:CE",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "0C:C4:7A:73:69:CE",
+        "interface": "g1",
+        "vlan": 91,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "24:5E:BE:8A:29:E1",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "38:1A:52:87:10:B4",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "3C:18:A0:18:4C:15",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "3C:18:A0:19:3B:4A",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "48:65:EE:12:3B:92",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "50:EB:F6:9B:EE:63",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0C:39:DB",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0C:39:DD",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0C:39:DD",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0C:39:DD",
+        "interface": "g1",
+        "vlan": 60,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0C:39:DD",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0C:46:26",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0C:46:26",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0C:46:26",
+        "interface": "g1",
+        "vlan": 60,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0C:46:26",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2E:94",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2E:94",
+        "interface": "g1",
+        "vlan": 60,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2E:94",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2E:97",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:7C",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:7C",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:7C",
+        "interface": "g1",
+        "vlan": 60,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:7D",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:7E",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:7F",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:D0",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:D0",
+        "interface": "g1",
+        "vlan": 11,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:D0",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:D0",
+        "interface": "g1",
+        "vlan": 60,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:D0",
+        "interface": "g1",
+        "vlan": 91,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:D0",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:D0",
+        "interface": "g1",
+        "vlan": 102,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:D3",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:DC",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:DC",
+        "interface": "g1",
+        "vlan": 60,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:DC",
+        "interface": "g1",
+        "vlan": 102,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:0D:2F:DF",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:17:FB:74",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:1B:7F:5F",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:1B:7F:7B",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:2C:07:55",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:07:7D:2C:08:3D",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "54:B5:6C:1A:A3:08",
+        "interface": "g3",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "68:72:C3:63:D6:C7",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "70:85:C2:DB:00:48",
+        "interface": "g2",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "70:A7:41:68:A3:AC",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "90:5A:08:18:1E:6D",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "90:AC:3F:13:96:1E",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "90:AC:3F:18:1A:6B",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "90:AC:3F:20:0F:85",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "90:AC:3F:20:0F:F4",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "90:AC:3F:20:10:FD",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "90:AC:3F:20:11:0B",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "90:AC:3F:20:12:E6",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "A0:D0:5B:87:FC:4D",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "A0:D0:5B:88:01:88",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "A0:D0:5B:D8:88:7A",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "A0:D0:5B:D8:88:7D",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "A0:D0:5B:D8:88:C7",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:0A:13:BE",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:12:6B:5F",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:13:77:EA",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:27:DA:5A",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:28:C7:53",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:39:BC:F5",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:3D:B3:E2",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:3F:11:8F",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:4D:C0:8D",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:54:48:8A",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:54:7B:DB",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:69:1A:1B",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:76:E9:8D",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:83:46:6C",
+        "interface": "g1",
+        "vlan": 60,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:8E:F5:65",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:A1:40:57",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:A4:36:A5",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:A9:8B:72",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:AC:5E:DE",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:B5:B3:09",
+        "interface": "g1",
+        "vlan": 60,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:B7:4B:4F",
+        "interface": "g1",
+        "vlan": 102,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:BA:89:4A",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:BC:19:94",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:BC:DB:6E",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:D7:E4:61",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:E4:AF:20",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:ED:A2:39",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:F2:D8:E8",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:24:11:F4:96:FA",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "BC:FC:E7:70:2A:F9",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "C4:00:AD:19:D8:61",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "D8:3A:DD:5B:51:C6",
+        "interface": "g4",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "DC:62:94:25:F8:5E",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "DC:62:94:25:F8:61",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "DC:62:94:28:38:24",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "DC:62:94:28:38:87",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:20:6E:84",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:20:6F:9D",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:20:6F:A0",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:20:6F:D5",
+        "interface": "g1",
+        "vlan": 11,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:20:6F:D5",
+        "interface": "g1",
+        "vlan": 91,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:20:6F:D5",
+        "interface": "g1",
+        "vlan": 101,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:20:6F:D5",
+        "interface": "g1",
+        "vlan": 102,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:20:6F:D8",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:20:6F:E5",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:20:6F:E8",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:32:B8:D9",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:32:B8:DA",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:32:B8:DC",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:37:9B:48",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "E0:46:EE:37:9B:4B",
+        "interface": "g1",
+        "vlan": 1,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    },
+    {
+        "mac": "F8:4E:17:58:F7:80",
+        "interface": "g1",
+        "vlan": 50,
+        "static": false,
+        "active": true,
+        "moves": 0,
+        "last_move": 0.0
+    }
+]

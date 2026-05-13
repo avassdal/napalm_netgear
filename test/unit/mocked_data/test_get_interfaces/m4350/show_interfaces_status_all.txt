@@ -1,0 +1,102 @@
+show interfaces status all
+
+                                   Link    Physical    Physical    Media           Flow
+Port       Name                    State   Mode        Status      Type            Control    VLAN
+---------  ----------------------  ------  ----------  ----------  --------------  ---------  ----------
+1/0/1                              Up      Auto        1000 Full   Copper          Inactive    50
+1/0/2                              Up      Auto        1000 Full   Copper          Active      50
+1/0/3                              Up      Auto        1000 Full   Copper          Active      50
+1/0/4                              Up      Auto        1000 Full   Copper          Active      50
+1/0/5                              Up      Auto        1000 Full   Copper          Active      1
+1/0/6                              Up      Auto        1000 Full   Copper          Active      1
+1/0/7                              Up      Auto        1000 Full   Copper          Active      50
+1/0/8                              Up      Auto        1000 Full   Copper          Active      1
+1/0/9                              Down    Auto                                    Inactive    1
+1/0/10                             Down    Auto                                    Inactive    1
+1/0/11                             Up      Auto        1000 Full   Copper          Inactive    50
+1/0/12                             Down    Auto                                    Inactive    50
+1/0/13                             Down    Auto                                    Inactive    50
+1/0/14                             Down    Auto                                    Inactive    60
+1/0/15                             Down    Auto                                    Inactive    1,50
+1/0/16                             Down    Auto                                    Inactive    60
+1/0/17                             Down    Auto                                    Inactive    50
+1/0/18                             Down    Auto                                    Inactive    50
+1/0/19                             Up      Auto        1000 Full   Copper          Inactive    101
+1/0/20                             Down    Auto                                    Inactive    60
+1/0/21                             Down    Auto                                    Inactive    50
+1/0/22                             Down    Auto                                    Inactive    60
+1/0/23                             Down    Auto                                    Inactive    101
+1/0/24                             Up      Auto        1000 Full   Copper          Active      Trunk
+1/0/25                             Up      Auto        25G Full    Copper          Inactive    Trunk
+1/0/26                             Up      Auto        25G Full    Copper          Inactive    Trunk
+1/0/27                             Up      Auto        25G Full    Copper          Inactive    Trunk
+1/0/28                             Up      Auto        25G Full    Copper          Inactive    Trunk
+lag 1                              Up                                                          Trunk
+lag 2                              Down                                                        1
+lag 3                              Down                                                        1
+lag 4                              Down                                                        1
+lag 5                              Down                                                        1
+lag 6                              Down                                                        1
+lag 7                              Down                                                        1
+lag 8                              Down                                                        1
+lag 9                              Down                                                        1
+lag 10                             Down                                                        1
+lag 11                             Down                                                        1
+lag 12                             Down                                                        1
+lag 13                             Down                                                        1
+lag 14                             Down                                                        1
+lag 15                             Down                                                        1
+lag 16                             Down                                                        1
+lag 17                             Down                                                        1
+lag 18                             Down                                                        1
+lag 19                             Down                                                        1
+lag 20                             Down                                                        1
+lag 21                             Down                                                        1
+lag 22                             Down                                                        1
+lag 23                             Down                                                        1
+lag 24                             Down                                                        1
+lag 25                             Down                                                        1
+lag 26                             Down                                                        1
+lag 27                             Down                                                        1
+lag 28                             Down                                                        1
+lag 29                             Down                                                        1
+lag 30                             Down                                                        1
+lag 31                             Down                                                        1
+lag 32                             Down                                                        1
+lag 33                             Down                                                        1
+lag 34                             Down                                                        1
+lag 35                             Down                                                        1
+lag 36                             Down                                                        1
+lag 37                             Down                                                        1
+lag 38                             Down                                                        1
+lag 39                             Down                                                        1
+lag 40                             Down                                                        1
+lag 41                             Down                                                        1
+lag 42                             Down                                                        1
+lag 43                             Down                                                        1
+lag 44                             Down                                                        1
+lag 45                             Down                                                        1
+lag 46                             Down                                                        1
+lag 47                             Down                                                        1
+lag 48                             Down                                                        1
+lag 49                             Down                                                        1
+lag 50                             Down                                                        1
+lag 51                             Down                                                        1
+lag 52                             Down                                                        1
+lag 53                             Down                                                        1
+lag 54                             Down                                                        1
+lag 55                             Down                                                        1
+lag 56                             Down                                                        1
+lag 57                             Down                                                        1
+lag 58                             Down                                                        1
+lag 59                             Down                                                        1
+lag 60                             Down                                                        1
+lag 61                             Down                                                        1
+lag 62                             Down                                                        1
+lag 63                             Down                                                        1
+lag 64                             Down                                                        1
+vlan 1                             Up      10 Half     10 Half     Unknown
+vlan 60                            Up      10 Half     10 Half     Unknown
+vlan 50                            Up      10 Half     10 Half     Unknown
+
+(M4350-24X4V)#

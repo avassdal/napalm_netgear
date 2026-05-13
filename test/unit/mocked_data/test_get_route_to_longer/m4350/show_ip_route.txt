@@ -1,0 +1,22 @@
+show ip route
+
+Route Codes: R - RIP Derived, O - OSPF Derived, C - Connected, S - Static
+       B - BGP Derived, IA - OSPF Inter Area
+       E1 - OSPF External Type 1, E2 - OSPF External Type 2
+       N1 - OSPF NSSA External Type 1, N2 - OSPF NSSA External Type 2
+       S U - Unnumbered Peer
+       L - Leaked Route, K - Kernel, D - Database Route
+
+Default Gateway is 192.0.2.1
+
+S      0.0.0.0/0 [253/0] via 192.0.2.1,   87d:16h:03m,  vlan 1
+C      192.0.2.0/24 [0/0] directly connected,   vlan 1
+C      10.10.50.0/24 [0/0] directly connected,   vlan 50
+C      10.10.60.0/24 [0/0] directly connected,   vlan 60
+C      10.101.0.0/16 [0/0] directly connected,   vlan 101
+S      10.147.17.0/24 [1/0] via 10.101.0.101,   vlan 101
+S      10.147.18.0/24 [1/0] via 10.10.50.9,   vlan 50
+S      10.242.0.0/16 [1/0] via 10.10.50.9,   vlan 50
+S      192.168.70.0/24 [1/0] via 10.101.0.101,   vlan 101
+B      1.0.4.0/24 [20/0] via 192.0.2.1,   1d:00h:00m,  vlan 1
+

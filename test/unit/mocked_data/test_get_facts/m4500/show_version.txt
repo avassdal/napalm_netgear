@@ -1,0 +1,21 @@
+show version
+
+Switch: 1
+
+System Description............................. M4500-48XF8C, Runtime Code 7.0.4.30
+Machine Model.................................. M4500-48XF8C
+Serial Number.................................. 65D135KX00023
+Burned In MAC Address.......................... 54:07:7D:0C:39:DB
+Software Version............................... 7.0.4.30
+Software Storage............................... mSATA
+Additional Packages............................ BGP-4
+                                                QOS
+                                                Multicast
+                                                IPv6
+                                                Routing
+                                                Data Center
+                                                OpEN API
+                                                Prototype Open API
+
+
+(test-switch-04) #

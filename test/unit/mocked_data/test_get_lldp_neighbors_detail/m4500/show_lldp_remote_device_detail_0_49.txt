@@ -1,0 +1,43 @@
+show lldp remote-device detail 0/49
+
+LLDP Remote Device Detail
+
+Local Interface: 0/49
+
+
+Remote Identifier: 5
+Chassis ID Subtype: MAC Address
+Chassis ID: 54:07:7D:EA:AA:01
+Port ID Subtype: Interface Name
+Port ID: 0/49
+System Name:
+System Description:
+Port Description:
+System Capabilities Supported:
+System Capabilities Enabled:
+Time to Live: 110 seconds
+
+Auto-LAG: Supported, Disabled
+Auto-Trunk: Supported, Disabled
+MAC/PHY Configuration/Status: 
+    Auto-Negotiation: Supported, Enabled
+    PMD Auto-Negotiation Advertised Capabilities:
+        100Base-T Half Duplex
+        1000Base-T Half Duplex
+    Operational MAU Type: 100GBASE-CR4
+Power Via MDI: 
+    MDI Power Support:
+        Port Class: PD
+        PSE MDI Power: Not Supported
+        PSE MDI Power Enabled: No
+        PSE Pairs Control Ability: No
+    PSE Power Pair: 0
+    Power Class: 0
+Link Aggregation: 
+    Aggregation Status: Supported, Enabled
+    Aggregation Port Id: 354
+Maximum Frame Size: 9202
+Port VLAN Identity: 1
+
+
+(test-switch-04) #

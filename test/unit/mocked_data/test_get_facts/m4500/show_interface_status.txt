@@ -1,0 +1,211 @@
+show interface status
+
+                 Admi   Phy   Phy    Link   Link    LACP    Flow             Cap.      Expanded
+Intf      Type   Mode   Mode  Stat   Stat   Trap    Mode    Mode            Status     From
+-------- ------ ------- ----- ----- ------ ------- ------- ---------- ---------------- ---------
+0/1      PC Mbr Enable  25GF  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/2      PC Mbr Enable  25GF  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/3             Enable  25GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/4             Enable  25GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/5      PC Mbr Enable  25GF  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/6      PC Mbr Enable  25GF  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/7      PC Mbr Enable  Auto  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/8      PC Mbr Enable  Auto  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/9             Enable  10GF  10GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/10     PC Mbr Enable  10GF  10GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/11            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/12            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/13     PC Mbr Enable  25GF  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/14     PC Mbr Enable  25GF  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/15     PC Mbr Enable  25GF  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/16     PC Mbr Enable  25GF  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/17     PC Mbr Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/18     PC Mbr Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/19            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/20            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/21            Enable  25GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/22            Enable  25GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/23            Enable  Auto        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/24            Enable  Auto        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/25            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/26            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/27            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/28            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/29            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/30            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/31            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/32            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/33     PC Mbr Enable  25GF  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/34     PC Mbr Enable  25GF  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/35     PC Mbr Enable  Auto  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/36            Enable  Auto        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/37            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/38            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/39            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/40            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/41            Enable  25GF  25GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/42            Enable  25GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/43            Enable  25GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/44            Enable  25GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/45            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/46            Enable  10GF        Down   Enable  Enable  Disable    10GF 25GF 1GF
+0/47            Enable  10GF  10GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/48            Enable  10GF  10GF  Up     Enable  Enable  Disable    10GF 25GF 1GF
+0/49     PC Mbr Enable  Auto  100GF Up     Enable  Enable  Disable    40GF 100GF
+0/50     PC Mbr Enable  Auto  100GF Up     Enable  Enable  Disable    40GF 100GF
+0/51     PC Mbr Enable  Auto  100GF Up     Enable  Enable  Disable    40GF 100GF
+0/52     PC Mbr Enable  100GF 100GF Up     Enable  Enable  Disable    40GF 100GF
+0/53     PC Mbr Enable  Auto  100GF Up     Enable  Enable  Disable    40GF 100GF
+0/54     PC Mbr Enable  100GF 100GF Up     Enable  Enable  Disable    40GF 100GF
+0/55     PC Mbr Enable  Auto  100GF Up     Enable  Enable  Disable    40GF 100GF
+0/56     PC Mbr Enable  Auto  100GF Up     Enable  Enable  Disable    40GF 100GF
+0/57            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/49
+0/58            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/49
+0/59            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/49
+0/60            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/49
+0/61            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/50
+0/62            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/50
+0/63            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/50
+0/64            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/50
+0/65            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/51
+0/66            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/51
+0/67            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/51
+0/68            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/51
+0/69            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/52
+0/70            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/52
+0/71            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/52
+0/72            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/52
+0/73            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/53
+0/74            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/53
+0/75            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/53
+0/76            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/53
+0/77            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/54
+0/78            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/54
+0/79            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/54
+0/80            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/54
+0/81            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/55
+0/82            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/55
+0/83            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/55
+0/84            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/55
+0/85            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/56
+0/86            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/56
+0/87            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/56
+0/88            Enable  Auto        Detach Enable  Enable  Disable    25GF             0/56
+0/89            Enable  50GF        Detach Enable  Enable  Disable    50GF             0/49
+0/90            Enable  50GF        Detach Enable  Enable  Disable    50GF             0/49
+0/91            Enable  50GF        Detach Enable  Enable  Disable    50GF             0/50
+0/92            Enable  50GF        Detach Enable  Enable  Disable    50GF             0/50
+0/93            Enable  50GF        Detach Enable  Enable  Disable    50GF             0/51
+0/94            Enable  50GF        Detach Enable  Enable  Disable    50GF             0/51
+0/95            Enable  50GF        Detach Enable  Enable  Disable    50GF             0/52
+0/96            Enable  50GF        Detach Enable  Enable  Disable    50GF             0/52
+0/97            Enable  50GF        Detach Enable  Enable  Disable    50GF             0/53
+0/98            Enable  50GF        Detach Enable  Enable  Disable    50GF             0/53
+0/99            Enable  50GF        Detach Enable  Enable  Disable    50GF             0/54
+0/100           Enable  50GF        Detach Enable  Enable  Disable    50GF             0/54
+0/101           Enable  50GF        Detach Enable  Enable  Disable    50GF             0/55
+0/102           Enable  50GF        Detach Enable  Enable  Disable    50GF             0/55
+0/103           Enable  50GF        Detach Enable  Enable  Disable    50GF             0/56
+0/104           Enable  50GF        Detach Enable  Enable  Disable    50GF             0/56
+0/105           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/49
+0/106           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/49
+0/107           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/49
+0/108           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/49
+0/109           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/50
+0/110           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/50
+0/111           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/50
+0/112           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/50
+0/113           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/51
+0/114           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/51
+0/115           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/51
+0/116           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/51
+0/117           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/52
+0/118           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/52
+0/119           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/52
+0/120           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/52
+0/121           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/53
+0/122           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/53
+0/123           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/53
+0/124           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/53
+0/125           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/54
+0/126           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/54
+0/127           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/54
+0/128           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/54
+0/129           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/55
+0/130           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/55
+0/131           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/55
+0/132           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/55
+0/133           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/56
+0/134           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/56
+0/135           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/56
+0/136           Enable  10GF        Detach Enable  Enable  Disable    10GF             0/56
+ch1             Enable              Up     Disable  -      Disable
+ch2             NA                  Up     Disable  -      Disable
+ch3             NA                  Up     Disable  -      Disable
+ch4             NA                  Down   Disable  -      Disable
+ch5             NA                  Up     Disable  -      Disable
+ch6             NA                  Up     Disable  -      Disable
+ch7             NA                  Up     Disable  -      Disable
+ch8             Enable              Down   Disable  -      Disable
+ch9             NA                  Up     Disable  -      Disable
+ch10            Enable              Up     Disable  -      Disable
+ch11            Enable              Up     Disable  -      Disable
+ch12            Enable              Up     Disable  -      Disable
+ch13            Enable              Down   Disable  -      Disable
+ch14            Enable              Down   Disable  -      Disable
+ch15            Enable              Down   Disable  -      Disable
+ch16            Enable              Down   Disable  -      Disable
+ch17            Enable              Down   Disable  -      Disable
+ch18            Enable              Down   Disable  -      Disable
+ch19            Enable              Down   Disable  -      Disable
+ch20            Enable              Down   Disable  -      Disable
+ch21            Enable              Down   Disable  -      Disable
+ch22            Enable              Down   Disable  -      Disable
+ch23            Enable              Down   Disable  -      Disable
+ch24            Enable              Down   Disable  -      Disable
+ch25            Enable              Down   Disable  -      Disable
+ch26            Enable              Down   Disable  -      Disable
+ch27            Enable              Down   Disable  -      Disable
+ch28            Enable              Down   Disable  -      Disable
+ch29            Enable              Down   Disable  -      Disable
+ch30            Enable              Down   Disable  -      Disable
+ch31            Enable              Down   Disable  -      Disable
+ch32            Enable              Down   Disable  -      Disable
+ch33            Enable              Down   Disable  -      Disable
+ch34            Enable              Down   Disable  -      Disable
+ch35            Enable              Down   Disable  -      Disable
+ch36            Enable              Down   Disable  -      Disable
+ch37            Enable              Down   Disable  -      Disable
+ch38            Enable              Down   Disable  -      Disable
+ch39            Enable              Down   Disable  -      Disable
+ch40            Enable              Down   Disable  -      Disable
+ch41            Enable              Down   Disable  -      Disable
+ch42            Enable              Down   Disable  -      Disable
+ch43            Enable              Down   Disable  -      Disable
+ch44            Enable              Down   Disable  -      Disable
+ch45            Enable              Down   Disable  -      Disable
+ch46            Enable              Down   Disable  -      Disable
+ch47            Enable              Down   Disable  -      Disable
+ch48            Enable              Down   Disable  -      Disable
+ch49            Enable              Down   Disable  -      Disable
+ch50            Enable              Down   Disable  -      Disable
+ch51            Enable              Down   Disable  -      Disable
+ch52            Enable              Down   Disable  -      Disable
+ch53            Enable              Down   Disable  -      Disable
+ch54            Enable              Down   Disable  -      Disable
+ch55            Enable              Down   Disable  -      Disable
+ch56            Enable              Down   Disable  -      Disable
+ch57            Enable              Down   Disable  -      Disable
+ch58            Enable              Down   Disable  -      Disable
+ch59            Enable              Down   Disable  -      Disable
+ch60            Enable              Down   Disable  -      Disable
+ch61            Enable              Down   Disable  -      Disable
+ch62            Enable              Down   Disable  -      Disable
+ch63            Enable              Down   Disable  -      Disable
+ch64            Enable              Down   Disable  -      Disable
+vlan 1          Enable              Up     Enable   -      Disable
+vlan 60         Enable              Up     Enable   -      Disable
+vlan 50         Enable              Up     Enable   -      Disable
+vlan 101        Enable              Up     Enable   -      Disable
+
+(test-switch-04) #

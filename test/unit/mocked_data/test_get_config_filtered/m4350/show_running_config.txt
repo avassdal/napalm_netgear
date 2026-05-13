@@ -1,0 +1,943 @@
+show running-config
+
+!Current Configuration:
+!
+!System Description "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15"
+!System Software Version "14.0.6.13"
+!System Up Time          "87 days 14 hrs 38 mins 3 secs"
+!Additional Packages     QOS,Multicast,IPv6,IPv6 Management,Stacking,Routing
+!Current System Time: Feb  6 11:14:47 2026
+!
+serviceport protocol none
+vlan database
+vlan 11,50,60,91,101-102
+vlan name 11 "CEPH Data"
+vlan name 50 "AV"
+vlan name 60 "IPMX"
+vlan name 91 "Guest"
+vlan name 101 "Pharos"
+vlan name 102 "sACN"
+no set igmp-plus 1
+set igmp-plus 50
+set igmp querier 50 address 10.10.50.11
+set igmp-plus 60
+set igmp querier 60 address 10.10.60.11
+set igmp-plus 101
+no set igmp querier election participate 101
+set igmp-plus 102
+no set mld-plus 1
+set mld-plus 50
+set mld querier 50
+set mld-plus 60
+set mld querier 60
+set mld querier election participate 60
+set mld-plus 101
+set mld querier 101
+set mld-plus 102
+vlan routing 1 1
+vlan routing 60 2
+vlan routing 50 3
+exit
+
+ip http port 49151
+configure
+clock summer-time recurring EU offset 60
+clock timezone 1 minutes 0 zone "ZZZZ"
+stack
+member 1 7
+exit
+logging buffered 7
+username "admin" password $6$EgHafH0QJnh.0LUw$yk2G7w6WfbPDiHiUJM4JdBo8dtzGlxAJlKaYB8PNSRA9gzH6giHrbVraGEdkQz0SnyfL3iSce1qRlFFMLgC.c/ encryption-type sha512 level 15 encrypted
+username "qsys" password $6$qtx8d2ziYOCCj.34$3G5fz7MqIytMjNZh.yFBZ059VML/YWMprMrKH27Xfueptn4ijS7spg8cEjFHkRCRZUio5YolRghV9cSEcx5Z7. encryption-type sha512 level 15 encrypted
+sflow receiver 1 owner "NetMonitor" notimeout
+sflow receiver 1 ip 192.0.2.56
+sflow receiver 1 port 6344
+
+
+line console
+exit
+
+line telnet
+exit
+
+line ssh
+exit
+
+ntp broadcast client
+
+snmp-server sysname "test-switch-02"
+!
+snmp-server user "admin" DefaultWrite auth-sha512-key da379d6170f2002ed73b062eb0f7fd7fd4d7f34c54190ec142c66964dda0b4bb54949ac2cc7f19f7bdc9f32a50c26f64e90f94f4d22a2d532d287f5c6fc6e546
+snmp-server community "FtbSvZsQ26J3qX" rw
+ip access-list NET-BLOCK
+exit
+
+ip access-list inter-VLAN0091
+deny ip any 192.0.2.0 0.0.0.255
+deny ip any 10.10.50.0 0.0.0.255
+deny ip any 10.10.60.0 0.0.0.255
+permit ip any any
+exit
+
+ip access-group inter-VLAN0091 vlan 91 in 1
+class-map match-all CLASS_PTP1
+match dstip 224.0.1.129 255.255.255.255
+exit
+
+class-map match-all CLASS_PTP2
+match dstip 224.0.1.130 255.255.255.254
+exit
+
+class-map match-all CLASS_PTP3
+match dstip 224.0.1.132 255.255.255.255
+exit
+
+class-map match-all CLASS_AUDIO1
+!match ip dscp 46(ef)
+match ip dscp 46
+exit
+
+class-map match-all CLASS_AUDIO2
+!match ip dscp 34(af41)
+match ip dscp 34
+exit
+
+class-map match-all CLASS_VIDEO
+!match ip dscp 26(af31)
+match ip dscp 26
+exit
+
+class-map match-all CLASS_ENGAGE1
+match srcl4port 4443
+exit
+
+class-map match-all CLASS_ENGAGE2
+match dstl4port 4443
+exit
+
+policy-map POLICY_AV in
+class CLASS_PTP1
+assign-queue 6
+exit
+
+class CLASS_PTP2
+assign-queue 6
+exit
+
+class CLASS_PTP3
+assign-queue 6
+exit
+
+class CLASS_AUDIO1
+assign-queue 5
+exit
+
+class CLASS_AUDIO2
+assign-queue 5
+exit
+
+class CLASS_VIDEO
+assign-queue 4
+exit
+
+class CLASS_ENGAGE1
+assign-queue 3
+exit
+
+class CLASS_ENGAGE2
+assign-queue 3
+exit
+
+exit
+
+set mld querier
+classofservice dot1p-mapping 2 2
+classofservice dot1p-mapping 3 3
+classofservice dot1p-mapping 4 4
+classofservice dot1p-mapping 5 5
+classofservice dot1p-mapping 6 6
+classofservice dot1p-mapping 7 6
+classofservice trust dot1p
+cos-queue strict 3 4 5 6
+
+interface 1/0/1
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1
+vlan participation include 50
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/2
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1
+vlan participation include 50
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/3
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1
+vlan participation include 50
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/4
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1
+vlan participation include 50
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/5
+service-policy in POLICY_AV
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+exit
+
+
+
+interface 1/0/6
+service-policy in POLICY_AV
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+exit
+
+
+
+interface 1/0/7
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1
+vlan participation include 50
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/8
+service-policy in POLICY_AV
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+exit
+
+
+
+interface 1/0/9
+service-policy in POLICY_AV
+shutdown
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+exit
+
+
+
+interface 1/0/10
+service-policy in POLICY_AV
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+exit
+
+
+
+interface 1/0/11
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1
+vlan participation include 50
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/12
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1
+vlan participation include 50
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/13
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1
+vlan participation include 50
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/14
+service-policy in POLICY_AV
+vlan pvid 60
+vlan participation exclude 1,50
+vlan participation include 60
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/15
+service-policy in POLICY_AV
+mtu 1500
+vlan participation include 50
+vlan tagging 50
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/16
+service-policy in POLICY_AV
+vlan pvid 60
+vlan participation exclude 1,50
+vlan participation include 60
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/17
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1
+vlan participation include 50
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/18
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1
+vlan participation include 50
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/19
+no storm-control broadcast
+service-policy in POLICY_AV
+vlan pvid 101
+vlan participation exclude 1,60
+vlan participation include 101
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+exit
+
+
+
+interface 1/0/20
+service-policy in POLICY_AV
+vlan pvid 60
+vlan participation exclude 1
+vlan participation include 60
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/21
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1,60
+vlan participation include 50
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/22
+service-policy in POLICY_AV
+vlan pvid 60
+vlan participation exclude 1
+vlan participation include 60
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/23
+no storm-control broadcast
+service-policy in POLICY_AV
+vlan pvid 101
+vlan participation exclude 1,60
+vlan participation include 101
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+exit
+
+
+
+interface 1/0/24
+no storm-control broadcast
+service-policy in POLICY_AV
+vlan pvid 60
+vlan participation exclude 1
+vlan participation include 60
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/25
+no storm-control broadcast
+service-policy in POLICY_AV
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/26
+no storm-control broadcast
+service-policy in POLICY_AV
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/27
+no storm-control broadcast
+service-policy in POLICY_AV
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface 1/0/28
+no storm-control broadcast
+service-policy in POLICY_AV
+sflow sampler 1
+sflow sampler maxheadersize 138
+sflow sampler rate 8192
+ptp clock e2e-transparent
+exit
+
+
+
+interface lag 1
+service-policy in POLICY_AV
+ptp clock e2e-transparent
+exit
+
+
+
+interface lag 2
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 3
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 4
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 5
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 6
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 7
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 8
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 9
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 10
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 11
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 12
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 13
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 14
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 15
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 16
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 17
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 18
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 19
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 20
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 21
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 22
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 23
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 24
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 25
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 26
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 27
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 28
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 29
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 30
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 31
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 32
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 33
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 34
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 35
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 36
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 37
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 38
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 39
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 40
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 41
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 42
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 43
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 44
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 45
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 46
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 47
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 48
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 49
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 50
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 51
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 52
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 53
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 54
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 55
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 56
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 57
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 58
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 59
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 60
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 61
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 62
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 63
+service-policy in POLICY_AV
+exit
+
+
+
+interface lag 64
+service-policy in POLICY_AV
+exit
+
+
+
+interface vlan 1
+routing
+ip address 192.0.2.11 255.255.255.0
+exit
+
+
+
+interface vlan 60
+routing
+ip address 10.10.60.11 255.255.255.0
+exit
+
+
+
+interface vlan 50
+routing
+ip address 10.10.50.11 255.255.255.0
+exit
+
+
+ip management vlan 1 192.0.2.11 255.255.255.0
+service dhcp
+ip dhcp excluded-address 10.10.60.1 10.10.60.99
+ip dhcp excluded-address 10.10.60.201 10.10.60.254
+ip dhcp pool "pool_dynamic_60"
+lease 0 4 0
+dns-server 1.1.1.1
+default-router 10.10.60.1
+network 10.10.60.0 255.255.255.0
+netbios-node-type b-node
+exit
+
+router rip
+exit
+router ospf
+exit
+ipv6 router ospf
+exit
+ip default-gateway 192.0.2.1
+
+ptp clock e2e-transparent
+exit
+
+ip http secure-port 49152
+ip ssh server enable
+
+(M4350-24X4V)#

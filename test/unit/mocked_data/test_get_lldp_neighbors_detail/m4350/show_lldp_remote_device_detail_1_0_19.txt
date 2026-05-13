@@ -1,0 +1,35 @@
+show lldp remote-device detail 1/0/19
+
+LLDP Remote Device Detail
+
+Local Interface: 1/0/19
+
+
+Remote Identifier: 12
+Chassis ID Subtype: MAC Address
+Chassis ID: 00:21:6D:50:03:83
+Port ID Subtype: Local
+Port ID: Gig0/1
+System Name: test-server-01
+System Description: Soltech(tm) SFC4000T Software, Version 2.2.0D
+Serial: E20006013097, Soltech2019
+Compiled: 2023-6-12 15:26:56 by SYS
+Port Description: GigaEthernet0/1
+System Capabilities Supported: bridge, router
+System Capabilities Enabled: bridge, router
+Management Address:
+    Type: IPv4
+    Address: 203.0.113.1
+Time to Live: 115 seconds
+Port VLAN: 1
+VLANs:
+VLAN ID VLAN Name
+------- --------------------------------
+1       Default
+Maximum Frame Size: 1500
+Link Aggregation Information:
+  Aggregation Capable: Yes
+  Aggregation Status: No
+  Aggregation ID: 0
+
+(M4350-24X4V)#

@@ -1,0 +1,20 @@
+{
+    "0/10": [
+        {
+            "parent_interface": "0/10",
+            "remote_chassis_id": "54:07:7D:0D:2F:D0",
+            "remote_port": "1/0/2",
+            "remote_port_description": "1/0/2",
+            "remote_system_name": "test-switch-06",
+            "remote_system_description": "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ]
+}

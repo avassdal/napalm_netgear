@@ -1,0 +1,26 @@
+{
+    "vlan1": {
+        "ipv4": {
+            "192.0.2.17": {
+                "prefix_length": 24
+            }
+        },
+        "ipv6": {
+            "fe80::e246:eeff:fe20:6fd8": {
+                "prefix_length": 64
+            }
+        }
+    },
+    "vlan50": {
+        "ipv4": {
+            "10.10.50.17": {
+                "prefix_length": 24
+            }
+        },
+        "ipv6": {
+            "fe80::e246:eeff:fe20:6fd8": {
+                "prefix_length": 64
+            }
+        }
+    }
+}

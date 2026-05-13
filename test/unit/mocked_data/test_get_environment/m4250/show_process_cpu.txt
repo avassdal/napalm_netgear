@@ -1,0 +1,71 @@
+show process cpu
+
+Memory and Process CPU Utilization Info of Unit:1
+
+Memory Utilization Report
+status     KBytes
+------ ----------
+free      1335776
+alloc      713448
+CPU Utilization:
+
+PID        Name                  5 Secs  60 Secs 300 Secs
+---------- ------------------- -------- -------- --------
+5          (kworker/u2:0-flush   0.19%    0.02%    0.00%
+8          (ksoftirqd/0)         0.19%    0.09%    0.07%
+504        (kworker/0:2-cgroup   0.19%    0.04%    0.02%
+915        (procmgr)             0.19%    0.23%    0.23%
+954        (syncdb)              0.00%    0.08%    0.12%
+972        hwMonTask             0.19%    0.04%    0.03%
+981        osapiTimer            0.38%    0.27%    0.27%
+985        bcmINTR               0.77%    0.78%    0.72%
+986        socdmadesc.0          0.00%    0.09%    0.08%
+987        bcmMEM_SCAN.0         0.00%    0.02%    0.01%
+990        bcmCNTR.0             0.38%    0.47%    0.48%
+993        bcmLINK.0             0.19%    0.23%    0.23%
+994        bcmRX                 0.96%    0.93%    0.88%
+995        cpuUtilMonitorTask    0.19%    0.34%    0.33%
+1000       tL7Timer0             0.00%    0.01%    0.01%
+1006       tap_monitor_task      0.38%    0.22%    0.10%
+1010       simPts_task           0.00%    0.03%    0.03%
+1016       pingAsync             0.00%    0.00%    0.02%
+1017       traceRouteAsync       0.00%    0.02%    0.01%
+1025       emWeb                 0.38%    0.33%    0.09%
+1032       hapiRxTask            1.34%    1.10%    1.03%
+1055       DHCPV6_snoop          0.00%    0.00%    0.01%
+1056       Dynamic_ARP_Inspect   0.00%    0.01%    0.00%
+1066       dot1s_timer_task      0.00%    0.04%    0.05%
+1075       snoopTask             0.00%    0.18%    0.20%
+1083       dhcpsPingTask         0.19%    0.05%    0.03%
+1089       tRpcsrv.01001         0.19%    0.44%    0.48%
+1100       ipMapForwardingTask   1.54%    1.22%    1.13%
+1102       pbrProcessingTask     0.00%    0.00%    0.01%
+1107       IPSLAtask             0.00%    0.01%    0.01%
+1116       openrTask             1.34%    1.46%    1.44%
+1133       lldpTask              0.00%    0.00%    0.01%
+1136       dnsRxTask             0.00%    0.01%    0.00%
+1137       tCptvPrtl             0.00%    0.01%    0.01%
+1141       isdpTask              0.00%    0.01%    0.01%
+1144       RMONTask              0.00%    0.07%    0.08%
+1147       boxs_Req              0.00%    0.07%    0.06%
+1156       msrpTask              0.00%    0.10%    0.10%
+1157       dot1as_ctrl_task      0.19%    0.20%    0.19%
+1158       dot1as_timer_task     0.00%    0.11%    0.11%
+1162       StatsAppTask          0.19%    0.12%    0.11%
+1163       openConfigSyncTask    0.00%    0.01%    0.01%
+1177       bonjourTask           0.19%    0.15%    0.15%
+1209       poe_monitor           1.54%    1.59%    1.58%
+1248       (opensshd)            0.00%    0.01%    0.00%
+1255       (netsnmp_app)         0.00%    0.02%    0.01%
+1272       (lighttpd)            0.00%    0.82%    0.81%
+1289       (detection)           0.00%    0.01%    0.01%
+1290       (automatic)           0.00%    0.02%    0.03%
+1374       (appssdp)             0.00%    0.04%    0.03%
+18945      (ntpd)                0.00%    0.00%    0.01%
+21967      (sshd-session)        0.00%    0.14%    0.04%
+21969      (sshd-session)        0.38%    0.23%    0.05%
+------------------------------ -------- -------- --------
+Total CPU Utilization           11.74%   12.74%   11.85%
+
+
+(M4250-8G2XF-PoE+)#

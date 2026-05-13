@@ -1,0 +1,9 @@
+show fiber-ports optics all
+
+                                                 Output   Input
+Port    Physical Port/  Temp  Voltage  Current   Power    Power     TX     LOS  Fault
+        Lane Number     [C]   [Volt]     [mA]    [dBm]    [dBm]     Fault       Status
+------  --------------  ----  -------  -------   -------  -------   -----  ---  -------------
+0/1     0/1-Lane1       28.5    3.271     37.0     0.100   -1.500   No     No   No Fault
+0/2     0/2-Lane1       29.0    3.270     38.0     0.200   -2.000   No     No   No Fault
+

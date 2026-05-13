@@ -1,0 +1,25 @@
+show lldp remote-device detail 0/41
+
+LLDP Remote Device Detail
+
+Local Interface: 0/41
+
+
+Remote Identifier: 385
+Chassis ID Subtype: MAC Address
+Chassis ID: 00:20:FC:3A:5C:35
+Port ID Subtype: MAC Address
+Port ID: 00:20:FC:3A:5C:36
+System Name:
+System Description:
+Port Description:
+System Capabilities Supported:
+System Capabilities Enabled:
+Management Address:
+    Type: IPv4
+    Address: 203.0.113.142
+Time to Live: 94 seconds
+
+
+
+(test-switch-04) #

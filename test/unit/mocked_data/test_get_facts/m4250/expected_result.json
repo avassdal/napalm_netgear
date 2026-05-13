@@ -1,0 +1,21 @@
+{
+    "uptime": 7571315.0,
+    "vendor": "Netgear",
+    "model": "M4250-8G2XF-PoE+",
+    "hostname": "test-switch-03",
+    "fqdn": "test-switch-03",
+    "os_version": "13.0.5.20",
+    "serial_number": "6YX3315GA00A9",
+    "interface_list": [
+        "0/1",
+        "0/2",
+        "0/3",
+        "0/4",
+        "0/5",
+        "0/6",
+        "0/7",
+        "0/8",
+        "0/9",
+        "0/10"
+    ]
+}

@@ -1,0 +1,10 @@
+show lldp remote-device detail 1/0/4
+
+LLDP Remote Device Detail
+
+Local Interface: 1/0/4
+
+
+No LLDP data has been received on this interface.
+
+(M4350-24X4V)#

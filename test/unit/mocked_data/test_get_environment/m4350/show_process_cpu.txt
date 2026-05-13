@@ -1,0 +1,54 @@
+show process cpu
+
+Memory and Process CPU Utilization Info of Unit:1
+
+Memory Utilization Report
+status     KBytes
+------ ----------
+free       418100
+alloc     1571728
+CPU Utilization:
+
+PID        Name                  5 Secs  60 Secs 300 Secs
+---------- ------------------- -------- -------- --------
+8          (rcu_sched)           0.04%    0.01%    0.00%
+488        (procmgr)             0.00%    0.01%    0.01%
+527        (syncdb)              0.00%    0.00%    0.01%
+543        hwMonTask             0.04%    0.08%    0.09%
+553        osapiTimer            0.00%    0.01%    0.02%
+558        socdmadesc.0          0.04%    0.03%    0.03%
+559        SOC_KNET_RX           0.00%    0.04%    0.04%
+561        bcmL2X.0              0.24%    0.28%    0.29%
+562        bcmCNTR.0             0.24%    0.25%    0.26%
+565        sphyMonTask           1.77%    1.86%    1.86%
+566        bcmLINK.0             0.54%    0.52%    0.52%
+570        bcmRX                 0.04%    0.05%    0.05%
+580        MAC_Send_Task         0.04%    0.01%    0.00%
+585        cpuUtilMonitorTask    0.00%    0.02%    0.02%
+605        simPts_task           0.00%    0.01%    0.01%
+621        emWeb                 0.00%    0.09%    0.02%
+628        hapiRxTask            0.04%    0.05%    0.05%
+662        dot1s_timer_task      0.00%    0.01%    0.01%
+669        radius_rx_task        0.04%    0.00%    0.00%
+677        snoopTask             0.04%    0.02%    0.02%
+687        dhcpsPingTask         0.04%    0.00%    0.00%
+693        tRpcsrv.01001         0.00%    0.17%    0.28%
+711        ipMapForwardingTask   0.04%    0.06%    0.06%
+713        pbrProcessingTask     0.04%    0.00%    0.00%
+722        openrTask             0.09%    0.10%    0.10%
+753        lldpTask              0.00%    0.01%    0.01%
+766        RMONTask              0.24%    0.06%    0.05%
+768        boxs_Req              0.14%    0.09%    0.09%
+779        msrpTask              0.00%    0.01%    0.01%
+780        dot1as_ctrl_task      0.00%    0.02%    0.03%
+786        StatsAppTask          0.00%    0.03%    0.03%
+802        bonjourTask           0.00%    0.00%    0.01%
+842        poe_monitor           1.53%    1.44%    1.44%
+911        (lighttpd)            0.14%    0.05%    0.05%
+14879      (sshd-session)        0.00%    0.01%    0.00%
+14881      (sshd-session)        0.04%    0.00%    0.00%
+------------------------------ -------- -------- --------
+Total CPU Utilization            5.58%    5.67%    5.70%
+
+
+(M4350-24X4V)#

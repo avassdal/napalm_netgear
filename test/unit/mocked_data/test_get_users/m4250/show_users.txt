@@ -1,0 +1,7 @@
+show users
+
+                             User
+User Name                 Access Mode
+------------------------  -----------
+admin                     Privilege-15
+guest                     Privilege-1

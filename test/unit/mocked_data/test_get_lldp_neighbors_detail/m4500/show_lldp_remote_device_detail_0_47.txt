@@ -1,0 +1,37 @@
+show lldp remote-device detail 0/47
+
+LLDP Remote Device Detail
+
+Local Interface: 0/47
+
+
+Remote Identifier: 16
+Chassis ID Subtype: MAC Address
+Chassis ID: 0C:C4:7A:73:69:CE
+Port ID Subtype: MAC Address
+Port ID: 0C:C4:7A:73:69:CE
+System Name: test-router-01
+System Description: test-router-01 23.05.2 @ test-router-01
+Port Description: eth0
+System Capabilities Supported: bridge, WLAN access point, router, station only
+System Capabilities Enabled: bridge, router
+Management Address:
+    Type: IPv4
+    Address: 192.0.2.1
+Time to Live: 97 seconds
+
+Link Aggregation: 
+    Aggregation Status: Supported, Disabled
+    Aggregation Port Id: 0
+MAC/PHY Configuration/Status: 
+    Auto-Negotiation: Supported, Enabled
+    PMD Auto-Negotiation Advertised Capabilities:
+        10Base-T Full Duplex
+        10Base-T Half Duplex
+        100Base-T Full Duplex
+        100Base-T Half Duplex
+        1000Base-T Full Duplex
+    Operational MAU Type: 1000Base-T Full Duplex
+
+
+(test-switch-04) #

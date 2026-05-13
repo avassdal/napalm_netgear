@@ -1,0 +1,62 @@
+{
+    "1/0/5": [
+        {
+            "hostname": "test-server-02     0",
+            "port": "9C:6B:00:1C:E2:C5"
+        }
+    ],
+    "1/0/6": [
+        {
+            "hostname": "test-server-02",
+            "port": "9C:6B:00:1C:E4:E8"
+        }
+    ],
+    "1/0/8": [
+        {
+            "hostname": "test-server-03     0",
+            "port": "9C:6B:00:1C:E8:3A"
+        }
+    ],
+    "1/0/11": [
+        {
+            "hostname": "00:20:FC:3A:5C:35",
+            "port": "00:20:FC:3A:5C:35"
+        }
+    ],
+    "1/0/19": [
+        {
+            "hostname": "test-server-01     0",
+            "port": "Gig0/1"
+        }
+    ],
+    "1/0/24": [
+        {
+            "hostname": "test-switch-02",
+            "port": "1/0/24"
+        }
+    ],
+    "1/0/25": [
+        {
+            "hostname": "54:07:7D:EA:AA:01",
+            "port": "0/7"
+        }
+    ],
+    "1/0/26": [
+        {
+            "hostname": "54:07:7D:EA:AA:01",
+            "port": "0/7"
+        }
+    ],
+    "1/0/27": [
+        {
+            "hostname": "54:07:7D:EA:AA:01",
+            "port": "0/8"
+        }
+    ],
+    "1/0/28": [
+        {
+            "hostname": "54:07:7D:EA:AA:01",
+            "port": "0/8"
+        }
+    ]
+}

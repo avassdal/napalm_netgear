@@ -1,0 +1,84 @@
+{
+    "fans": {
+        "fan-1": {
+            "status": true
+        },
+        "fan-2": {
+            "status": true
+        },
+        "fan-3": {
+            "status": true
+        },
+        "fan-4": {
+            "status": true
+        }
+    },
+    "temperature": {
+        "system-1": {
+            "temperature": 29.0,
+            "is_alert": false,
+            "is_critical": false
+        },
+        "system-2": {
+            "temperature": 35.0,
+            "is_alert": false,
+            "is_critical": false
+        },
+        "system-3": {
+            "temperature": 24.0,
+            "is_alert": false,
+            "is_critical": false
+        },
+        "cpu-1": {
+            "temperature": 49.0,
+            "is_alert": false,
+            "is_critical": false
+        },
+        "cpu-2": {
+            "temperature": 50.0,
+            "is_alert": false,
+            "is_critical": false
+        },
+        "mac-1": {
+            "temperature": 38.0,
+            "is_alert": false,
+            "is_critical": false
+        },
+        "mac-2": {
+            "temperature": 37.0,
+            "is_alert": false,
+            "is_critical": false
+        },
+        "phy-1": {
+            "temperature": 34.0,
+            "is_alert": false,
+            "is_critical": false
+        },
+        "phy-2": {
+            "temperature": 35.0,
+            "is_alert": false,
+            "is_critical": false
+        }
+    },
+    "power": {
+        "PSU1": {
+            "status": true,
+            "capacity": -1.0,
+            "output": -1.0
+        },
+        "PSU2": {
+            "status": true,
+            "capacity": -1.0,
+            "output": -1.0
+        }
+    },
+    "cpu": {
+        "0": {
+            "%usage": 5.58
+        }
+    },
+    "memory": {
+        "available_ram": 2037583872,
+        "used_ram": 1609449472
+    }
+}

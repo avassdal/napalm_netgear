@@ -1,0 +1,50 @@
+{
+    "vlan1": {
+        "ipv4": {
+            "192.0.2.2": {
+                "prefix_length": 24
+            }
+        },
+        "ipv6": {
+            "fe80::5607:7dff:fe0c:39dd": {
+                "prefix_length": 64
+            }
+        }
+    },
+    "vlan60": {
+        "ipv4": {
+            "10.10.60.2": {
+                "prefix_length": 24
+            }
+        },
+        "ipv6": {
+            "fe80::5607:7dff:fe0c:39dd": {
+                "prefix_length": 64
+            }
+        }
+    },
+    "vlan50": {
+        "ipv4": {
+            "10.10.50.2": {
+                "prefix_length": 24
+            }
+        },
+        "ipv6": {
+            "fe80::5607:7dff:fe0c:39dd": {
+                "prefix_length": 64
+            }
+        }
+    },
+    "vlan101": {
+        "ipv4": {
+            "10.101.0.2": {
+                "prefix_length": 16
+            }
+        },
+        "ipv6": {
+            "fe80::5607:7dff:fe0c:39dd": {
+                "prefix_length": 64
+            }
+        }
+    }
+}

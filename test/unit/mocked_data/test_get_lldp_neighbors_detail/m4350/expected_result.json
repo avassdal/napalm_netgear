@@ -1,0 +1,155 @@
+{
+    "1/0/8": [
+        {
+            "parent_interface": "1/0/8",
+            "remote_chassis_id": "9C:6B:00:1C:E8:3A",
+            "remote_port": "9C:6B:00:1C:E8:3A",
+            "remote_port_description": "eth0",
+            "remote_system_name": "test-server-03",
+            "remote_system_description": "Linux 5.4.210-ami #1 SMP Mon May 6 03:32:52 UTC 2024 armv7l",
+            "remote_system_capab": [
+                "bridge",
+                "WLAN access point",
+                "router",
+                "station only"
+            ],
+            "remote_system_enable_capab": [
+                "station only"
+            ]
+        }
+    ],
+    "1/0/6": [
+        {
+            "parent_interface": "1/0/6",
+            "remote_chassis_id": "9C:6B:00:1C:E4:E8",
+            "remote_port": "9C:6B:00:1C:E4:E8",
+            "remote_port_description": "eth0",
+            "remote_system_name": "test-server-02",
+            "remote_system_description": "Linux 5.4.210-ami #1 SMP Mon May 6 03:32:52 UTC 2024 armv7l",
+            "remote_system_capab": [
+                "bridge",
+                "WLAN access point",
+                "router",
+                "station only"
+            ],
+            "remote_system_enable_capab": [
+                "station only"
+            ]
+        }
+    ],
+    "1/0/24": [
+        {
+            "parent_interface": "1/0/24",
+            "remote_chassis_id": "54:07:7D:0D:2E:94",
+            "remote_port": "1/0/24",
+            "remote_port_description": "1/0/24",
+            "remote_system_name": "test-switch-02",
+            "remote_system_description": "NETGEAR M4350-24X4V 24x10G Copper 4x25G SFP28 Managed Switch, 14.0.6.13, 1.0.0.15",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "1/0/26": [
+        {
+            "parent_interface": "1/0/26",
+            "remote_chassis_id": "54:07:7D:EA:AA:01",
+            "remote_port": "0/7",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "1/0/27": [
+        {
+            "parent_interface": "1/0/27",
+            "remote_chassis_id": "54:07:7D:EA:AA:01",
+            "remote_port": "0/8",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "1/0/25": [
+        {
+            "parent_interface": "1/0/25",
+            "remote_chassis_id": "54:07:7D:EA:AA:01",
+            "remote_port": "0/7",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "1/0/5": [
+        {
+            "parent_interface": "1/0/5",
+            "remote_chassis_id": "9C:6B:00:1C:E2:C5",
+            "remote_port": "9C:6B:00:1C:E2:C5",
+            "remote_port_description": "eth0",
+            "remote_system_name": "test-server-02",
+            "remote_system_description": "Linux 5.4.210-ami #1 SMP Mon May 6 03:32:52 UTC 2024 armv7l",
+            "remote_system_capab": [
+                "bridge",
+                "WLAN access point",
+                "router",
+                "station only"
+            ],
+            "remote_system_enable_capab": [
+                "station only"
+            ]
+        }
+    ],
+    "1/0/19": [
+        {
+            "parent_interface": "1/0/19",
+            "remote_chassis_id": "00:21:6D:50:03:83",
+            "remote_port": "Gig0/1",
+            "remote_port_description": "GigaEthernet0/1",
+            "remote_system_name": "test-server-01",
+            "remote_system_description": "Soltech(tm) SFC4000T Software, Version 2.2.0D",
+            "remote_system_capab": [
+                "bridge",
+                "router"
+            ],
+            "remote_system_enable_capab": [
+                "bridge",
+                "router"
+            ]
+        }
+    ],
+    "1/0/28": [
+        {
+            "parent_interface": "1/0/28",
+            "remote_chassis_id": "54:07:7D:EA:AA:01",
+            "remote_port": "0/8",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ],
+    "1/0/11": [
+        {
+            "parent_interface": "1/0/11",
+            "remote_chassis_id": "00:20:FC:3A:5C:35",
+            "remote_port": "00:20:FC:3A:5C:35",
+            "remote_port_description": "",
+            "remote_system_name": "",
+            "remote_system_description": "",
+            "remote_system_capab": [],
+            "remote_system_enable_capab": []
+        }
+    ]
+}

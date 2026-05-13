@@ -1,0 +1,64 @@
+show fiber-ports optics all
+
+                                                 Output   Input
+Port    Physical Port/  Temp  Voltage  Current   Power    Power     TX     LOS  Fault
+        Lane Number     [C]   [Volt]     [mA]    [dBm]    [dBm]     Fault       Status
+------  --------------  ----  -------  -------   -------  -------   -----  ---  -------------
+0/1     0/1-Lane1       29.5    3.273     38.4     0.109   -0.838   No     No   No Fault
+0/2     0/2-Lane1       34.1    3.273     44.2     0.141   -2.021   No     No   No Fault
+0/3     0/3-Lane1       30.4    3.267     37.5     0.338  -40.000   No     Yes  Local Fault
+0/4     0/4-Lane1       30.5    3.280     38.8     0.106  -40.000   No     Yes  Local Fault
+0/5     0/5-Lane1       32.6    3.281     39.1     0.069   -2.118   No     No   No Fault
+0/6     0/6-Lane1       33.6    3.281     45.2    -0.178   -0.831   No     No   No Fault
+0/7     0/7-Lane1        N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+0/8     0/8-Lane1        N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+0/9     0/9-Lane1        N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+0/10    0/10-Lane1      31.3    3.271     36.0    -1.261   -2.527   No     No   No Fault
+0/13    0/13-Lane1      28.0    3.290     37.5    -0.028    0.158   No     No   No Fault
+0/14    0/14-Lane1      28.8    3.283     37.5     0.256   -2.120   No     No   No Fault
+0/15    0/15-Lane1      26.1    3.281     37.4     0.429   -0.359   No     No   No Fault
+0/16    0/16-Lane1      28.7    3.290     37.5     0.568   -0.562   No     No   No Fault
+0/19    0/19-Lane1      24.5    3.288     37.5     0.097  -40.000   No     Yes  Local Fault
+0/20    0/20-Lane1      25.8    3.285     37.5     0.171  -40.000   No     Yes  Local Fault
+0/21    0/21-Lane1      23.7    3.295     37.5     0.298  -40.000   No     Yes  Local Fault
+0/22    0/22-Lane1      28.1    3.285     44.9     0.107  -40.000   No     Yes  Local Fault
+0/33    0/33-Lane1       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+0/34    0/34-Lane1       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+0/35    0/35-Lane1       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+0/41    0/41-Lane1       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+0/42    0/42-Lane1       N/A      N/A      N/A       N/A      N/A   N/A    N/A  Local Fault
+0/43    0/43-Lane1      21.9    3.285     37.2     0.268  -40.000   No     Yes  Local Fault
+0/47    0/47-Lane1       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+0/48    0/48-Lane1       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+0/49    0/49-Lane1       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/49-Lane2       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/49-Lane3       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/49-Lane4       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+0/50    0/50-Lane1       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/50-Lane2       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/50-Lane3       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/50-Lane4       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+0/51    0/51-Lane1       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/51-Lane2       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/51-Lane3       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/51-Lane4       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+0/52    0/52-Lane1       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+        0/52-Lane2       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+        0/52-Lane3       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+        0/52-Lane4       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+0/53    0/53-Lane1       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/53-Lane2       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/53-Lane3       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/53-Lane4       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+0/54    0/54-Lane1       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+        0/54-Lane2       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+        0/54-Lane3       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+        0/54-Lane4       N/A      N/A      N/A       N/A      N/A   N/A    N/A  No Fault
+0/55    0/55-Lane1       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/55-Lane2       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/55-Lane3       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/55-Lane4       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+0/56    0/56-Lane1       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/56-Lane2       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/56-Lane3       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault
+        0/56-Lane4       0.0    0.000      0.0   -40.000  -40.000   No     No   No Fault

@@ -1,0 +1,60 @@
+{
+    "0/1": {
+        "physical_channels": {
+            "channel": [
+                {
+                    "index": 0,
+                    "state": {
+                        "input_power": {
+                            "instant": -1.5,
+                            "avg": 0.0,
+                            "min": 0.0,
+                            "max": 0.0
+                        },
+                        "output_power": {
+                            "instant": 0.1,
+                            "avg": 0.0,
+                            "min": 0.0,
+                            "max": 0.0
+                        },
+                        "laser_bias_current": {
+                            "instant": 37.0,
+                            "avg": 0.0,
+                            "min": 0.0,
+                            "max": 0.0
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "0/2": {
+        "physical_channels": {
+            "channel": [
+                {
+                    "index": 0,
+                    "state": {
+                        "input_power": {
+                            "instant": -2.0,
+                            "avg": 0.0,
+                            "min": 0.0,
+                            "max": 0.0
+                        },
+                        "output_power": {
+                            "instant": 0.2,
+                            "avg": 0.0,
+                            "min": 0.0,
+                            "max": 0.0
+                        },
+                        "laser_bias_current": {
+                            "instant": 38.0,
+                            "avg": 0.0,
+                            "min": 0.0,
+                            "max": 0.0
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

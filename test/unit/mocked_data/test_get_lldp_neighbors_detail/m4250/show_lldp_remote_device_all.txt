@@ -1,0 +1,31 @@
+show lldp remote-device all
+
+LLDP Remote Device Summary
+
+Local
+Interface  RemID   Chassis ID            Port ID             System Name         OUI          OUI Subtype
+--------- -------  --------------------  ------------------  ------------------  -----------  -----------
+0/1
+0/2
+0/3
+0/4
+0/5
+0/6
+0/7
+0/8
+0/9
+0/10       34      54:07:7D:0D:2F:D0     1/0/2               test-switch-03          0x0080c2     0x01
+                                                                                 0x00120f     0x02
+                                                                                 0x00120f     0x03
+                                                                                 0x00120f     0x04
+                                                                                 0x8c3bad     0x65
+                                                                                 0x0080c2     0x03
+                                                                                 0x0080c2     0x03
+                                                                                 0x0080c2     0x03
+                                                                                 0x0080c2     0x03
+                                                                                 0x0080c2     0x03
+                                                                                 0x0080c2     0x03
+                                                                                 0x0080c2     0x03
+                                                                                 0x0080c2     0x03
+
+(M4250-8G2XF-PoE+)#

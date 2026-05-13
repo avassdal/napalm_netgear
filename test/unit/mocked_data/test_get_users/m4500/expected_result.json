@@ -1,0 +1,12 @@
+{
+    "admin": {
+        "level": 15,
+        "password": "",
+        "sshkeys": []
+    },
+    "guest": {
+        "level": 1,
+        "password": "",
+        "sshkeys": []
+    }
+}

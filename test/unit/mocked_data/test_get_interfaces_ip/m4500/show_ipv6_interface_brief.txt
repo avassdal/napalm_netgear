@@ -1,0 +1,11 @@
+show ipv6 interface brief
+
+             Oper.
+Interface    Mode     IPv6 Address/Length
+----------   -------- ---------------------------------
+vlan 1       Disabled fe80::5607:7dff:fe0c:39dd/64                       [TENT]
+vlan 60      Disabled fe80::5607:7dff:fe0c:39dd/64                       [TENT]
+vlan 50      Disabled fe80::5607:7dff:fe0c:39dd/64                       [TENT]
+vlan 101     Disabled fe80::5607:7dff:fe0c:39dd/64                       [TENT]
+
+(test-switch-04) #

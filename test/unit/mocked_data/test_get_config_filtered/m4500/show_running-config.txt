@@ -1,0 +1,1559 @@
+show running-config
+
+!Current Configuration:
+!
+!System Description "M4500-48XF8C, Runtime Code 7.0.4.30"
+!System Software Version "7.0.4.30"
+!System Up Time          "87 days 15 hrs 18 mins 29 secs"
+!Additional Packages     BGP-4,QOS,Multicast,IPv6,Routing,Data Center
+!Current System Time: Feb  6 11:08:22 2026
+!
+configure
+hostname "test-switch-04"
+igmp-plus 1
+igmp-plus 50
+igmp-plus 60
+igmp-plus 61
+igmp-plus 101
+igmp-plus 102
+vlan database
+vlan 11,50,60-61,91,101-102
+vlan name 11 "CEPH Data"
+vlan name 50 "AV"
+vlan name 60 "IPMX"
+vlan name 61 "IPMX Redundancy"
+vlan name 91 "Guest"
+vlan name 101 "Pharos"
+vlan name 102 "sACN"
+exit
+
+time-range
+ip name-server 192.0.2.10 1.1.1.1
+ipv6 unicast-routing
+ip routing
+ip helper enable
+username "admin" passwd 7 876c3433e0f2f03b709546e58b5a79c2d58edfe25cd32757822a0e42f7c3a510849f64d637f13acceb3bb9ca030b6407b5339cb3b5039fe3213310821c2b95c9 level 15
+username "admin" role "network-admin"
+username "guest" role "network-operator"
+line console
+exit
+
+line vty
+exit
+
+line ssh
+exit
+
+spanning-tree mst priority 0 0
+interface vlan 1
+exit
+interface vlan 60
+exit
+interface vlan 50
+exit
+interface vlan 101
+exit
+!
+snmp-server community "FtbSvZsQ26J3qX" rw
+ip access-list inter-VLAN0091
+1 deny ip any 192.0.2.0 0.0.0.255
+2 deny ip any 10.10.50.0 0.0.0.255
+3 deny ip any 10.10.60.0 0.0.0.255
+4 deny ip any 10.101.0.0 0.0.255.255
+5 permit ip any any
+exit
+
+ip access-list NET-BLOCK
+exit
+
+ip access-list ALLOW-DNS
+1 permit udp 10.10.50.0 0.0.0.255 host 192.0.2.10 eq domain
+2 permit udp host 192.0.2.10 eq domain 10.10.50.0 0.0.0.255
+3 permit udp 10.10.60.0 0.0.0.255 host 192.0.2.10 eq domain
+4 permit udp host 192.0.2.10 eq domain 10.10.60.0 0.0.0.255
+5 permit udp 10.101.0.0 0.0.255.255 host 192.0.2.10 eq domain
+6 permit udp host 192.0.2.10 eq domain 10.101.0.0 0.0.255.255
+exit
+
+ip access-group inter-VLAN0091 vlan 91 in 1
+interface control-plane
+exit
+class-map match-all "CLASS_PTP1" ipv4
+match dstip 224.0.1.129 255.255.255.255
+exit
+
+class-map match-all "CLASS_PTP2" ipv4
+match dstip 224.0.1.130 255.255.255.254
+exit
+
+class-map match-all "CLASS_PTP3" ipv4
+match dstip 224.0.1.132 255.255.255.255
+exit
+
+class-map match-all "CLASS_AUDIO1" ipv4
+!match ip dscp 46(ef)
+match ip dscp 46
+exit
+
+class-map match-all "CLASS_AUDIO2" ipv4
+!match ip dscp 34(af41)
+match ip dscp 34
+exit
+
+class-map match-all "CLASS_VIDEO" ipv4
+!match ip dscp 26(af31)
+match ip dscp 26
+exit
+
+class-map match-all "CLASS_ENGAGE1" ipv4
+match srcl4port 4443
+exit
+
+class-map match-all "CLASS_ENGAGE2" ipv4
+match dstl4port 4443
+exit
+
+policy-map "POLICY_AV" in
+class "CLASS_PTP1"
+assign-queue 6
+exit
+
+class "CLASS_PTP2"
+assign-queue 6
+exit
+
+class "CLASS_PTP3"
+assign-queue 6
+exit
+
+class "CLASS_AUDIO1"
+assign-queue 5
+exit
+
+class "CLASS_AUDIO2"
+assign-queue 5
+exit
+
+class "CLASS_VIDEO"
+assign-queue 4
+exit
+
+class "CLASS_ENGAGE1"
+assign-queue 3
+exit
+
+class "CLASS_ENGAGE2"
+assign-queue 3
+exit
+
+exit
+
+ipv6 mld snooping querier
+ipv6 mld snooping querier vlan 60
+ipv6 mld snooping querier vlan election participate 60
+ipv6 mld snooping querier vlan 61
+ipv6 mld snooping querier vlan election participate 61
+queue cos-map all 2 2
+queue cos-map all 3 3
+queue cos-map all 4 4
+queue cos-map all 5 5
+queue cos-map all 6 6
+queue cos-map all 7 6
+queue cos-queue strict all 3 4 5 6
+application install appmgr auto-restart start-on-boot
+application install orig_restful_api
+ip vrrp
+
+
+interface 0/1
+port-mode 4x25G
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/2
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/3
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/4
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/5
+port-mode 4x25G
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/6
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/7
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/8
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/9
+port-mode 4x10G
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/10
+service-policy in "POLICY_AV"
+switchport allowed vlan add 50,60,101
+switchport tagging 50,60,101
+exit
+
+
+
+interface 0/11
+service-policy in "POLICY_AV"
+switchport allowed vlan add 50,60,101
+switchport tagging 50,60,101
+exit
+
+
+
+interface 0/12
+service-policy in "POLICY_AV"
+switchport allowed vlan add 50,60,101
+switchport tagging 50,60,101
+exit
+
+
+
+interface 0/13
+port-mode 4x25G
+no negotiate
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/14
+no negotiate
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/15
+no negotiate
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/16
+no negotiate
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/17
+port-mode 4x10G
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/18
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/19
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/20
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/21
+port-mode 4x25G
+no negotiate
+no fec
+service-policy in "POLICY_AV"
+lldp transmit-mgmt
+no ptp clock e2e-transparent
+exit
+
+
+
+interface 0/22
+service-policy in "POLICY_AV"
+lldp transmit-mgmt
+no ptp clock e2e-transparent
+exit
+
+
+
+interface 0/23
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/24
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/25
+port-mode 4x10G
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/26
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/27
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/28
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/29
+port-mode 4x10G
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/30
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/31
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/32
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/33
+port-mode 4x25G
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/34
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/35
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/36
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/37
+port-mode 4x10G
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/38
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/39
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/40
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/41
+port-mode 4x25G
+no negotiate
+service-policy in "POLICY_AV"
+switchport allowed vlan add 60
+switchport native vlan 60
+switchport allowed vlan remove 1
+exit
+
+
+
+interface 0/42
+no negotiate
+service-policy in "POLICY_AV"
+switchport allowed vlan add 60
+switchport native vlan 60
+switchport allowed vlan remove 1
+exit
+
+
+
+interface 0/43
+no negotiate
+service-policy in "POLICY_AV"
+switchport allowed vlan add 60
+switchport native vlan 60
+switchport allowed vlan remove 1
+exit
+
+
+
+interface 0/44
+no negotiate
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/45
+port-mode 4x10G
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/46
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/47
+service-policy in "POLICY_AV"
+switchport allowed vlan add 91
+switchport tagging 91
+exit
+
+
+
+interface 0/48
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/49
+service-policy in "POLICY_AV"
+description 'MLAG-Peer-Link'
+exit
+
+
+
+interface 0/50
+service-policy in "POLICY_AV"
+description 'MLAG-Peer-Link'
+exit
+
+
+
+interface 0/51
+service-policy in "POLICY_AV"
+description 'MLAG-Peer-Link'
+exit
+
+
+
+interface 0/52
+service-policy in "POLICY_AV"
+description 'MLAG-Peer-Link'
+exit
+
+
+
+interface 0/53
+service-policy in "POLICY_AV"
+description 'MLAG-Peer-Link'
+exit
+
+
+
+interface 0/54
+service-policy in "POLICY_AV"
+description 'MLAG-Peer-Link'
+exit
+
+
+
+interface 0/55
+service-policy in "POLICY_AV"
+description 'MLAG-Peer-Link'
+exit
+
+
+
+interface 0/56
+service-policy in "POLICY_AV"
+description 'MLAG-Peer-Link'
+exit
+
+
+
+interface 0/57
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/58
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/59
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/60
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/61
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/62
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/63
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/64
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/65
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/66
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/67
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/68
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/69
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/70
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/71
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/72
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/73
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/74
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/75
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/76
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/77
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/78
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/79
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/80
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/81
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/82
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/83
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/84
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/85
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/86
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/87
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/88
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/89
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/90
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/91
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/92
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/93
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/94
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/95
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/96
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/97
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/98
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/99
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/100
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/101
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/102
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/103
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/104
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/105
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/106
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/107
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/108
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/109
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/110
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/111
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/112
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/113
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/114
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/115
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/116
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/117
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/118
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/119
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/120
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/121
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/122
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/123
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/124
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/125
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/126
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/127
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/128
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/129
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/130
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/131
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/132
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/133
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/134
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/135
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface 0/136
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 1
+service-policy in "POLICY_AV"
+description 'MLAG-Peer-Link'
+no staticcapability
+switchport mode trunk
+mlag peer-link
+exit
+
+
+
+interface port-channel 2
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 3
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 4
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 5
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 6
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 7
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 8
+service-policy in "POLICY_AV"
+no staticcapability
+load-balance dst-mac
+exit
+
+
+
+interface port-channel 9
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 10
+service-policy in "POLICY_AV"
+no staticcapability
+load-balance dst-mac
+switchport mode trunk
+switchport acceptable-frame-types tagged
+switchport tagging 1,50,60,101-102
+mlag 10
+exit
+
+
+
+interface port-channel 11
+service-policy in "POLICY_AV"
+no staticcapability
+load-balance dst-mac
+switchport mode trunk
+switchport acceptable-frame-types tagged
+switchport tagging 1,50,60,101-102
+mlag 11
+exit
+
+
+
+interface port-channel 12
+service-policy in "POLICY_AV"
+no staticcapability
+load-balance dst-mac
+switchport mode trunk
+switchport acceptable-frame-types tagged
+switchport tagging 1,50,60,101-102
+mlag 12
+exit
+
+
+
+interface port-channel 13
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 14
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 15
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 16
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 17
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 18
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 19
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 20
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 21
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 22
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 23
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 24
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 25
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 26
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 27
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 28
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 29
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 30
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 31
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 32
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 33
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 34
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 35
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 36
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 37
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 38
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 39
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 40
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 41
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 42
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 43
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 44
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 45
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 46
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 47
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 48
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 49
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 50
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 51
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 52
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 53
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 54
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 55
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 56
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 57
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 58
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 59
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 60
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 61
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 62
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 63
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface port-channel 64
+service-policy in "POLICY_AV"
+exit
+
+
+
+interface vlan 1
+ip address 192.0.2.2 255.255.255.0
+exit
+
+
+
+interface vlan 60
+ip address 10.10.60.2 255.255.255.0
+ip vrrp 60
+ip vrrp 60 mode
+ip vrrp 60 ip 10.10.60.1
+ip vrrp 60 accept-mode
+exit
+
+
+
+interface vlan 50
+ip address 10.10.50.2 255.255.255.0
+ip vrrp 50
+ip vrrp 50 mode
+ip vrrp 50 ip 10.10.50.1
+ip vrrp 50 accept-mode
+exit
+
+
+
+interface vlan 101
+ip address 10.101.0.2 255.255.0.0
+ip vrrp 101
+ip vrrp 101 mode
+ip vrrp 101 ip 10.101.0.1
+ip vrrp 101 accept-mode
+exit
+
+
+interface 0/49
+channel-group 1 mode active
+exit
+interface 0/50
+channel-group 1 mode active
+exit
+interface 0/51
+channel-group 1 mode active
+exit
+interface 0/52
+channel-group 1 mode active
+exit
+interface 0/53
+channel-group 1 mode active
+exit
+interface 0/54
+channel-group 1 mode active
+exit
+interface 0/55
+channel-group 1 mode active
+exit
+interface 0/56
+channel-group 1 mode active
+exit
+interface 0/13
+no negotiate
+exit
+interface 0/14
+no negotiate
+exit
+interface 0/15
+no negotiate
+exit
+interface 0/16
+no negotiate
+exit
+interface 0/18
+exit
+interface 0/17
+exit
+interface 0/1
+exit
+interface 0/2
+exit
+interface 0/8
+exit
+interface 0/7
+exit
+interface 0/5
+exit
+interface 0/6
+exit
+interface 0/10
+exit
+interface 0/33
+channel-group 10 mode active
+exit
+interface 0/34
+channel-group 11 mode active
+exit
+interface 0/35
+channel-group 12 mode active
+exit
+port-channel auto
+switchport mode auto
+router ospf
+exit
+ipv6 router ospf
+exit
+ip default-gateway 192.0.2.1
+ip route 0.0.0.0 0.0.0.0 192.0.2.1 253
+ip route 192.168.70.0 255.255.255.0 10.101.0.101
+ip route 10.147.17.0 255.255.255.0 10.101.0.101
+ip route 10.242.0.0 255.255.0.0 10.10.50.9 description ZeroTier-Bridge
+ip route 10.147.18.0 255.255.255.0 10.10.50.9 description UCI-Zerotier
+mlag
+mlag domain 1
+mlag peer-keepalive enable
+exit
+
+
+(test-switch-04) #

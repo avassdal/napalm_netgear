@@ -1,0 +1,250 @@
+show startup-config
+
+!Current Configuration:
+!
+!System Description "M4250-8G2XF-PoE+ 8x1G PoE+ 220W and 2xSFP+ Managed Switch, 13.0.5.20, 1.0.0.11"
+!System Software Version "13.0.5.20"
+!System Up Time          "78 days 16 hrs 27 mins 56 secs"
+!Additional Packages     QOS,Multicast,IPv6,IPv6 Management,Routing
+!Current System Time: Jan 28 12:35:31 2026
+!
+vlan database
+vlan 11,50,60-61,91,101-102
+vlan name 11 "CEPH Data"
+vlan name 50 "AV"
+vlan name 60 "IPMX"
+vlan name 61 "IPMX Redundancy"
+vlan name 91 "Guest"
+vlan name 101 "Pharos"
+vlan name 102 "sACN"
+no set igmp querier election participate 1
+set igmp-plus 11
+set igmp-plus 50
+set igmp querier 50 address 10.10.50.17
+set igmp-plus 60
+set igmp querier 60 address 10.10.60.17
+no set igmp querier election participate 60
+set igmp-plus 61
+set igmp-plus 91
+set igmp-plus 101
+set igmp-plus 102
+set mld querier 1
+set mld querier election participate 1
+set mld-plus 11
+set mld querier 11
+set mld querier election participate 11
+set mld-plus 50
+set mld querier 50
+set mld querier election participate 50
+set mld-plus 60
+set mld querier 60
+set mld querier election participate 60
+set mld-plus 61
+set mld querier 61
+set mld querier election participate 61
+set mld-plus 91
+set mld querier 91
+set mld querier election participate 91
+set mld-plus 101
+set mld querier 101
+set mld querier election participate 101
+set mld-plus 102
+set mld querier 102
+set mld querier election participate 102
+vlan routing 1 1
+vlan routing 50 2
+exit
+ip http port 49151
+configure
+clock summer-time recurring EU offset 60
+clock timezone 1 minutes 0 zone "ZZZZ"
+logging cli-command
+username "admin" password $6$E3sDkqh8hrpR0MjX$PH0kq/IVOLz8OjUKpdQt4sKruEeQXc2gvOfWFiRlW79ENLSwmM5RmC1ja2m/nr/nFQPrsL4nDZebaAj/rPEfh/ encryption-type sha512 level 15 encrypted
+line console
+exit
+line telnet
+exit
+line ssh
+exit
+ntp broadcast client
+snmp-server sysname "test-switch-03"
+!
+snmp-server user "admin" DefaultWrite auth-sha512-key 2eb760029914594a8a9200efe9603ce21d066ef16c6065c055e38725b0f2eff41411bd9c6d27d71c04c0c70796e3b12b8b11c5c38d7903f774f690aef8e4f419
+snmp-server community "FtbSvZsQ26J3qX" rw
+snmp-server community "LjSnS2wWMt5Ljn" rw
+ip access-list NET-BLOCK
+exit
+ip access-list inter-VLAN0091
+deny ip any 192.0.2.0 0.0.0.255
+deny ip any 10.10.50.0 0.0.0.255
+permit ip any any
+exit
+ip access-group inter-VLAN0091 vlan 91 in 1
+class-map match-all CLASS_PTP1
+match dstip 224.0.1.129 255.255.255.255
+exit
+class-map match-all CLASS_PTP2
+match dstip 224.0.1.130 255.255.255.254
+exit
+class-map match-all CLASS_PTP3
+match dstip 224.0.1.132 255.255.255.255
+exit
+class-map match-all CLASS_AUDIO1
+!match ip dscp 46(ef)
+match ip dscp 46
+exit
+class-map match-all CLASS_AUDIO2
+!match ip dscp 34(af41)
+match ip dscp 34
+exit
+class-map match-all CLASS_VIDEO
+!match ip dscp 26(af31)
+match ip dscp 26
+exit
+class-map match-all CLASS_ENGAGE1
+match srcl4port 4443
+exit
+class-map match-all CLASS_ENGAGE2
+match dstl4port 4443
+exit
+policy-map POLICY_AV in
+class CLASS_PTP1
+assign-queue 6
+exit
+class CLASS_PTP2
+assign-queue 6
+exit
+class CLASS_PTP3
+assign-queue 6
+exit
+class CLASS_AUDIO1
+assign-queue 5
+exit
+class CLASS_AUDIO2
+assign-queue 5
+exit
+class CLASS_VIDEO
+assign-queue 4
+exit
+class CLASS_ENGAGE1
+assign-queue 3
+exit
+class CLASS_ENGAGE2
+assign-queue 3
+exit
+exit
+set mld querier
+classofservice dot1p-mapping 2 2
+classofservice dot1p-mapping 3 3
+classofservice dot1p-mapping 4 4
+classofservice dot1p-mapping 5 5
+classofservice dot1p-mapping 6 6
+classofservice dot1p-mapping 7 6
+classofservice trust dot1p
+cos-queue strict 3 4 5 6
+interface 0/1
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1,60
+vlan participation include 50
+ptp clock e2e-transparent
+exit
+interface 0/2
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1,60
+vlan participation include 50
+ptp clock e2e-transparent
+no poe
+exit
+interface 0/3
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1,60,101
+vlan participation include 50
+ptp clock e2e-transparent
+exit
+interface 0/4
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1,101
+vlan participation include 50
+ptp clock e2e-transparent
+exit
+interface 0/5
+service-policy in POLICY_AV
+mtu 1500
+vlan pvid 50
+vlan participation exclude 1,60
+vlan participation include 50
+ptp clock e2e-transparent
+exit
+interface 0/6
+service-policy in POLICY_AV
+vlan participation exclude 50
+exit
+interface 0/7
+service-policy in POLICY_AV
+vlan participation exclude 50,60,101-102
+exit
+interface 0/8
+service-policy in POLICY_AV
+vlan participation exclude 60,101-102
+vlan participation include 50
+vlan tagging 50
+ptp clock e2e-transparent
+exit
+interface 0/9
+service-policy in POLICY_AV
+exit
+interface 0/10
+no storm-control broadcast
+service-policy in POLICY_AV
+ptp clock e2e-transparent
+exit
+interface lag 1
+service-policy in POLICY_AV
+exit
+interface lag 2
+service-policy in POLICY_AV
+exit
+interface lag 3
+service-policy in POLICY_AV
+exit
+interface lag 4
+service-policy in POLICY_AV
+exit
+interface lag 5
+service-policy in POLICY_AV
+exit
+interface lag 6
+service-policy in POLICY_AV
+exit
+interface lag 7
+service-policy in POLICY_AV
+exit
+interface lag 8
+service-policy in POLICY_AV
+exit
+interface vlan 1
+routing
+ip address 192.0.2.17 255.255.255.0
+exit
+interface vlan 50
+routing
+ip address 10.10.50.17 255.255.255.0
+exit
+ip management vlan 1 192.0.2.17 255.255.255.0
+router rip
+exit
+ip default-gateway 192.0.2.1
+ptp clock e2e-transparent
+exit
+ip http secure-port 49152
+ip ssh server enable
+
+(M4250-8G2XF-PoE+)#

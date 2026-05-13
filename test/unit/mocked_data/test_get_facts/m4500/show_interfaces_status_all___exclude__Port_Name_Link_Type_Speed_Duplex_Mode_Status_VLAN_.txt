@@ -1,0 +1,5 @@
+show interfaces status all | exclude "Port|Name|Link|Type|Speed|Duplex|Mode|Status|VLAN"
+                         ^
+% Invalid input detected at '^' marker.
+
+(test-switch-04) #
